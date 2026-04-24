@@ -196,3 +196,99 @@ def test_bad_sql_surfaces_400(client: TestClient, tmp_path: Path) -> None:
 def test_delete_missing_connection_is_404(client: TestClient) -> None:
     resp = client.delete("/api/datasets/connections/does_not_exist")
     assert resp.status_code == 404
+
+
+@pytest.mark.unit
+def test_refresh_reruns_saved_query(client: TestClient, tmp_path: Path) -> None:
+    """Refreshing a SQL-backed dataset re-executes its saved query and picks
+    up new rows added since the original ingest."""
+
+    db = tmp_path / "sample.db"
+    _seed_sqlite(db)
+
+    create = client.post(
+        "/api/datasets/connections",
+        json={"name": "x", "dialect": "sqlite", "database": str(db)},
+    )
+    cid = create.json()["id"]
+
+    ingest = client.post(
+        f"/api/datasets/connections/{cid}/ingest",
+        json={"sql": "SELECT date, qty FROM sales ORDER BY date"},
+    )
+    assert ingest.status_code == 200, ingest.text
+    dataset_id = ingest.json()["id"]
+    assert ingest.json()["row_count"] == 12
+
+    # Add three more rows out-of-band, then refresh.
+    engine = create_engine(f"sqlite:///{db}")
+    with engine.begin() as conn:
+        conn.execute(
+            text("INSERT INTO sales (date, qty) VALUES (:d, :q)"),
+            [{"d": f"2022-{m:02d}-01", "q": m * 100} for m in range(1, 4)],
+        )
+    engine.dispose()
+
+    refresh = client.post(f"/api/datasets/{dataset_id}/refresh")
+    assert refresh.status_code == 200, refresh.text
+    assert refresh.json()["row_count"] == 15
+    assert refresh.json()["id"] == dataset_id
+
+    # /preview now reflects the refreshed snapshot.
+    prev = client.get(f"/api/datasets/{dataset_id}/preview")
+    assert prev.status_code == 200
+    assert prev.json()["row_count"] == 15
+
+
+@pytest.mark.unit
+def test_refresh_rejects_non_sql_dataset(client: TestClient) -> None:
+    """A CSV-backed dataset can't be refreshed - we should get a clear 400."""
+
+    rows = "\n".join(f"2024-01-{d:02d},{d}" for d in range(1, 16))
+    csv_bytes = ("date,value\n" + rows + "\n").encode("utf-8")
+    upload = client.post(
+        "/api/datasets/upload",
+        files={"file": ("tiny.csv", csv_bytes, "text/csv")},
+    )
+    assert upload.status_code == 200, upload.text
+    dataset_id = upload.json()["id"]
+
+    resp = client.post(f"/api/datasets/{dataset_id}/refresh")
+    assert resp.status_code == 400
+    assert "sql" in resp.json()["detail"].lower()
+
+
+@pytest.mark.unit
+def test_refresh_missing_dataset_is_404(client: TestClient) -> None:
+    resp = client.post("/api/datasets/does_not_exist/refresh")
+    assert resp.status_code == 404
+
+
+@pytest.mark.unit
+def test_refresh_missing_connection_is_404(
+    client: TestClient, tmp_path: Path
+) -> None:
+    """If the saved connection has been deleted, refresh returns 404 with a
+    recovery hint, not a 500."""
+
+    db = tmp_path / "sample.db"
+    _seed_sqlite(db)
+
+    create = client.post(
+        "/api/datasets/connections",
+        json={"name": "x", "dialect": "sqlite", "database": str(db)},
+    )
+    cid = create.json()["id"]
+    ingest = client.post(
+        f"/api/datasets/connections/{cid}/ingest",
+        json={"sql": "SELECT date, qty FROM sales"},
+    )
+    dataset_id = ingest.json()["id"]
+
+    # Delete the connection out-of-band.
+    delete = client.delete(f"/api/datasets/connections/{cid}")
+    assert delete.status_code == 204
+
+    resp = client.post(f"/api/datasets/{dataset_id}/refresh")
+    assert resp.status_code == 404
+    assert cid in resp.json()["detail"]

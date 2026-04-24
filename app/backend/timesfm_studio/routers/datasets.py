@@ -2,17 +2,22 @@
 
 from __future__ import annotations
 
+import datetime
 import json as json_module
 import logging
 import os
 import shutil
+import tempfile
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 
 from ..deps import get_settings
 from ..schemas.dataset import ColumnMapping, DatasetPreview, DatasetSummary, SeriesExtraction
-from ..services import dataset_store
+from ..services import connection_store, dataset_store
+from ..services import secrets as secrets_service
 from ..services.loaders import loader_for_extension
+from ..services.loaders._file_common import build_column_infos, build_first_rows
 from ..services.series import _infer_column_dtype, build_extraction
 from ..settings import Settings
 
@@ -148,6 +153,118 @@ def delete_dataset(dataset_id: str, settings: Settings = Depends(get_settings)) 
     if not dataset_dir.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found.")
     shutil.rmtree(dataset_dir)
+
+
+@router.post("/{dataset_id}/refresh", response_model=DatasetPreview)
+def refresh(
+    dataset_id: str, settings: Settings = Depends(get_settings)
+) -> DatasetPreview:
+    """Re-run the saved SQL query that produced this dataset.
+
+    Only valid for SQL-backed datasets (kind == "sql"). The new snapshot is
+    materialized into a temporary directory first and then atomically renamed
+    over the existing parquet, so a failed refresh leaves the previous snapshot
+    intact.
+    """
+
+    from ..services.loaders.sql import build_engine, materialize
+
+    dataset_dir = settings.datasets_dir / dataset_id
+    if not dataset_dir.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found."
+        )
+    try:
+        meta = dataset_store.read_meta(dataset_dir)
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
+
+    if meta.get("kind") != "sql":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "Refresh is only supported for SQL-backed datasets. "
+                f"This dataset is kind={meta.get('kind', 'unknown')!r}."
+            ),
+        )
+
+    source = meta.get("source") or {}
+    connection_id = source.get("connection_id")
+    sql = source.get("sql")
+    if not connection_id or not sql:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Dataset metadata is missing the saved connection_id or sql.",
+        )
+
+    try:
+        connection = connection_store.get_connection(
+            settings.connections_path, connection_id
+        )
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=(
+                f"Connection {connection_id} no longer exists. Re-create it "
+                "before refreshing this dataset."
+            ),
+        ) from exc
+
+    try:
+        password = connection_store.resolve_password(connection)
+    except secrets_service.KeyringUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
+        ) from exc
+
+    engine = build_engine(connection, password)
+    try:
+        with tempfile.TemporaryDirectory(dir=dataset_dir) as staging_dir:
+            staging = Path(staging_dir)
+            try:
+                df = materialize(
+                    engine=engine,
+                    sql=sql,
+                    dataset_dir=staging,
+                    max_rows=settings.max_sql_rows,
+                    chunk_size=int(source.get("chunk_size") or 50_000),
+                    dialect=connection.dialect,
+                )
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=str(exc),
+                ) from exc
+            except Exception as exc:
+                logger.exception("Refresh query failed for %s", dataset_id)
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Refresh failed: {exc}",
+                ) from exc
+            shutil.move(
+                str(staging / "data.parquet"),
+                str(dataset_dir / "data.parquet"),
+            )
+    finally:
+        try:
+            engine.dispose()
+        except Exception:  # pragma: no cover - defensive
+            pass
+
+    meta["row_count"] = int(len(df))
+    source["fetched_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+    meta["source"] = source
+    dataset_store.write_meta(dataset_dir, meta)
+
+    return DatasetPreview(
+        id=dataset_id,
+        filename=meta.get("filename", dataset_id),
+        columns=build_column_infos(df),
+        row_count=int(len(df)),
+        first_rows=build_first_rows(df),
+    )
 
 
 @router.post("/{dataset_id}/series", response_model=SeriesExtraction)
