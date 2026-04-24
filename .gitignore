@@ -1,0 +1,38 @@
+# Python
+.venv/
+.pytest_cache/
+__pycache__/
+*.egg-info/
+*.pyc
+dist/
+build/
+
+# Node / Vite
+node_modules/
+app/frontend/dist/
+app/frontend/.vite/
+app/frontend/tsconfig.tsbuildinfo
+.DS_Store
+
+# Editor / OS
+.idea/
+.vscode/
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# ML / data
+checkpoints/
+wandb/
+datasets/
+results/
+debug.log
+
+# Lock file — keep out of git for uv
+uv.lock
+
+# Claude Code workspace state
+.claude/

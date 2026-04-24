@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <clipPath id="eye-clip-fav">
+      <path d="M 2,16 C 7,5 25,5 30,16 C 25,27 7,27 2,16 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="32" height="32" fill="#0F172A"/>
+
+  <!-- Eye fill -->
+  <path
+    d="M 2,16 C 7,5 25,5 30,16 C 25,27 7,27 2,16 Z"
+    fill="#0F172A"
+  />
+
+  <!-- Eye outline -->
+  <path
+    d="M 2,16 C 7,5 25,5 30,16 C 25,27 7,27 2,16 Z"
+    fill="none"
+    stroke="#22D3EE"
+    stroke-width="1.6"
+    stroke-linejoin="round"
+  />
+
+  <!-- Trend sparkline -->
+  <g clip-path="url(#eye-clip-fav)">
+    <path
+      d="M 6,20 C 9,21.5 10,17.5 13,16.5 C 15,15.8 15,18.5 18,17 C 21,15.5 22,12 25,10"
+      fill="none"
+      stroke="#22D3EE"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <circle cx="25" cy="10" r="1.8" fill="#22D3EE"/>
+  </g>
+</svg>

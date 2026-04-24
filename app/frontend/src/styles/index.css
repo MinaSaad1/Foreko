@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: theme('colors.bg.base');
+  background-image:
+    linear-gradient(to right, theme('colors.border.DEFAULT' / 6%) 1px, transparent 1px),
+    linear-gradient(to bottom, theme('colors.border.DEFAULT' / 6%) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-attachment: fixed;
+  caret-color: theme('colors.accent.DEFAULT');
+  accent-color: theme('colors.accent.DEFAULT');
+}
+
+/* Terminal-style text selection — consistent across browsers/OS */
+::selection {
+  background: theme('colors.accent.DEFAULT');
+  color: theme('colors.bg.base');
+  text-shadow: none;
+}
+::-moz-selection {
+  background: theme('colors.accent.DEFAULT');
+  color: theme('colors.bg.base');
+  text-shadow: none;
+}
+
+/* Focus ring — accent cyan with a subtle outer glow */
+:focus-visible {
+  outline: 1px solid theme('colors.accent.DEFAULT');
+  outline-offset: 2px;
+  box-shadow: 0 0 8px theme('colors.accent.dim');
+}
+/* Suppress default ring on interactive elements we already style */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible) {
+  outline: none;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60vh;
+  background: radial-gradient(ellipse at 50% 0%, theme('colors.accent.dim'), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.anomaly-pulse {
+  position: relative;
+  display: inline-block;
+}
+
+.anomaly-pulse::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: rgba(255, 71, 87, 0.4);
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* Custom CSS Scrollbar - Terminal Aesthetic */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: theme('colors.bg.base');
+  border-left: 1px solid theme('colors.border.DEFAULT');
+  border-top: 1px solid theme('colors.border.DEFAULT');
+}
+::-webkit-scrollbar-thumb {
+  background: theme('colors.bg.elevated');
+  border: 1px solid theme('colors.border.strong');
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.accent.DEFAULT' / 40%);
+  border-color: theme('colors.accent.DEFAULT' / 80%);
+}
+::-webkit-scrollbar-corner {
+  background: theme('colors.bg.base');
+}

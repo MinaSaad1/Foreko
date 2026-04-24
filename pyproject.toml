@@ -1,0 +1,80 @@
+[project]
+name = "foresee-web"
+version = "0.1.0"
+description = "Foresee — local forecasting studio (web app for localhost dev)."
+authors = [
+    {name = "Mina Saad", email = "mina.saad.wahba@gmail.com"},
+]
+license = {text = "Apache-2.0"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26.4",
+    "huggingface_hub[cli]>=0.23.0",
+    "safetensors>=0.5.3",
+]
+
+[project.optional-dependencies]
+torch = [
+    "torch>=2.0.0",
+]
+flax = [
+    "flax",
+    "optax",
+    "einshape",
+    "orbax-checkpoint",
+    "jaxtyping",
+    "jax[cuda]"
+]
+xreg = [
+    "jax[cuda]",
+    "scikit-learn",
+]
+app = [
+    "torch>=2.0.0",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "sse-starlette>=2.0.0",
+    "python-multipart>=0.0.9",
+    "pandas>=2.1.0",
+    "jax[cpu]>=0.4.23",
+    "scikit-learn>=1.3.0",
+    "transformers>=4.40.0",
+    "peft>=0.10.0",
+    "accelerate>=0.29.0",
+    "lightgbm>=4.0.0",
+    "statsmodels>=0.14.0",
+]
+app-dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "httpx>=0.27.0",
+    "ruff>=0.3.0",
+    "black>=24.0.0",
+]
+
+[tool.ruff]
+line-length = 88
+indent-width = 2
+
+[tool.pytest.ini_options]
+testpaths = ["app/backend/tests", "tests"]
+pythonpath = ["app/backend"]
+markers = [
+    "unit: fast tests that do not load the real TimesFM model",
+    "integration: tests that require downloading and loading the real TimesFM model",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.setuptools.packages.find]
+where = ["src", "app/backend"]
+include = ["timesfm*", "timesfm_studio*"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

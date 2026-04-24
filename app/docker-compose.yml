@@ -1,0 +1,23 @@
+services:
+  timesfm-studio:
+    build:
+      context: ..
+      dockerfile: app/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - timesfm_data:/data
+      - hf_cache:/root/.cache/huggingface
+    restart: unless-stopped
+    # GPU support (requires nvidia-container-toolkit on the host)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  timesfm_data:
+  hf_cache:

@@ -1,0 +1,10 @@
+{
+  "pythonVersion": "3.12",
+  "venvPath": ".",
+  "venv": ".venv",
+  "extraPaths": ["app/backend", "src"],
+  "include": ["app/backend", "src"],
+  "pythonPath": ".venv/Scripts/python.exe",
+  "reportMissingModuleSource": "none",
+  "reportMissingImports": "none"
+}
