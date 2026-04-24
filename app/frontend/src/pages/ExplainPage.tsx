@@ -1,15 +1,16 @@
 import { useCallback, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/api/endpoints";
 import { useDatasetStore } from "@/stores/datasetStore";
-import { CSVUpload } from "@/components/CSVUpload";
 import { ColumnMapper } from "@/components/ColumnMapper";
 import { MethodAgreementMatrix } from "@/components/anomaly/MethodAgreementMatrix";
 import { RootCauseHints } from "@/components/anomaly/RootCauseHints";
 import { PageIntro } from "@/components/common/PageIntro";
+import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
 import { Term } from "@/components/common/Term";
-import type { ColumnInfo, ColumnMapping, DatasetPreview } from "@/types/dataset";
+import { useSyncedDataset } from "@/hooks/useSyncedDataset";
+import type { ColumnInfo, ColumnMapping } from "@/types/dataset";
 import type {
   AnomalyMethodsResult,
   ChangepointsResult,
@@ -21,23 +22,14 @@ import ReactECharts from "echarts-for-react";
 
 export function ExplainPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
-  const navigate = useNavigate();
-  const storePreview = useDatasetStore((s) => s.preview);
   const storeMapping = useDatasetStore((s) => s.mapping);
   const setStoreMapping = useDatasetStore((s) => s.setMapping);
-  const setStorePreview = useDatasetStore((s) => s.setPreview);
 
   const [mapping, setMapping] = useState<ColumnMapping | null>(storeMapping);
   const [numericFactors, setNumericFactors] = useState<string[]>([]);
   const [categoricalFactors, setCategoricalFactors] = useState<string[]>([]);
 
-  const activeId = datasetId ?? storePreview?.id;
-  const { data: preview } = useQuery({
-    queryKey: ["dataset-preview", activeId],
-    queryFn: () => api.datasetPreview(activeId!),
-    enabled: !!activeId,
-    initialData: activeId === storePreview?.id ? storePreview ?? undefined : undefined,
-  });
+  const { activeId, preview } = useSyncedDataset(datasetId);
 
   const handleMappingChange = useCallback(
     (m: ColumnMapping) => {
@@ -84,17 +76,11 @@ export function ExplainPage() {
 
   if (!activeId) {
     return (
-      <div className="mx-auto max-w-2xl space-y-6 py-12">
-        <h1 className="font-display text-2xl font-semibold text-text-primary">Explain Your Data</h1>
-        <PageIntro pageKey="explain" />
-        <p className="text-text-secondary">Upload a dataset first.</p>
-        <CSVUpload
-          onUploaded={(p: DatasetPreview) => {
-            setStorePreview(p);
-            navigate(`/explain/${p.id}`);
-          }}
-        />
-      </div>
+      <EmptyDatasetState
+        title="Explain Your Data"
+        pageKey="explain"
+        basePath="/explain"
+      />
     );
   }
 
@@ -118,7 +104,7 @@ export function ExplainPage() {
         <p className="mt-1 text-sm text-text-secondary">
           Multi-method <Term k="severity">anomaly detection</Term>,{" "}
           <Term k="changepoint">changepoints</Term>, <Term k="lag">lag analysis</Term>, and{" "}
-          <Term k="granger">Granger causality</Term> — all in one place.
+          <Term k="granger">Granger causality</Term>, all in one place.
         </p>
       </div>
 
@@ -321,7 +307,7 @@ export function ExplainPage() {
                         yes
                       </span>
                     ) : (
-                      <span className="text-text-muted">—</span>
+                      <span className="text-text-muted">-</span>
                     )}
                   </td>
                 </tr>

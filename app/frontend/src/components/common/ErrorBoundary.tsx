@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             Foresee hit an unexpected error
           </h1>
           <p className="text-sm text-text-secondary">
-            The UI encountered a problem and stopped. Your data is still safe — nothing leaves this machine. You can try reloading the page, or restart the app.
+            The UI encountered a problem and stopped. Your data is still safe, nothing leaves this machine. You can try reloading the page, or restart the app.
           </p>
           <details className="rounded border border-border/60 bg-bg-elevated/40 px-3 py-2 text-xs text-text-muted">
             <summary className="cursor-pointer font-mono uppercase tracking-widest">

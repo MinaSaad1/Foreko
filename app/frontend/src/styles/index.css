@@ -23,7 +23,7 @@ body {
   accent-color: theme('colors.accent.DEFAULT');
 }
 
-/* Terminal-style text selection — consistent across browsers/OS */
+/* Terminal-style text selection, consistent across browsers/OS */
 ::selection {
   background: theme('colors.accent.DEFAULT');
   color: theme('colors.bg.base');
@@ -35,7 +35,7 @@ body {
   text-shadow: none;
 }
 
-/* Focus ring — accent cyan with a subtle outer glow */
+/* Focus ring, accent cyan with a subtle outer glow */
 :focus-visible {
   outline: 1px solid theme('colors.accent.DEFAULT');
   outline-offset: 2px;

@@ -41,7 +41,7 @@ export function DownloadPdfButton({
     try {
       const resolved = await sections();
       if (resolved.length === 0) {
-        toast.info("Nothing to export yet — run an analysis first.");
+        toast.info("Nothing to export yet, run an analysis first.");
         return;
       }
       const blob = await api.exportPdf(title, resolved);

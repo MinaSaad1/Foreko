@@ -39,7 +39,9 @@ npm run dev
 
 Open http://localhost:5173 and upload a CSV.
 
-The first forecast downloads TimesFM 2.5 weights (~1.2 GB) into `~/.cache/huggingface/hub/`. Subsequent runs reuse the cached weights.
+The first forecast downloads TimesFM 2.5 weights (~1.2 GB) into `~/.timesfm_studio/models/`. Subsequent runs reuse the cached weights.
+
+Override any default via `TIMESFM_STUDIO_<FIELD>` environment variables (for example `TIMESFM_STUDIO_PRELOAD_MODEL=false` to skip model preload at startup, or `TIMESFM_STUDIO_STORAGE_DIR=/tmp/foresee` to move the storage root).
 
 ## Tests
 

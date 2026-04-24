@@ -1,19 +1,21 @@
 import { useRef, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/api/endpoints";
 import { useDatasetStore } from "@/stores/datasetStore";
 import { ColumnMapper } from "@/components/ColumnMapper";
 import { AnomalyChart, type AnomalyChartHandle } from "@/components/AnomalyChart";
 import { AnomalyInsights } from "@/components/AnomalyInsights";
 import { AnomalyTable } from "@/components/AnomalyTable";
-import { CSVUpload } from "@/components/CSVUpload";
 import { PageIntro } from "@/components/common/PageIntro";
+import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
 import { Term } from "@/components/common/Term";
 import { HelpHint } from "@/components/common/HelpHint";
 import { DownloadPdfButton, type PdfSection } from "@/components/common/DownloadPdfButton";
 import { useDocumentTitle } from "@/utils/useDocumentTitle";
-import type { ColumnMapping, DatasetPreview } from "@/types/dataset";
+import { useSyncedDataset } from "@/hooks/useSyncedDataset";
+import { useHealth } from "@/hooks/useHealth";
+import type { ColumnMapping } from "@/types/dataset";
 import type {
   AnomalyResponse,
   AnomalySummary,
@@ -51,7 +53,7 @@ function buildSummary(data: AnomalyResponse): AnomalySummary {
 }
 
 function formatValue(v: number): string {
-  if (!Number.isFinite(v)) return "—";
+  if (!Number.isFinite(v)) return "-";
   if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(2)}M`;
   if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(2)}K`;
   return v.toFixed(2);
@@ -107,7 +109,7 @@ function buildAnomalyReport(
       ? `Detected ${summary.critical} critical ${summary.critical === 1 ? "anomaly" : "anomalies"} and ${summary.warning} warnings across ${summary.total} observations (${anomalyRate.toFixed(1)}% critical rate).`
       : summary.warning > 0
         ? `No critical anomalies, but ${summary.warning} warning-level points (${warningRate.toFixed(1)}%) deviate more than 2 sigma from expected.`
-        : "All observations fell within normal bounds — no anomalies or warnings detected.",
+        : "All observations fell within normal bounds, no anomalies or warnings detected.",
     kv: [
       ["Anomalies (critical)", summary.critical.toString()],
       ["Warnings", summary.warning.toString()],
@@ -115,13 +117,13 @@ function buildAnomalyReport(
       ["Critical rate", `${anomalyRate.toFixed(1)}%`],
       ["Warning rate", `${warningRate.toFixed(1)}%`],
       ["Residual std (σ)", series.res_std.toFixed(4)],
-      ["Anomaly mean vs baseline", baselineAvg > 0 ? `${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%` : "—"],
+      ["Anomaly mean vs baseline", baselineAvg > 0 ? `${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%` : "-"],
       ["Look-ahead horizon", `${ctx.horizon} periods`],
-      ["Worst z-score", worst ? worst.z_score.toFixed(2) : "—"],
-      ["Worst date", worst ? worst.date : "—"],
-      ["Most recent flag", latest ? `${latest.date} (${latest.severity.toLowerCase()})` : "—"],
-      ["Observation range", records.length ? `${records[0].date} → ${records[records.length - 1].date}` : "—"],
-      ["Dataset", ctx.datasetName ?? "—"],
+      ["Worst z-score", worst ? worst.z_score.toFixed(2) : "-"],
+      ["Worst date", worst ? worst.date : "-"],
+      ["Most recent flag", latest ? `${latest.date} (${latest.severity.toLowerCase()})` : "-"],
+      ["Observation range", records.length ? `${records[0].date} → ${records[records.length - 1].date}` : "-"],
+      ["Dataset", ctx.datasetName ?? "-"],
       ["Historical rows", ctx.rowCount ? ctx.rowCount.toLocaleString() : `${records.length}`],
     ],
   });
@@ -134,7 +136,7 @@ function buildAnomalyReport(
     });
   }
 
-  // Ranked anomaly table — sort by severity then |z|.
+  // Ranked anomaly table, sort by severity then |z|.
   if (flagged.length > 0) {
     const ranked = [...flagged].sort((a, b) => {
       const sev = (r: ContextAnomalyRecord) => (r.severity === "CRITICAL" ? 1 : 0);
@@ -167,7 +169,7 @@ function buildAnomalyReport(
   if (topMonths.length > 0) {
     sections.push({
       heading: "Flag concentration by month",
-      body: "Months with the most flagged observations — useful for spotting recurring patterns.",
+      body: "Months with the most flagged observations, useful for spotting recurring patterns.",
       table: {
         headers: ["Month", "Flagged count"],
         rows: topMonths.map(([m, n]) => [m, n]),
@@ -177,7 +179,7 @@ function buildAnomalyReport(
 
   const takeaways: string[] = [];
   if (summary.critical === 0 && summary.warning === 0) {
-    takeaways.push("Series is stable — no points exceed the 2-sigma warning threshold, so forecasts can be trusted without scrubbing.");
+    takeaways.push("Series is stable, no points exceed the 2-sigma warning threshold, so forecasts can be trusted without scrubbing.");
   } else {
     if (summary.critical > 0) {
       takeaways.push(
@@ -192,11 +194,11 @@ function buildAnomalyReport(
     }
     if (topMonths.length && topMonths[0][1] >= 2) {
       takeaways.push(
-        `${topMonths[0][0]} has the most flags (${topMonths[0][1]}) — check whether a known event or recurring pattern explains the clustering.`,
+        `${topMonths[0][0]} has the most flags (${topMonths[0][1]}), check whether a known event or recurring pattern explains the clustering.`,
       );
     }
     if (summary.warning > summary.critical * 3 && summary.critical > 0) {
-      takeaways.push("Warnings outnumber criticals by ~3× — consider tightening the warning threshold if this series is noisy by nature.");
+      takeaways.push("Warnings outnumber criticals by ~3×, consider tightening the warning threshold if this series is noisy by nature.");
     }
   }
 
@@ -211,24 +213,16 @@ function buildAnomalyReport(
 export function AnomalyPage() {
   useDocumentTitle("Anomalies");
   const { datasetId } = useParams<{ datasetId?: string }>();
-  const navigate = useNavigate();
-  const storePreview = useDatasetStore((s) => s.preview);
   const storeMapping = useDatasetStore((s) => s.mapping);
   const setStoreMapping = useDatasetStore((s) => s.setMapping);
-  const setStorePreview = useDatasetStore((s) => s.setPreview);
 
   const [mapping, setMapping] = useState<ColumnMapping | null>(storeMapping);
   const [horizon, setHorizon] = useState(12);
   const chartHandleRef = useRef<AnomalyChartHandle | null>(null);
 
-  const activeId = datasetId ?? storePreview?.id;
-
-  const { data: preview } = useQuery({
-    queryKey: ["dataset-preview", activeId],
-    queryFn: () => api.datasetPreview(activeId!),
-    enabled: !!activeId,
-    initialData: activeId === storePreview?.id ? storePreview ?? undefined : undefined,
-  });
+  const { activeId, preview } = useSyncedDataset(datasetId);
+  const { data: health } = useHealth();
+  const modelReady = health?.model_status === "ready";
 
   const handleMappingChange = useCallback(
     (m: ColumnMapping) => {
@@ -251,19 +245,11 @@ export function AnomalyPage() {
 
   if (!activeId) {
     return (
-      <div className="mx-auto max-w-2xl space-y-6 py-12">
-        <h1 className="font-display text-2xl font-semibold text-text-primary">
-          Anomaly Detection
-        </h1>
-        <PageIntro pageKey="anomaly" />
-        <p className="text-text-secondary">Upload a dataset first.</p>
-        <CSVUpload
-          onUploaded={(p: DatasetPreview) => {
-            setStorePreview(p);
-            navigate(`/anomaly/${p.id}`);
-          }}
-        />
-      </div>
+      <EmptyDatasetState
+        title="Anomaly Detection"
+        pageKey="anomaly"
+        basePath="/anomaly"
+      />
     );
   }
 
@@ -295,7 +281,7 @@ export function AnomalyPage() {
             <SummaryPill count={summary.normal} label="Normal" color="border-positive/20 bg-positive/10 text-positive" />
           </div>
           <DownloadPdfButton
-            title="Foresee — Anomaly report"
+            title="Foresee, Anomaly report"
             filename="foresee-anomalies.pdf"
             sections={() => buildAnomalyReport(seriesResult, summary, {
               horizon,
@@ -361,11 +347,14 @@ export function AnomalyPage() {
 
           <button
             onClick={() => detectMutation.mutate()}
-            disabled={!mapping || detectMutation.isPending}
+            disabled={!mapping || detectMutation.isPending || !modelReady}
             className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-bg-base transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             {detectMutation.isPending ? "Detecting..." : "Detect Anomalies"}
           </button>
+          {!modelReady && (
+            <p className="text-xs text-text-muted text-center">Model still loading, the Run button will enable when it's ready.</p>
+          )}
         </div>
       )}
 

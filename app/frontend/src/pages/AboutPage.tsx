@@ -40,7 +40,7 @@ export function AboutPage() {
           Who it's for
         </h2>
         <p className="text-sm text-text-secondary">
-          Business users — product managers, ops leads, analysts — who need forecasts and explanations without a data science team.
+          Business users, product managers, ops leads, analysts, who need forecasts and explanations without a data science team.
           Upload a CSV, get a forecast with uncertainty ranges, understand what drove the change, and export a report.
         </p>
       </section>
@@ -52,11 +52,11 @@ export function AboutPage() {
         <ul className="space-y-2 text-sm">
           <li>
             <Link to="/glossary" className="text-accent hover:underline">Glossary</Link>
-            <span className="text-text-muted"> — every metric and term in plain English</span>
+            <span className="text-text-muted">, every metric and term in plain English</span>
           </li>
           <li>
             <Link to="/privacy" className="text-accent hover:underline">Privacy</Link>
-            <span className="text-text-muted"> — what stays local, what is opt-in</span>
+            <span className="text-text-muted">, what stays local, what is opt-in</span>
           </li>
           <li>
             <Link to="/upload" className="text-accent hover:underline">Upload a CSV</Link>

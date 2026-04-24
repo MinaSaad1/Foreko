@@ -1,17 +1,19 @@
 import { useCallback, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/api/endpoints";
 import { useDatasetStore } from "@/stores/datasetStore";
 import { ColumnMapper } from "@/components/ColumnMapper";
-import { CSVUpload } from "@/components/CSVUpload";
 import { FactorImpactCards } from "@/components/FactorImpactCards";
 import { FactorInfluenceChart } from "@/components/FactorInfluenceChart";
 import { FactorComparisonChart } from "@/components/FactorComparisonChart";
 import { FactorDetailsTable } from "@/components/FactorDetailsTable";
 import { PageIntro } from "@/components/common/PageIntro";
+import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
 import { Term } from "@/components/common/Term";
-import type { ColumnInfo, ColumnMapping, DatasetPreview } from "@/types/dataset";
+import { useSyncedDataset } from "@/hooks/useSyncedDataset";
+import { useHealth } from "@/hooks/useHealth";
+import type { ColumnInfo, ColumnMapping } from "@/types/dataset";
 import type {
   FactorAnalysisRequest,
   FactorAnalysisResponse,
@@ -48,11 +50,8 @@ function FactorToggle({
 
 export function CovariatesPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
-  const navigate = useNavigate();
-  const storePreview = useDatasetStore((s) => s.preview);
   const storeMapping = useDatasetStore((s) => s.mapping);
   const setStoreMapping = useDatasetStore((s) => s.setMapping);
-  const setStorePreview = useDatasetStore((s) => s.setPreview);
 
   const [mapping, setMapping] = useState<ColumnMapping | null>(storeMapping);
   const [horizon, setHorizon] = useState(12);
@@ -61,14 +60,9 @@ export function CovariatesPage() {
   const [categoricalFactors, setCategoricalFactors] = useState<string[]>([]);
   const [showBaseline, setShowBaseline] = useState(true);
 
-  const activeId = datasetId ?? storePreview?.id;
-
-  const { data: preview } = useQuery({
-    queryKey: ["dataset-preview", activeId],
-    queryFn: () => api.datasetPreview(activeId!),
-    enabled: !!activeId,
-    initialData: activeId === storePreview?.id ? storePreview ?? undefined : undefined,
-  });
+  const { activeId, preview } = useSyncedDataset(datasetId);
+  const { data: health } = useHealth();
+  const modelReady = health?.model_status === "ready";
 
   const handleMappingChange = useCallback(
     (m: ColumnMapping) => {
@@ -105,17 +99,12 @@ export function CovariatesPage() {
 
   if (!activeId) {
     return (
-      <div className="mx-auto max-w-2xl space-y-6 py-12">
-        <h1 className="font-display text-2xl font-semibold text-text-primary">Factors</h1>
-        <PageIntro pageKey="covariates" />
-        <p className="text-text-secondary">Upload a dataset first to use external factors.</p>
-        <CSVUpload
-          onUploaded={(p: DatasetPreview) => {
-            setStorePreview(p);
-            navigate(`/covariates/${p.id}`);
-          }}
-        />
-      </div>
+      <EmptyDatasetState
+        title="Factors"
+        pageKey="covariates"
+        basePath="/covariates"
+        message="Upload a CSV with extra columns (price, weather, promos), or pick a sample to see factor analysis."
+      />
     );
   }
 
@@ -283,11 +272,14 @@ export function CovariatesPage() {
 
             <button
               onClick={() => analyze.mutate()}
-              disabled={!mapping || !hasSelectedFactors || analyze.isPending}
+              disabled={!mapping || !hasSelectedFactors || analyze.isPending || !modelReady}
               className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-bg-base transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               {analyze.isPending ? "Running analysis..." : "Analyze factor impact"}
             </button>
+            {!modelReady && (
+              <p className="text-xs text-text-muted text-center">Model still loading, the Run button will enable when it's ready.</p>
+            )}
           </div>
         )
       )}

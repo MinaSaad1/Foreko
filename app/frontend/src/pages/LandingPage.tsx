@@ -14,6 +14,7 @@ import {
   ScenariosIllustration,
   SegmentsIllustration,
 } from "@/components/landing/FeatureIllustrations";
+import { QuickstartAnimation } from "@/components/landing/QuickstartAnimation";
 
 interface FeatureTile {
   title: string;
@@ -33,7 +34,7 @@ const FEATURES: FeatureTile[] = [
   },
   {
     title: "Forecast",
-    benefit: "Best-fit forecast with upper and lower ranges — and a recommended model.",
+    benefit: "Best-fit forecast with upper and lower ranges, and a recommended model.",
     to: "/compare",
     cta: "Open forecast",
     illustration: <ForecastIllustration />,
@@ -68,14 +69,14 @@ const FEATURES: FeatureTile[] = [
   },
   {
     title: "Factors",
-    benefit: "Bring in price, promo, weather — and measure their real impact.",
+    benefit: "Bring in price, promo, weather, and measure their real impact.",
     to: "/covariates",
     cta: "Add factors",
     illustration: <FactorsIllustration />,
   },
   {
     title: "Scenarios",
-    benefit: "Simulate price cuts, spend ramps, launches — before you commit.",
+    benefit: "Simulate price cuts, spend ramps, launches, before you commit.",
     to: "/scenarios",
     cta: "Build scenarios",
     illustration: <ScenariosIllustration />,
@@ -96,7 +97,7 @@ const TRUST_POINTS: { title: string; body: string }[] = [
   },
   {
     title: "Foundation-model ready",
-    body: "Uses a pretrained forecasting model — usable the moment you upload, no ML team required.",
+    body: "Uses a pretrained forecasting model, usable the moment you upload, no ML team required.",
   },
   {
     title: "Evidence over vibes",
@@ -141,7 +142,7 @@ export function LandingPage() {
             </h1>
             <p className="text-lg text-text-secondary md:text-xl">
               Foresee turns a CSV into a trustworthy forecast with uncertainty
-              ranges, a recommended model, and plain-English explanations — no
+              ranges, a recommended model, and plain-English explanations, no
               data-science team required.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
@@ -157,28 +158,28 @@ export function LandingPage() {
                 disabled={loadingDemo}
                 className="inline-flex items-center gap-2 border border-text-muted/40 bg-transparent px-5 py-3 font-mono text-xs font-medium uppercase tracking-widest text-text-secondary transition-all hover:border-accent hover:text-accent disabled:opacity-40"
               >
-                {loadingDemo ? "Loading demo…" : "Try demo dataset"}
+                {loadingDemo ? "Loading demo..." : "Try demo dataset"}
               </button>
               <Link
-                to="/glossary"
+                to="/upload"
                 className="inline-flex items-center gap-2 px-3 py-3 font-mono text-xs font-medium uppercase tracking-widest text-text-muted transition-colors hover:text-accent"
               >
-                What do these terms mean? →
+                Or pick a sample →
               </Link>
             </div>
           </div>
 
           {/* Hero mascot */}
           <div className="relative hidden md:block shrink-0 h-[22rem] w-[22rem] lg:h-[28rem] lg:w-[28rem]">
-            {/* Soft glow behind — fills the square */}
+            {/* Soft glow behind, fills the square */}
             <span className="pointer-events-none absolute inset-0 rounded-full bg-hero-glow opacity-25 blur-3xl animate-pulse-slow" />
 
-            {/* Concentric halo rings — absolute + inset-0 + m-auto = perfectly centered */}
+            {/* Concentric halo rings, absolute + inset-0 + m-auto = perfectly centered */}
             <span className="pointer-events-none absolute inset-0 m-auto h-[16rem] w-[16rem] lg:h-[20rem] lg:w-[20rem] rounded-full border border-accent/10" />
             <span className="pointer-events-none absolute inset-0 m-auto h-[20rem] w-[20rem] lg:h-[24rem] lg:w-[24rem] rounded-full border border-dashed border-accent/15 animate-spin-slow" />
             <span className="pointer-events-none absolute inset-0 m-auto h-[22rem] w-[22rem] lg:h-[28rem] lg:w-[28rem] rounded-full border border-accent/5" />
 
-            {/* Mascot — centered via absolute + inset-0 + m-auto */}
+            {/* Mascot, centered via absolute + inset-0 + m-auto */}
             <img
               src="/foresee-logo.png"
               alt="Foresee mascot"
@@ -186,6 +187,18 @@ export function LandingPage() {
             />
           </div>
         </div>
+      </section>
+
+      <section className="pt-4 pb-10">
+        <div className="mb-4 flex items-baseline justify-between">
+          <h2 className="font-display text-xl font-semibold text-text-primary">
+            See it in 6 seconds
+          </h2>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
+            No data required
+          </span>
+        </div>
+        <QuickstartAnimation />
       </section>
 
       <section className="pt-4">

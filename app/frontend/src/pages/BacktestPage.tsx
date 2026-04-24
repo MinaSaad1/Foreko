@@ -1,31 +1,33 @@
 import { useCallback, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/api/endpoints";
 import { useDatasetStore } from "@/stores/datasetStore";
-import { CSVUpload } from "@/components/CSVUpload";
 import { ColumnMapper } from "@/components/ColumnMapper";
 import { JobProgress } from "@/components/common/JobProgress";
 import { FoldResultsTable } from "@/components/backtest/FoldResultsTable";
 import { PerHorizonMAPE, type PerHorizonMAPEHandle } from "@/components/backtest/PerHorizonMAPE";
 import { CalibrationPlot, type CalibrationPlotHandle } from "@/components/backtest/CalibrationPlot";
 import { PageIntro } from "@/components/common/PageIntro";
+import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
 import { HelpHint } from "@/components/common/HelpHint";
 import { Term } from "@/components/common/Term";
 import { DownloadPdfButton, type PdfSection } from "@/components/common/DownloadPdfButton";
 import { useDocumentTitle } from "@/utils/useDocumentTitle";
-import type { ColumnMapping, DatasetPreview } from "@/types/dataset";
+import { useSyncedDataset } from "@/hooks/useSyncedDataset";
+import { useHealth } from "@/hooks/useHealth";
+import type { ColumnMapping } from "@/types/dataset";
 import type { BacktestResult, CalibrationResult } from "@/types/phases";
 
 const ALL_MODELS = ["timesfm", "lightgbm", "seasonal_naive", "ets"];
 
 function formatPct(v: number): string {
-  if (!Number.isFinite(v)) return "—";
+  if (!Number.isFinite(v)) return "-";
   return `${(v * 100).toFixed(2)}%`;
 }
 
 function formatNumber(v: number, digits = 3): string {
-  if (!Number.isFinite(v)) return "—";
+  if (!Number.isFinite(v)) return "-";
   return v.toFixed(digits);
 }
 
@@ -49,7 +51,7 @@ function buildBacktestReport(
   const byMape = modelNames
     .map((m) => ({ m, mape: result.aggregate[m].mape_mean }))
     .sort((a, b) => a.mape - b.mape);
-  const winner = result.winner ?? byMape[0]?.m ?? "—";
+  const winner = result.winner ?? byMape[0]?.m ?? "-";
   const best = byMape[0];
   const second = byMape[1];
   const winnerAgg = best ? result.aggregate[best.m] : null;
@@ -79,19 +81,19 @@ function buildBacktestReport(
       : "No model produced usable backtest metrics.",
     kv: [
       ["Winner model", winner],
-      ["Winner MAPE (mean)", winnerAgg ? formatPct(winnerAgg.mape_mean) : "—"],
-      ["Winner MAPE (std)", winnerAgg ? formatPct(winnerAgg.mape_std) : "—"],
-      ["Winner RMSE", winnerAgg ? formatNumber(winnerAgg.rmse_mean) : "—"],
-      ["Winner MASE", winnerAgg ? formatNumber(winnerAgg.mase_mean) : "—"],
-      ["Lift vs 2nd best", best && second ? `+${liftPct.toFixed(1)}%` : "—"],
-      ["Models evaluated", ctx.models.length ? ctx.models.join(", ") : "—"],
+      ["Winner MAPE (mean)", winnerAgg ? formatPct(winnerAgg.mape_mean) : "-"],
+      ["Winner MAPE (std)", winnerAgg ? formatPct(winnerAgg.mape_std) : "-"],
+      ["Winner RMSE", winnerAgg ? formatNumber(winnerAgg.rmse_mean) : "-"],
+      ["Winner MASE", winnerAgg ? formatNumber(winnerAgg.mase_mean) : "-"],
+      ["Lift vs 2nd best", best && second ? `+${liftPct.toFixed(1)}%` : "-"],
+      ["Models evaluated", ctx.models.length ? ctx.models.join(", ") : "-"],
       ["Folds", `${ctx.folds}`],
       ["Horizon", `${ctx.horizon} periods`],
-      ["Horizon degradation (winner)", winnerPerH.length >= 2 ? `${degradation >= 0 ? "+" : ""}${degradation.toFixed(1)}%` : "—"],
+      ["Horizon degradation (winner)", winnerPerH.length >= 2 ? `${degradation >= 0 ? "+" : ""}${degradation.toFixed(1)}%` : "-"],
       ["PI miscalibration (mean gap)", calibration ? `${(miscalibration * 100).toFixed(2)} pp` : "not computed"],
-      ["Calibration observations", calibration ? calibration.n_observations.toString() : "—"],
-      ["Dataset", ctx.datasetName ?? "—"],
-      ["Historical rows", ctx.rowCount ? ctx.rowCount.toLocaleString() : "—"],
+      ["Calibration observations", calibration ? calibration.n_observations.toString() : "-"],
+      ["Dataset", ctx.datasetName ?? "-"],
+      ["Historical rows", ctx.rowCount ? ctx.rowCount.toLocaleString() : "-"],
     ],
   });
 
@@ -124,7 +126,7 @@ function buildBacktestReport(
     });
   }
 
-  // Per-horizon MAPE table — helpful when chart is absent or small.
+  // Per-horizon MAPE table, helpful when chart is absent or small.
   if (winnerPerH.length > 0) {
     const step = Math.max(1, Math.ceil(winnerPerH.length / 12));
     const headers = ["Model", ...Array.from({ length: Math.ceil(winnerPerH.length / step) }, (_, i) => `h+${i * step + 1}`)];
@@ -145,7 +147,7 @@ function buildBacktestReport(
   const winnerFolds = result.fold_details[winner] ?? [];
   if (winnerFolds.length > 0) {
     sections.push({
-      heading: `Fold details — ${winner}`,
+      heading: `Fold details, ${winner}`,
       body: `Per-fold breakdown shows variance across time windows. High fold-to-fold swings suggest instability.`,
       table: {
         headers: ["Fold", "MAPE", "sMAPE", "RMSE", "MASE", "Pinball 50"],
@@ -187,29 +189,29 @@ function buildBacktestReport(
   const takeaways: string[] = [];
   if (best) {
     takeaways.push(
-      `Use ${winner} in production — it leads on MAPE with ${formatPct(best.mape)} error across ${ctx.folds} folds.`,
+      `Use ${winner} in production, it leads on MAPE with ${formatPct(best.mape)} error across ${ctx.folds} folds.`,
     );
   }
   if (winnerAgg && winnerAgg.mape_std > winnerAgg.mape_mean * 0.5) {
     takeaways.push(
-      `Fold-to-fold MAPE std (${formatPct(winnerAgg.mape_std)}) is large relative to the mean — the model is sensitive to which window you train on.`,
+      `Fold-to-fold MAPE std (${formatPct(winnerAgg.mape_std)}) is large relative to the mean, the model is sensitive to which window you train on.`,
     );
   }
   if (Math.abs(degradation) > 25 && winnerPerH.length >= 2) {
     takeaways.push(
-      `Error ${degradation > 0 ? "grows" : "shrinks"} by ${Math.abs(degradation).toFixed(0)}% from the first to the last forecast step — ${degradation > 0 ? "consider a shorter operating horizon" : "the model holds up well over long horizons"}.`,
+      `Error ${degradation > 0 ? "grows" : "shrinks"} by ${Math.abs(degradation).toFixed(0)}% from the first to the last forecast step, ${degradation > 0 ? "consider a shorter operating horizon" : "the model holds up well over long horizons"}.`,
     );
   }
   if (calibration) {
     if (miscalibration < 0.03) {
-      takeaways.push("Prediction intervals are well calibrated (mean gap < 3 pp) — P10/P90 can be used directly for planning bounds.");
+      takeaways.push("Prediction intervals are well calibrated (mean gap < 3 pp), P10/P90 can be used directly for planning bounds.");
     } else if (miscalibration > 0.08) {
-      takeaways.push(`Prediction intervals are miscalibrated by ~${(miscalibration * 100).toFixed(1)} pp on average — widen planning buffers or recalibrate before using P10/P90 for decisions.`);
+      takeaways.push(`Prediction intervals are miscalibrated by ~${(miscalibration * 100).toFixed(1)} pp on average, widen planning buffers or recalibrate before using P10/P90 for decisions.`);
     }
   }
   if (second && liftPct < 2 && best) {
     takeaways.push(
-      `${winner} only beats ${second.m} by ${liftPct.toFixed(1)}% — an ensemble or a simpler model may be more robust in practice.`,
+      `${winner} only beats ${second.m} by ${liftPct.toFixed(1)}%, an ensemble or a simpler model may be more robust in practice.`,
     );
   }
 
@@ -224,11 +226,8 @@ function buildBacktestReport(
 export function BacktestPage() {
   useDocumentTitle("Backtest");
   const { datasetId } = useParams<{ datasetId?: string }>();
-  const navigate = useNavigate();
-  const storePreview = useDatasetStore((s) => s.preview);
   const storeMapping = useDatasetStore((s) => s.mapping);
   const setStoreMapping = useDatasetStore((s) => s.setMapping);
-  const setStorePreview = useDatasetStore((s) => s.setPreview);
 
   const [mapping, setMapping] = useState<ColumnMapping | null>(storeMapping);
   const [horizon, setHorizon] = useState(12);
@@ -240,13 +239,9 @@ export function BacktestPage() {
   const perHorizonRef = useRef<PerHorizonMAPEHandle | null>(null);
   const calibrationRef = useRef<CalibrationPlotHandle | null>(null);
 
-  const activeId = datasetId ?? storePreview?.id;
-  const { data: preview } = useQuery({
-    queryKey: ["dataset-preview", activeId],
-    queryFn: () => api.datasetPreview(activeId!),
-    enabled: !!activeId,
-    initialData: activeId === storePreview?.id ? storePreview ?? undefined : undefined,
-  });
+  const { activeId, preview } = useSyncedDataset(datasetId);
+  const { data: health } = useHealth();
+  const modelReady = health?.model_status === "ready";
 
   const handleMappingChange = useCallback(
     (m: ColumnMapping) => {
@@ -289,17 +284,11 @@ export function BacktestPage() {
 
   if (!activeId) {
     return (
-      <div className="mx-auto max-w-2xl space-y-6 py-12">
-        <h1 className="font-display text-2xl font-semibold text-text-primary">Walk-Forward Backtest</h1>
-        <PageIntro pageKey="backtest" />
-        <p className="text-text-secondary">Upload a dataset first.</p>
-        <CSVUpload
-          onUploaded={(p: DatasetPreview) => {
-            setStorePreview(p);
-            navigate(`/backtest/${p.id}`);
-          }}
-        />
-      </div>
+      <EmptyDatasetState
+        title="Walk-Forward Backtest"
+        pageKey="backtest"
+        basePath="/backtest"
+      />
     );
   }
 
@@ -381,11 +370,15 @@ export function BacktestPage() {
 
           <button
             onClick={() => startMutation.mutate()}
-            disabled={!mapping || models.length === 0 || startMutation.isPending || !!jobId}
+            disabled={!mapping || models.length === 0 || startMutation.isPending || !!jobId || !modelReady}
             className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-bg-base transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            {startMutation.isPending ? "Starting…" : "Run walk-forward backtest"}
+            {startMutation.isPending ? "Starting..." : "Run walk-forward backtest"}
           </button>
+
+          {!modelReady && (
+            <p className="text-xs text-text-muted text-center">Model still loading, the Run button will enable when it's ready.</p>
+          )}
 
           {startMutation.isError && (
             <p className="rounded-md border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
@@ -412,7 +405,7 @@ export function BacktestPage() {
         <div className="space-y-6">
           <div className="flex justify-end">
             <DownloadPdfButton
-              title="Foresee — Backtest report"
+              title="Foresee, Backtest report"
               filename="foresee-backtest.pdf"
               sections={() => buildBacktestReport(result, calibration, {
                 horizon,

@@ -32,7 +32,7 @@ export function PageIntro({ pageKey, defaultOpen = true }: PageIntroProps) {
         open ? "1" : "0",
       );
     } catch {
-      // localStorage unavailable — best-effort only
+      // localStorage unavailable, best-effort only
     }
   }, [open, pageKey]);
 

@@ -71,7 +71,7 @@ export function DataQualityCard({ data }: Props) {
                 {data.recommended_transforms.map((t, i) => (
                   <p key={i} className="text-sm text-text-secondary">
                     <span className="font-mono text-accent">{t.transform}</span>
-                    <span className="ml-2 text-text-muted">— {t.reason}</span>
+                    <span className="ml-2 text-text-muted">- {t.reason}</span>
                   </p>
                 ))}
               </div>

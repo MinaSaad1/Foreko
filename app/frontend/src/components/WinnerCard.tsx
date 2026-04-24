@@ -42,7 +42,7 @@ export function WinnerCard({ data, onSelectionChange, chartRef }: WinnerCardProp
       <div className="absolute -inset-[1px] bg-hero-glow opacity-20 group-hover:opacity-40 transition-opacity duration-500 blur-[2px] animate-border-flow bg-[length:200%_200%]" />
       
       <div className="relative border border-accent/20 bg-bg-surface/80 backdrop-blur-xl p-6 space-y-6">
-        {/* Header — recommendation is constant */}
+        {/* Header, recommendation is constant */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-accent text-sm">
@@ -63,14 +63,14 @@ export function WinnerCard({ data, onSelectionChange, chartRef }: WinnerCardProp
         <ConfidencePill level={active.confidence} />
       </div>
 
-      {/* Three headline numbers — from active model */}
+      {/* Three headline numbers, from active model */}
       <div className="flex gap-8">
         <MetricBadge label="Expected total" value={fmtTotal(active.total_forecast)} />
         <MetricBadge label="Accuracy" value={fmtPct(active.accuracy)} sub="on recent data" />
         <MetricBadge label="Confidence" value={active.confidence} />
       </div>
 
-      {/* Chart — primary line follows active, overlay is the other */}
+      {/* Chart, primary line follows active, overlay is the other */}
       <ComparisonChart
         ref={chartRef}
         data={data}
@@ -88,17 +88,17 @@ export function WinnerCard({ data, onSelectionChange, chartRef }: WinnerCardProp
           : `▸ Compare side by side with ${viewingWinner ? alternative.display_name : winner.display_name}`}
       </button>
 
-      {/* Winner explanation — constant */}
+      {/* Winner explanation, constant */}
       <p className="rounded-md border border-border bg-bg-elevated px-4 py-3 text-sm text-text-secondary">
         {data.winner_explanation}
       </p>
 
-      {/* Feature importance — only when the active model has any (LightGBM) */}
+      {/* Feature importance, only when the active model has any (LightGBM) */}
       {active.feature_importance && active.feature_importance.length > 0 && (
         <FeatureImportance items={active.feature_importance} />
       )}
 
-      {/* Model toggle — lets the user inspect either forecast */}
+      {/* Model toggle, lets the user inspect either forecast */}
       <div className="space-y-2">
         <p className="font-mono text-[11px] uppercase tracking-widest text-text-muted">
           Inspect forecast
@@ -128,7 +128,7 @@ export function WinnerCard({ data, onSelectionChange, chartRef }: WinnerCardProp
         </div>
       </div>
 
-      {/* Error rate detail — constant */}
+      {/* Error rate detail, constant */}
       <p className="text-xs text-text-muted font-mono">
         {winner.display_name} error rate: {fmtPct(winner.mape)} on holdout period
         {" · "}

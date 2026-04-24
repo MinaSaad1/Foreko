@@ -98,6 +98,22 @@ def mark_error(message: str) -> None:
     _update(state="error", error=message)
 
 
+def reset_for_retry() -> None:
+    """Reset progress state so a new download attempt shows fresh counters.
+
+    Intended for stalled-download recovery. Any in-flight HTTP connection
+    started by the previous attempt will eventually time out on its own.
+    HuggingFace's ``snapshot_download`` skips files already present on disk,
+    so a fresh call picks up where the last attempt stopped.
+    """
+
+    global _state
+    with _lock:
+        prev_state = _state.state
+        _state = _ProgressState()
+    logger.warning("Model download reset for retry (was state=%s)", prev_state)
+
+
 def ensure_model(model_id: str, local_dir: Path) -> Path:
     """Download the model snapshot into ``local_dir`` with progress reporting.
 
@@ -120,7 +136,7 @@ def ensure_model(model_id: str, local_dir: Path) -> Path:
 
     # Seed the progress state. The custom tqdm below will update
     # total_bytes as the hub hub.snapshot_download walks each file.
-    _update(state="downloading", downloaded=0, total=0)
+    _update(state="downloading", downloaded=0, total=0, cache_path=str(local_dir))
 
     try:
         local_dir.mkdir(parents=True, exist_ok=True)
@@ -132,7 +148,16 @@ def ensure_model(model_id: str, local_dir: Path) -> Path:
         mark_ready(local_dir)
         return local_dir
     except HfHubHTTPError as exc:
-        mark_error(f"HuggingFace error: {exc}")
+        mark_error(
+            f"HuggingFace error: {exc}. If the Hub is unreachable, "
+            f"you can place the snapshot at {local_dir} and restart Foresee."
+        )
+        raise
+    except (ConnectionError, TimeoutError) as exc:
+        mark_error(
+            f"Network error reaching HuggingFace: {exc}. If this persists, "
+            f"place the snapshot at {local_dir} and restart Foresee."
+        )
         raise
     except Exception as exc:
         mark_error(str(exc))

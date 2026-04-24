@@ -25,6 +25,7 @@ from .routers import scenarios as scenarios_router
 from .routers import phase4 as phase4_routers
 from .routers import phase5 as phase5_routers
 from .routers import phase6 as phase6_routers
+from .routers import connections as connections_router
 from .routers import datasets as datasets_router
 from .routers import finetune as finetune_router
 from .routers import forecast as forecast_router
@@ -117,6 +118,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(system_router.router, prefix="/api")
     app.include_router(datasets_router.router, prefix="/api")
+    app.include_router(connections_router.router, prefix="/api")
     app.include_router(forecast_router.router, prefix="/api")
     app.include_router(comparison_router.router, prefix="/api")
     app.include_router(anomaly_router.router, prefix="/api")

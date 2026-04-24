@@ -5,7 +5,7 @@ interface FactorDetailsTableProps {
 }
 
 function fmt(n: number | null, digits: number = 2): string {
-  if (n === null || n === undefined) return "—";
+  if (n === null || n === undefined) return "-";
   const abs = Math.abs(n);
   if (abs >= 10_000) return `${(n / 1_000).toFixed(1)}K`;
   if (abs === 0) return "0";
@@ -74,20 +74,20 @@ export function FactorDetailsTable({ factors }: FactorDetailsTableProps) {
                     </span>
                   </td>
                   <td className="px-4 py-2 font-mono text-text-secondary">
-                    {f.kind === "numeric" ? fmt(f.elasticity, 4) : "—"}
+                    {f.kind === "numeric" ? fmt(f.elasticity, 4) : "-"}
                   </td>
                   <td className="px-4 py-2 font-mono text-text-secondary">
                     {f.kind === "numeric"
                       ? fmt(f.mean)
                       : f.top_category
                         ? `mode: ${f.top_category}`
-                        : "—"}
+                        : "-"}
                   </td>
                   <td className="px-4 py-2 font-mono text-text-secondary">
-                    {f.kind === "numeric" ? fmt(f.std) : f.unique_count != null ? `${f.unique_count} values` : "—"}
+                    {f.kind === "numeric" ? fmt(f.std) : f.unique_count != null ? `${f.unique_count} values` : "-"}
                   </td>
                   <td className="px-4 py-2 font-mono text-text-secondary">
-                    {f.kind === "numeric" ? fmt(f.last_value) : "—"}
+                    {f.kind === "numeric" ? fmt(f.last_value) : "-"}
                   </td>
                 </tr>
               );

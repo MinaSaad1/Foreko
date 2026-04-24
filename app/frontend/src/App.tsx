@@ -2,8 +2,11 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { ModelStatusBar } from "@/components/ModelStatusBar";
+import { LoadingSplash } from "@/components/LoadingSplash";
+import { Tour } from "@/components/Tour";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { useDocumentTitle } from "@/utils/useDocumentTitle";
+import { APP_VERSION } from "@/utils/version";
 
 const LandingPage = lazy(() => import("@/pages/LandingPage").then((m) => ({ default: m.LandingPage })));
 const UploadPage = lazy(() => import("@/pages/UploadPage").then((m) => ({ default: m.UploadPage })));
@@ -93,7 +96,7 @@ export default function App() {
   const location = useLocation();
   const isLanding = location.pathname === "/";
 
-  // Reset scroll on route change — keeps long analysis pages from leaving users in the middle.
+  // Reset scroll on route change, keeps long analysis pages from leaving users in the middle.
   useEffect(() => {
     const main = document.getElementById("main-content");
     if (main) main.scrollTop = 0;
@@ -107,6 +110,8 @@ export default function App() {
       >
         Skip to content
       </a>
+      <LoadingSplash />
+      <Tour />
       <DocumentTitleSync />
 
       {/* Top bar */}
@@ -143,7 +148,7 @@ export default function App() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left sidebar — hidden on landing */}
+        {/* Left sidebar, hidden on landing */}
         {!isLanding && (
           <aside className={`flex shrink-0 flex-col border-r border-border/50 bg-bg-surface/40 backdrop-blur-md relative z-40 transition-all duration-300 ease-in-out ${isSidebarOpen ? "w-56 px-2 py-6" : "w-[68px] px-1 py-6"}`}>
             <nav className={`flex flex-col gap-1 transition-all duration-300 ${isSidebarOpen ? "pr-1" : ""}`} aria-label="Primary">
@@ -226,6 +231,16 @@ export default function App() {
               </Routes>
             </Suspense>
           </ErrorBoundary>
+          {!isLanding && (
+            <footer className="mt-16 border-t border-border/40 pt-4 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-widest text-text-muted">
+              <span>Foresee v{APP_VERSION} · Local forecasting studio</span>
+              <div className="flex gap-3">
+                <Link to="/privacy" className="hover:text-accent">Privacy</Link>
+                <Link to="/about" className="hover:text-accent">About</Link>
+                <Link to="/glossary" className="hover:text-accent">Glossary</Link>
+              </div>
+            </footer>
+          )}
         </main>
       </div>
 

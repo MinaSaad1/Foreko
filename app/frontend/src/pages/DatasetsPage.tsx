@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { api } from "@/api/endpoints";
 import { useDatasetStore } from "@/stores/datasetStore";
 import { PageIntro } from "@/components/common/PageIntro";
+import { SamplesPicker } from "@/components/SamplesPicker";
 import type { DatasetSummary, DatasetPreview } from "@/types/dataset";
 
 export function DatasetsPage() {
@@ -71,14 +72,21 @@ export function DatasetsPage() {
           ))}
         </div>
       ) : !datasets?.length ? (
-        <div className="rounded-panel border border-border bg-bg-surface px-8 py-12 text-center">
-          <p className="text-text-muted">No datasets yet.</p>
-          <a href="/upload" className="mt-2 block text-sm text-accent hover:opacity-80">
-            Upload a CSV to get started
-          </a>
+        <div className="space-y-6">
+          <div className="rounded-panel border border-border bg-bg-surface px-8 py-10 text-center space-y-2">
+            <p className="text-text-muted">No datasets yet.</p>
+            <a href="/upload" className="block text-sm text-accent hover:opacity-80">
+              Upload a CSV to get started
+            </a>
+          </div>
+          <SamplesPicker />
         </div>
       ) : (
-        <div className="border border-border bg-bg-surface overflow-hidden">
+        <div className="space-y-3">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
+            Datasets are kept for 30 days, then auto-purged.
+          </p>
+          <div className="border border-border bg-bg-surface overflow-hidden">
           <table className="w-full text-sm">
             <thead className="border-b border-border-strong bg-bg-elevated">
               <tr>
@@ -165,6 +173,7 @@ export function DatasetsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

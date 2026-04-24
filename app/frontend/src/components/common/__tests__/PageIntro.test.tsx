@@ -45,7 +45,7 @@ describe("PageIntro", () => {
 
   it("renders nothing for an unknown page key", () => {
     const { container } = renderWithRouter(
-      // @ts-expect-error — deliberately invalid key
+      // @ts-expect-error, deliberately invalid key
       <PageIntro pageKey="not-a-page" />,
     );
     expect(container).toBeEmptyDOMElement();

@@ -9,7 +9,7 @@ function fmtPct(n: number): string {
 }
 
 function fmtNum(n: number, digits: number = 2): string {
-  if (!isFinite(n)) return "—";
+  if (!isFinite(n)) return "-";
   const abs = Math.abs(n);
   if (abs >= 10_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toFixed(digits);
@@ -82,7 +82,7 @@ export function FoldResultsTable({ result }: FoldResultsTableProps) {
                   <td className="px-4 py-2 text-right font-mono text-text-secondary">{fmtNum(agg.rmse_mean)}</td>
                   <td className="px-4 py-2 text-right font-mono text-text-secondary">{fmtNum(agg.mae_mean)}</td>
                   <td className="px-4 py-2 text-right font-mono text-text-secondary">
-                    {isFinite(agg.mase_mean) ? fmtNum(agg.mase_mean, 3) : "—"}
+                    {isFinite(agg.mase_mean) ? fmtNum(agg.mase_mean, 3) : "-"}
                   </td>
                   <td className="px-4 py-2 text-right font-mono text-text-secondary">{fmtNum(agg.pinball_50_mean)}</td>
                 </tr>

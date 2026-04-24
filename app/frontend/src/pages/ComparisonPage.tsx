@@ -1,18 +1,21 @@
 import { useRef, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/api/endpoints";
 import { useDatasetStore } from "@/stores/datasetStore";
 import { ColumnMapper } from "@/components/ColumnMapper";
 import { WinnerCard } from "@/components/WinnerCard";
 import { AlternativeCard } from "@/components/AlternativeCard";
-import { CSVUpload } from "@/components/CSVUpload";
+import { NextStepsCallout } from "@/components/NextStepsCallout";
 import { PageIntro } from "@/components/common/PageIntro";
+import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
 import { HelpHint } from "@/components/common/HelpHint";
 import { Term } from "@/components/common/Term";
 import { DownloadPdfButton, type PdfSection } from "@/components/common/DownloadPdfButton";
 import { useDocumentTitle } from "@/utils/useDocumentTitle";
-import type { ColumnMapping, DatasetPreview } from "@/types/dataset";
+import { useSyncedDataset } from "@/hooks/useSyncedDataset";
+import { useHealth } from "@/hooks/useHealth";
+import type { ColumnMapping } from "@/types/dataset";
 import type { ComparisonResponse } from "@/types/comparison";
 import type { ComparisonChartHandle } from "@/components/ComparisonChart";
 
@@ -25,14 +28,14 @@ const HORIZON_OPTIONS = [
 ];
 
 function formatNumber(value: number): string {
-  if (!Number.isFinite(value)) return "—";
+  if (!Number.isFinite(value)) return "-";
   if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
   if (Math.abs(value) >= 1_000) return `${(value / 1_000).toFixed(2)}K`;
   return value.toFixed(2);
 }
 
 function formatPct(value: number): string {
-  if (!Number.isFinite(value)) return "—";
+  if (!Number.isFinite(value)) return "-";
   return `${(value * 100).toFixed(1)}%`;
 }
 
@@ -71,12 +74,12 @@ function buildForecastReport(
       ["First-period change vs last actual", `${deltaVsLast >= 0 ? "+" : ""}${deltaVsLast.toFixed(1)}%`],
       ["Trend across horizon", `${trendPct >= 0 ? "+" : ""}${trendPct.toFixed(1)}%`],
       ["Historical rows", ctx.rowCount ? ctx.rowCount.toLocaleString() : `${historical_values.length}`],
-      ["Dataset", ctx.datasetName ?? "—"],
+      ["Dataset", ctx.datasetName ?? "-"],
       ["Holdout size", `${backtest_holdout} periods`],
-      ["Forecast range", dates.length ? `${dates[0]} → ${dates[dates.length - 1]}` : "—"],
+      ["Forecast range", dates.length ? `${dates[0]} → ${dates[dates.length - 1]}` : "-"],
       ["Historical range", historical_dates.length
         ? `${historical_dates[0]} → ${historical_dates[historical_dates.length - 1]}`
-        : "—"],
+        : "-"],
     ],
   });
 
@@ -112,7 +115,7 @@ function buildForecastReport(
           "Confidence",
           winner.confidence,
           alternative.confidence,
-          winner.confidence === alternative.confidence ? "—" : "differ",
+          winner.confidence === alternative.confidence ? "-" : "differ",
         ],
         [
           "Expected total",
@@ -173,7 +176,7 @@ function buildForecastReport(
 
   const takeaways: string[] = [];
   takeaways.push(
-    `Use ${winner.display_name} as the primary forecast — it beats ${alternative.display_name} by ${lift.toFixed(1)}% on holdout error.`,
+    `Use ${winner.display_name} as the primary forecast, it beats ${alternative.display_name} by ${lift.toFixed(1)}% on holdout error.`,
   );
   takeaways.push(
     `Expect roughly ${formatNumber(winner.total_forecast)} total across the next ${ctx.horizon} periods, ` +
@@ -186,7 +189,7 @@ function buildForecastReport(
   }
   if (winner.confidence === "Low" || alternative.confidence === "Low") {
     takeaways.push(
-      "One or both models flagged Low confidence — treat the point forecasts as directional and use the P10/P90 band for planning bounds.",
+      "One or both models flagged Low confidence, treat the point forecasts as directional and use the P10/P90 band for planning bounds.",
     );
   }
 
@@ -201,25 +204,17 @@ function buildForecastReport(
 export function ComparisonPage() {
   useDocumentTitle("Forecast");
   const { datasetId } = useParams<{ datasetId?: string }>();
-  const navigate = useNavigate();
-  const storePreview = useDatasetStore((s) => s.preview);
   const storeMapping = useDatasetStore((s) => s.mapping);
   const setStoreMapping = useDatasetStore((s) => s.setMapping);
-  const setStorePreview = useDatasetStore((s) => s.setPreview);
 
   const [mapping, setMapping] = useState<ColumnMapping | null>(storeMapping);
   const [horizon, setHorizon] = useState(12);
   const [result, setResult] = useState<ComparisonResponse | null>(null);
   const chartHandleRef = useRef<ComparisonChartHandle | null>(null);
 
-  const activeId = datasetId ?? storePreview?.id;
-
-  const { data: preview } = useQuery({
-    queryKey: ["dataset-preview", activeId],
-    queryFn: () => api.datasetPreview(activeId!),
-    enabled: !!activeId,
-    initialData: activeId === storePreview?.id ? storePreview ?? undefined : undefined,
-  });
+  const { activeId, preview } = useSyncedDataset(datasetId);
+  const { data: health } = useHealth();
+  const modelReady = health?.model_status === "ready";
 
   const handleMappingChange = useCallback(
     (m: ColumnMapping) => {
@@ -241,14 +236,11 @@ export function ComparisonPage() {
 
   if (!activeId) {
     return (
-      <div className="mx-auto max-w-2xl space-y-6 py-12">
-        <h1 className="font-display text-2xl font-semibold text-text-primary">
-          Forecast
-        </h1>
-        <PageIntro pageKey="compare" />
-        <p className="text-text-secondary">Upload a dataset first to run a forecast.</p>
-        <CSVUpload onUploaded={(p: DatasetPreview) => { setStorePreview(p); navigate(`/compare/${p.id}`); }} />
-      </div>
+      <EmptyDatasetState
+        title="Forecast"
+        pageKey="compare"
+        basePath="/compare"
+      />
     );
   }
 
@@ -309,13 +301,19 @@ export function ComparisonPage() {
 
           <button
             onClick={() => compareMutation.mutate()}
-            disabled={!mapping || compareMutation.isPending}
+            disabled={!mapping || compareMutation.isPending || !modelReady}
             className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-bg-base transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             {compareMutation.isPending
               ? "Running comparison..."
               : "Run Forecast Comparison"}
           </button>
+
+          {!modelReady && (
+            <p className="text-xs text-text-muted text-center">
+              Model still loading, the Run button will enable when it's ready.
+            </p>
+          )}
 
           {compareMutation.isPending && (
             <p className="text-xs text-text-muted text-center">
@@ -329,7 +327,7 @@ export function ComparisonPage() {
         <div className="space-y-4">
           <div className="flex justify-end">
             <DownloadPdfButton
-              title="Foresee — Forecast report"
+              title="Foresee, Forecast report"
               filename="foresee-forecast.pdf"
               sections={() => buildForecastReport(result, {
                 horizon,
@@ -344,6 +342,7 @@ export function ComparisonPage() {
             model={result.alternative}
             winnerAccuracy={result.winner.accuracy}
           />
+          <NextStepsCallout datasetId={activeId} />
           <button
             onClick={() => setResult(null)}
             className="text-xs text-text-muted hover:text-text-secondary underline underline-offset-2"

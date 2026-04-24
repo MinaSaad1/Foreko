@@ -1,4 +1,14 @@
 import type { DatasetPreview, SeriesExtraction, ColumnMapping, DatasetSummary } from "@/types/dataset";
+import type {
+  Connection,
+  ConnectionCreate,
+  ConnectionTestRequest,
+  ConnectionTestResult,
+  IngestRequest,
+  QueryRequest,
+  SecretsBackendInfo,
+  TableInfo,
+} from "@/types/connection";
 import type { ForecastRequest, ForecastResponse } from "@/types/forecast";
 import type { HealthInfo, ModelInfo } from "@/types/system";
 import type { CovariateForecastRequest } from "@/types/covariates";
@@ -51,17 +61,53 @@ export interface ModelDownloadProgress {
   cache_path: string | null;
 }
 
+export interface StorageWipeResult {
+  removed: string[];
+  kept: string[];
+}
+
 export const api = {
   health: () => apiGet<HealthInfo>("/health"),
   modelInfo: () => apiGet<ModelInfo>("/model-info"),
   modelDownloadProgress: () => apiGet<ModelDownloadProgress>("/model/download-progress"),
   ensureModel: () => apiPost<ModelDownloadProgress>("/model/ensure", {}),
-  uploadDataset: (file: File) => apiUpload<DatasetPreview>("/datasets/upload", file),
+  retryModelDownload: () => apiPost<ModelDownloadProgress>("/model/retry", {}),
+  wipeStorage: () => apiDelete<StorageWipeResult>("/system/storage"),
+  logBundleUrl: "/api/system/log-bundle",
+  uploadDataset: (
+    file: File,
+    options?: { sheet?: string; jsonPath?: string },
+  ) =>
+    apiUpload<DatasetPreview>("/datasets/upload", file, {
+      query: {
+        sheet: options?.sheet,
+        json_path: options?.jsonPath,
+      },
+    }),
   datasetPreview: (id: string) => apiGet<DatasetPreview>(`/datasets/${id}/preview`),
   listDatasets: () => apiGet<DatasetSummary[]>("/datasets"),
   deleteDataset: (id: string) => apiDelete<void>(`/datasets/${id}`),
   datasetSeries: (id: string, mapping: ColumnMapping) =>
     apiPost<SeriesExtraction>(`/datasets/${id}/series`, mapping),
+
+  // Saved database connections (PR 3 backend; the UI is in DataSourceSelector).
+  listConnections: () => apiGet<Connection[]>("/datasets/connections"),
+  createConnection: (payload: ConnectionCreate) =>
+    apiPost<Connection>("/datasets/connections", payload),
+  deleteConnection: (id: string) =>
+    apiDelete<void>(`/datasets/connections/${id}`),
+  testConnection: (req: ConnectionTestRequest) =>
+    apiPost<ConnectionTestResult>("/datasets/connections/test", req),
+  listTables: (id: string, schema?: string) =>
+    apiGet<TableInfo[]>(
+      `/datasets/connections/${id}/tables${schema ? `?schema=${encodeURIComponent(schema)}` : ""}`,
+    ),
+  previewQuery: (id: string, req: QueryRequest) =>
+    apiPost<DatasetPreview>(`/datasets/connections/${id}/preview`, req),
+  ingestQuery: (id: string, req: IngestRequest) =>
+    apiPost<DatasetPreview>(`/datasets/connections/${id}/ingest`, req),
+  secretsBackend: () =>
+    apiGet<SecretsBackendInfo>("/datasets/connections/secrets-backend"),
   forecast: (req: ForecastRequest) => apiPost<ForecastResponse>("/forecast", req),
 
   runComparison: (req: ComparisonRequest) =>

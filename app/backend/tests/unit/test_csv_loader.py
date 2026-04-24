@@ -14,16 +14,109 @@ from timesfm_studio.services import csv_loader
 
 @pytest.mark.unit
 def test_ingest_upload_creates_preview(tmp_path: Path) -> None:
-    content = b"Date,QTY\n2021-01-01,10\n2021-02-01,20\n"
+    rows = "\n".join(
+        f"2021-{m:02d}-01,{10 * m}" for m in range(1, 13)
+    )
+    content = f"Date,QTY\n{rows}\n".encode()
     preview = csv_loader.ingest_upload(
         filename="sample.csv", content=content, datasets_dir=tmp_path
     )
-    assert preview.row_count == 2
+    assert preview.row_count == 12
     assert {c.name for c in preview.columns} == {"Date", "QTY"}
     qty_col = next(c for c in preview.columns if c.name == "QTY")
     assert qty_col.dtype == "numeric"
     date_col = next(c for c in preview.columns if c.name == "Date")
     assert date_col.dtype == "datetime"
+
+
+@pytest.mark.unit
+def test_ingest_upload_sniffs_semicolon_delimiter(tmp_path: Path) -> None:
+    rows = "\n".join(f"2021-{m:02d}-01;{10 * m}" for m in range(1, 13))
+    content = f"Date;QTY\n{rows}\n".encode()
+    preview = csv_loader.ingest_upload(
+        filename="euro.csv", content=content, datasets_dir=tmp_path
+    )
+    assert preview.row_count == 12
+    assert {c.name for c in preview.columns} == {"Date", "QTY"}
+    # Meta should persist the detected dialect for the load() path.
+    meta_path = tmp_path / preview.id / "meta.json"
+    import json as _json
+    meta = _json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta["csv_sep"] == ";"
+    assert meta["csv_decimal"] == "."
+
+
+@pytest.mark.unit
+def test_ingest_upload_handles_european_decimal_comma(tmp_path: Path) -> None:
+    rows = "\n".join(f"2021-{m:02d}-01;{m},{m*5:02d}" for m in range(1, 13))
+    content = f"Date;Temp\n{rows}\n".encode()
+    preview = csv_loader.ingest_upload(
+        filename="euro-decimal.csv", content=content, datasets_dir=tmp_path
+    )
+    assert preview.row_count == 12
+    temp_col = next(c for c in preview.columns if c.name == "Temp")
+    assert temp_col.dtype == "numeric"
+    import json as _json
+    meta = _json.loads((tmp_path / preview.id / "meta.json").read_text(encoding="utf-8"))
+    assert meta["csv_sep"] == ";"
+    assert meta["csv_decimal"] == ","
+
+
+@pytest.mark.unit
+def test_ingest_upload_rejects_too_few_rows(tmp_path: Path) -> None:
+    content = b"Date,QTY\n2021-01-01,10\n2021-02-01,20\n"
+    with pytest.raises(ValueError, match="at least 10 rows"):
+        csv_loader.ingest_upload(
+            filename="tiny.csv", content=content, datasets_dir=tmp_path
+        )
+
+
+@pytest.mark.unit
+def test_ingest_upload_rejects_single_column(tmp_path: Path) -> None:
+    rows = "\n".join(str(i) for i in range(12))
+    content = f"only_date\n{rows}\n".encode()
+    with pytest.raises(ValueError, match="at least two columns"):
+        csv_loader.ingest_upload(
+            filename="one-col.csv", content=content, datasets_dir=tmp_path
+        )
+
+
+@pytest.mark.unit
+def test_ingest_upload_rejects_non_numeric(tmp_path: Path) -> None:
+    rows = "\n".join(
+        f"2021-{m:02d}-01,label_{m},tag" for m in range(1, 13)
+    )
+    content = f"Date,Label,Tag\n{rows}\n".encode()
+    with pytest.raises(ValueError, match="numeric column"):
+        csv_loader.ingest_upload(
+            filename="labels-only.csv", content=content, datasets_dir=tmp_path
+        )
+
+
+@pytest.mark.unit
+def test_extract_series_rejects_constant() -> None:
+    df = pd.DataFrame(
+        {
+            "Date": pd.date_range("2021-01-01", periods=12, freq="MS"),
+            "QTY": [5.0] * 12,
+        }
+    )
+    mapping = ColumnMapping(value_col="QTY", date_col="Date")
+    with pytest.raises(ValueError, match="constant"):
+        csv_loader.extract_series(df, mapping)
+
+
+@pytest.mark.unit
+def test_extract_series_rejects_duplicate_timestamps() -> None:
+    df = pd.DataFrame(
+        {
+            "Date": ["2021-01-01"] * 2 + [f"2021-{m:02d}-01" for m in range(2, 12)],
+            "QTY": list(range(12)),
+        }
+    )
+    mapping = ColumnMapping(value_col="QTY", date_col="Date")
+    with pytest.raises(ValueError, match="duplicate timestamps"):
+        csv_loader.extract_series(df, mapping)
 
 
 @pytest.mark.unit

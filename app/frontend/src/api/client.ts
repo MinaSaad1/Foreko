@@ -49,14 +49,21 @@ export async function apiPost<T>(
 export async function apiUpload<T>(
   path: string,
   file: File,
-  signal?: AbortSignal,
+  options?: { query?: Record<string, string | undefined>; signal?: AbortSignal },
 ): Promise<T> {
   const form = new FormData();
   form.append("file", file);
-  const res = await fetch(`/api${path}`, {
+  const query = options?.query
+    ? Object.entries(options.query)
+        .filter((entry): entry is [string, string] => entry[1] !== undefined)
+        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+        .join("&")
+    : "";
+  const url = `/api${path}${query ? `?${query}` : ""}`;
+  const res = await fetch(url, {
     method: "POST",
     body: form,
-    signal,
+    signal: options?.signal,
   });
   return handle<T>(res);
 }

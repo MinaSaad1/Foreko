@@ -138,7 +138,7 @@ export function ColumnMapper({ preview, value, onChange }: ColumnMapperProps) {
         <Select
           value={seriesIdCol}
           onChange={setSeriesIdCol}
-          options={[{ value: "", label: "— none —" }, ...columnOptions]}
+          options={[{ value: "", label: "- none -" }, ...columnOptions]}
         />
       </Field>
     </div>

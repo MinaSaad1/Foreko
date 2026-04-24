@@ -29,8 +29,8 @@ class Settings(BaseSettings):
         description="Root directory for persistent app data (datasets, adapters, jobs).",
     )
     dataset_ttl_hours: int = Field(
-        default=24,
-        description="How long uploaded CSV datasets live before the janitor sweeps them.",
+        default=720,
+        description="How long uploaded CSV datasets live before the janitor sweeps them. Default is 30 days.",
     )
     max_upload_bytes: int = Field(
         default=50 * 1024 * 1024,
@@ -44,6 +44,21 @@ class Settings(BaseSettings):
         default=True,
         description="If True, the model starts loading at FastAPI startup (recommended).",
     )
+
+    # Database / connection ingestion (PR 3)
+    max_sql_rows: int = Field(
+        default=5_000_000,
+        description="Hard cap on rows returned by a SQL ingest query.",
+    )
+    max_parquet_bytes: int = Field(
+        default=2 * 1024 * 1024 * 1024,
+        description="Advisory cap on the size of a materialized parquet snapshot.",
+    )
+
+    @property
+    def connections_path(self) -> Path:
+        """Location of the saved connections registry (passwords live in the OS keyring)."""
+        return self.data_dir / "connections.json"
 
     @property
     def datasets_dir(self) -> Path:

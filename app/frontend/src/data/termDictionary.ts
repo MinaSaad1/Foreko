@@ -106,7 +106,7 @@ export const TERMS: Record<string, TermDefinition> = {
     shortDefinition:
       "Symmetric percentage error. Handles values near zero better than MAPE.",
     businessAngle:
-      "Safer percentage score when actuals can be zero or very small — MAPE can explode there.",
+      "Safer percentage score when actuals can be zero or very small, MAPE can explode there.",
     relatedTerms: ["mape"],
   },
   mase: {
@@ -191,7 +191,7 @@ export const TERMS: Record<string, TermDefinition> = {
     aliases: ["expanding-window fold"],
     category: "backtest",
     shortDefinition:
-      "One slice of the backtest — train on history up to a date, forecast forward, score it, repeat.",
+      "One slice of the backtest, train on history up to a date, forecast forward, score it, repeat.",
     businessAngle:
       "More folds = more independent 'did it work?' checks. Average across folds is your real accuracy.",
     relatedTerms: ["backtest", "horizon"],
@@ -213,7 +213,7 @@ export const TERMS: Record<string, TermDefinition> = {
     aliases: ["critical", "warning", "normal"],
     category: "anomaly",
     shortDefinition:
-      "How surprising a point is — Critical (very unusual), Warning (worth a look), Normal.",
+      "How surprising a point is, Critical (very unusual), Warning (worth a look), Normal.",
     businessAngle:
       "A triage label so you focus on the right anomalies first.",
     relatedTerms: ["z-score", "changepoint"],
@@ -226,7 +226,7 @@ export const TERMS: Record<string, TermDefinition> = {
     shortDefinition:
       "A date where the underlying pattern of the data shifts (new trend, new baseline).",
     businessAngle:
-      "Flags moments your business behaved differently — launches, promos, policy changes, market shifts.",
+      "Flags moments your business behaved differently, launches, promos, policy changes, market shifts.",
     relatedTerms: ["z-score", "drift"],
   },
   residual: {
@@ -280,7 +280,7 @@ export const TERMS: Record<string, TermDefinition> = {
     shortDefinition:
       "Splits a series into long-term trend, repeating seasonal pattern, and leftover noise.",
     businessAngle:
-      "Lets you see growth, cycle, and surprise separately — clearer story for stakeholders.",
+      "Lets you see growth, cycle, and surprise separately, clearer story for stakeholders.",
     relatedTerms: ["seasonality", "trend"],
   },
   seasonality: {
@@ -289,7 +289,7 @@ export const TERMS: Record<string, TermDefinition> = {
     aliases: ["seasonal", "seasonal pattern"],
     category: "data-quality",
     shortDefinition:
-      "A pattern that repeats on a fixed calendar cycle — weekly, monthly, yearly.",
+      "A pattern that repeats on a fixed calendar cycle, weekly, monthly, yearly.",
     businessAngle:
       "Recognising seasonality means we can plan around it instead of reacting every time.",
     relatedTerms: ["stl", "stationarity", "trend"],
@@ -384,7 +384,7 @@ export const TERMS: Record<string, TermDefinition> = {
     label: "Baseline",
     category: "factors",
     shortDefinition:
-      "The forecast ignoring extra factors — useful as a comparison point.",
+      "The forecast ignoring extra factors, useful as a comparison point.",
     businessAngle:
       "If adding factors doesn't beat the baseline, those factors aren't earning their keep.",
     relatedTerms: ["factor", "winner"],
@@ -417,7 +417,7 @@ export const TERMS: Record<string, TermDefinition> = {
     aliases: ["what-if", "scenario"],
     category: "scenarios",
     shortDefinition:
-      "Hypothetical futures you set manually — 'price -10%', 'ad spend ramp to 2x'.",
+      "Hypothetical futures you set manually, 'price -10%', 'ad spend ramp to 2x'.",
     businessAngle:
       "Stress-test decisions before committing resources.",
     relatedTerms: ["counterfactual", "factor"],
@@ -428,7 +428,7 @@ export const TERMS: Record<string, TermDefinition> = {
     aliases: ["cohort", "series id"],
     category: "comparison",
     shortDefinition:
-      "A subgroup of the data — region, product, customer tier — forecast and compared side-by-side.",
+      "A subgroup of the data, region, product, customer tier, forecast and compared side-by-side.",
     businessAngle:
       "See which parts of the business are growing, flat, or volatile without averaging the story away.",
     relatedTerms: ["winner", "trend"],
@@ -482,9 +482,9 @@ export const TERMS: Record<string, TermDefinition> = {
     aliases: ["foundation model", "pretrained"],
     category: "comparison",
     shortDefinition:
-      "The forecasting model hasn't been trained on your data — it generalises from millions of other series.",
+      "The forecasting model hasn't been trained on your data, it generalises from millions of other series.",
     businessAngle:
-      "You get a usable forecast the moment you upload — no training project, no ML team.",
+      "You get a usable forecast the moment you upload, no training project, no ML team.",
     relatedTerms: ["winner", "backtest"],
   },
 };

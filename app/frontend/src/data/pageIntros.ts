@@ -23,11 +23,11 @@ export interface PageIntroContent {
 
 export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
   upload: {
-    title: "Start here — bring in your data",
+    title: "Start here, bring in your data",
     summary:
       "Drop a CSV with a date column and a numeric value column. We do the rest.",
     whenToUse:
-      "Whenever you want to forecast a new metric — sales, demand, traffic, usage, costs, headcount, and so on.",
+      "Whenever you want to forecast a new metric, sales, demand, traffic, usage, costs, headcount, and so on.",
     businessQuestions: [
       "What numbers do I want to predict?",
       "Do I have at least a few months of history to learn from?",
@@ -37,7 +37,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
   },
   datasets: {
     title: "Your uploaded datasets",
-    summary: "All the CSVs you've uploaded in one place — preview, reuse, or delete.",
+    summary: "All the CSVs you've uploaded in one place, preview, reuse, or delete.",
     whenToUse:
       "Return here to re-run analyses on a dataset without re-uploading, or to clean up old files.",
     businessQuestions: [
@@ -51,7 +51,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
     summary:
       "Runs a quick data-quality check before you forecast. Flags missing values, outliers, seasonality, and shape problems.",
     whenToUse:
-      "Before trusting any forecast — especially if the data came from a new source or a fresh extract.",
+      "Before trusting any forecast, especially if the data came from a new source or a fresh extract.",
     businessQuestions: [
       "Is my data clean enough to forecast off?",
       "Do I have hidden weekly or yearly patterns?",
@@ -60,7 +60,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
     relatedTerms: ["preflight", "stationarity", "seasonality"],
   },
   compare: {
-    title: "Forecast — which model should I trust?",
+    title: "Forecast, which model should I trust?",
     summary:
       "Foresee runs two forecasting approaches on your data, backtests both, and highlights the winner.",
     whenToUse:
@@ -77,7 +77,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
     summary:
       "Replays the forecast on your past data as if you hadn't seen the future, scoring each replay.",
     whenToUse:
-      "When stakeholders need evidence that the forecast would have been right before — not just plausible-looking forward.",
+      "When stakeholders need evidence that the forecast would have been right before, not just plausible-looking forward.",
     businessQuestions: [
       "How accurate has this forecasting approach been on my real history?",
       "Does accuracy hold up 1 period out, 3 periods out, 12 periods out?",
@@ -88,7 +88,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
   diagnostics: {
     title: "Is the model capturing what it should?",
     summary:
-      "Looks at what's left over after forecasting — the residuals — and checks for patterns the model missed.",
+      "Looks at what's left over after forecasting, the residuals, and checks for patterns the model missed.",
     whenToUse:
       "When a forecast looks plausible but you want to confirm there's no obvious signal being ignored.",
     businessQuestions: [
@@ -105,7 +105,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
     whenToUse:
       "When something strange shows up on a dashboard and you need to know which points were genuinely outliers.",
     businessQuestions: [
-      "Which past dates were truly unusual — not just noisy?",
+      "Which past dates were truly unusual, not just noisy?",
       "How severe was each one?",
       "Are there clusters of anomalies I should investigate?",
     ],
@@ -129,7 +129,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
     summary:
       "Quantifies how factors like price, promos, weather, or holidays influence the forecast, versus a baseline.",
     whenToUse:
-      "When you know something about the world that the model should also know — and want to measure its real impact.",
+      "When you know something about the world that the model should also know, and want to measure its real impact.",
     businessQuestions: [
       "Does price / promo / weather meaningfully move the forecast?",
       "Which drivers are worth tracking and which are noise?",
@@ -142,7 +142,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
     summary:
       "Manually set future factor values (flat, ramp, or zeroed out) and see how the forecast responds.",
     whenToUse:
-      "When you're deciding between options — price cuts, spend increases, new launches — and want to compare.",
+      "When you're deciding between options, price cuts, spend increases, new launches, and want to compare.",
     businessQuestions: [
       "What if I raise price 10% next quarter?",
       "What if marketing ramps from current to 2x over 6 months?",

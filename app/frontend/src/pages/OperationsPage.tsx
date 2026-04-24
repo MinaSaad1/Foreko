@@ -1,20 +1,16 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/api/endpoints";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { CSVUpload } from "@/components/CSVUpload";
 import { PageIntro } from "@/components/common/PageIntro";
+import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
 import { Term } from "@/components/common/Term";
-import type { DatasetPreview } from "@/types/dataset";
+import { useSyncedDataset } from "@/hooks/useSyncedDataset";
 
 export function OperationsPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const storePreview = useDatasetStore((s) => s.preview);
-  const setStorePreview = useDatasetStore((s) => s.setPreview);
-  const activeId = datasetId ?? storePreview?.id;
+  const { activeId } = useSyncedDataset(datasetId);
 
   const [annoDate, setAnnoDate] = useState("");
   const [annoLabel, setAnnoLabel] = useState("");
@@ -104,7 +100,7 @@ export function OperationsPage() {
       {
         heading: "Operations snapshot",
         body: analysisList.length === 0 && annoList.length === 0 && scheduleList.length === 0 && ruleList.length === 0
-          ? "No operational configuration yet — add annotations, schedules, or alert rules to fill out this report."
+          ? "No operational configuration yet, add annotations, schedules, or alert rules to fill out this report."
           : `${annoList.length} annotation${annoList.length === 1 ? "" : "s"}, ${scheduleList.length} schedule${scheduleList.length === 1 ? "" : "s"} (${activeSchedules} active), ${ruleList.length} alert rule${ruleList.length === 1 ? "" : "s"} (${activeRules} active), ${analysisList.length} saved analysis${analysisList.length === 1 ? "" : "es"}.`,
         kv: [
           ["Annotations", annoList.length.toString()],
@@ -114,7 +110,7 @@ export function OperationsPage() {
           ["Alert rules (total)", ruleList.length.toString()],
           ["Alert rules (active)", activeRules.toString()],
           ["Saved analyses", analysisList.length.toString()],
-          ["Dataset id", activeId ?? "—"],
+          ["Dataset id", activeId ?? "-"],
         ] as [string, string][],
       },
       {
@@ -137,7 +133,7 @@ export function OperationsPage() {
                 s.cron,
                 JSON.stringify(s.action),
                 s.active ? "yes" : "no",
-                s.last_run_at ?? "—",
+                s.last_run_at ?? "-",
               ] as (string | number)[]),
             }
           : undefined,
@@ -169,7 +165,7 @@ export function OperationsPage() {
       },
     ];
 
-    const blob = await api.exportPdf("Foresee — Operations report", sections);
+    const blob = await api.exportPdf("Foresee, Operations report", sections);
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -182,17 +178,11 @@ export function OperationsPage() {
 
   if (!activeId) {
     return (
-      <div className="mx-auto max-w-2xl space-y-6 py-12">
-        <h1 className="font-display text-2xl font-semibold text-text-primary">Operations</h1>
-        <PageIntro pageKey="operations" />
-        <p className="text-text-secondary">Upload a dataset first.</p>
-        <CSVUpload
-          onUploaded={(p: DatasetPreview) => {
-            setStorePreview(p);
-            navigate(`/ops/${p.id}`);
-          }}
-        />
-      </div>
+      <EmptyDatasetState
+        title="Operations"
+        pageKey="operations"
+        basePath="/ops"
+      />
     );
   }
 
@@ -203,7 +193,7 @@ export function OperationsPage() {
           <h1 className="font-display text-2xl font-semibold text-text-primary">Operations</h1>
           <p className="mt-1 text-sm text-text-secondary">
             <Term k="annotation">Annotations</Term> · <Term k="schedule">Schedules</Term> ·{" "}
-            <Term k="alert-rule">Alerts</Term> · Share · Export — move from ad-hoc analysis to production.
+            <Term k="alert-rule">Alerts</Term> · Share · Export, move from ad-hoc analysis to production.
           </p>
         </div>
         <button
@@ -250,7 +240,7 @@ export function OperationsPage() {
             Add
           </button>
         </div>
-        {annotations && annotations.length > 0 && (
+        {annotations && annotations.length > 0 ? (
           <div className="space-y-1">
             {annotations.map((a) => (
               <div
@@ -275,6 +265,10 @@ export function OperationsPage() {
               </div>
             ))}
           </div>
+        ) : (
+          <p className="text-xs text-text-muted">
+            No annotations yet. Tag launches, promotions, or known incidents so they appear on forecast charts.
+          </p>
         )}
       </div>
 
@@ -300,7 +294,7 @@ export function OperationsPage() {
             Schedule refresh
           </button>
         </div>
-        {schedules && schedules.length > 0 && (
+        {schedules && schedules.length > 0 ? (
           <div className="space-y-1">
             {schedules.map((s) => (
               <div
@@ -323,6 +317,10 @@ export function OperationsPage() {
               </div>
             ))}
           </div>
+        ) : (
+          <p className="text-xs text-text-muted">
+            No schedules yet. Set a cron expression to refresh forecasts automatically.
+          </p>
         )}
       </div>
 
@@ -372,7 +370,7 @@ export function OperationsPage() {
             Webhook test: {testWebhook.data.ok ? "OK" : "Failed"}
           </p>
         )}
-        {alertRules && alertRules.length > 0 && (
+        {alertRules && alertRules.length > 0 ? (
           <div className="space-y-1">
             {alertRules.map((r) => (
               <div
@@ -394,6 +392,10 @@ export function OperationsPage() {
               </div>
             ))}
           </div>
+        ) : (
+          <p className="text-xs text-text-muted">
+            No alert rules yet. Add one to get notified when anomalies cross a threshold or when forecasts drift.
+          </p>
         )}
       </div>
 

@@ -61,15 +61,15 @@ export function DeviceBadge() {
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-2 z-40 w-64 rounded-lg border border-slate-200 bg-white p-3 shadow-lg text-sm">
-          <div className="flex justify-between py-0.5"><span className="text-slate-500">Device</span><span className="font-medium">{modelInfo?.device.name ?? "—"}</span></div>
+          <div className="flex justify-between py-0.5"><span className="text-slate-500">Device</span><span className="font-medium">{modelInfo?.device.name ?? "-"}</span></div>
           {modelInfo?.device.memory_total_mb && (
             <div className="flex justify-between py-0.5"><span className="text-slate-500">VRAM</span><span className="font-medium">{modelInfo.device.memory_free_mb} / {modelInfo.device.memory_total_mb} MB</span></div>
           )}
-          <div className="flex justify-between py-0.5"><span className="text-slate-500">Model status</span><span className="font-medium">{modelInfo?.model_status ?? "—"}</span></div>
+          <div className="flex justify-between py-0.5"><span className="text-slate-500">Model status</span><span className="font-medium">{modelInfo?.model_status ?? "-"}</span></div>
           <div className="flex justify-between py-0.5"><span className="text-slate-500">Compile count</span><span className="font-medium">{modelInfo?.compile_count ?? 0}</span></div>
           <div className="flex justify-between py-0.5"><span className="text-slate-500">Queue depth</span><span className="font-medium">{modelInfo?.queue_depth ?? 0}</span></div>
           {modelInfo?.current_config && (
-            <div className="flex justify-between py-0.5"><span className="text-slate-500">Config hash</span><span className="font-mono text-xs">{String(modelInfo.current_config).slice(0, 8) || "—"}</span></div>
+            <div className="flex justify-between py-0.5"><span className="text-slate-500">Config hash</span><span className="font-mono text-xs">{String(modelInfo.current_config).slice(0, 8) || "-"}</span></div>
           )}
         </div>
       )}

@@ -1,38 +1,33 @@
 import { useCallback, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/api/endpoints";
 import { useDatasetStore } from "@/stores/datasetStore";
-import { CSVUpload } from "@/components/CSVUpload";
 import { ColumnMapper } from "@/components/ColumnMapper";
 import { ResidualHistogram } from "@/components/diagnostics/ResidualHistogram";
 import { QQPlot } from "@/components/diagnostics/QQPlot";
 import { ACFChart } from "@/components/diagnostics/ACFChart";
 import { STLPanel } from "@/components/diagnostics/STLPanel";
 import { PageIntro } from "@/components/common/PageIntro";
+import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
 import { Term } from "@/components/common/Term";
-import type { ColumnMapping, DatasetPreview } from "@/types/dataset";
+import { useSyncedDataset } from "@/hooks/useSyncedDataset";
+import { useHealth } from "@/hooks/useHealth";
+import type { ColumnMapping } from "@/types/dataset";
 import type { DiagnosticsResult } from "@/types/phases";
 
 export function DiagnosticsPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
-  const navigate = useNavigate();
-  const storePreview = useDatasetStore((s) => s.preview);
   const storeMapping = useDatasetStore((s) => s.mapping);
   const setStoreMapping = useDatasetStore((s) => s.setMapping);
-  const setStorePreview = useDatasetStore((s) => s.setPreview);
 
   const [mapping, setMapping] = useState<ColumnMapping | null>(storeMapping);
   const [horizon, setHorizon] = useState(12);
   const [model, setModel] = useState("timesfm");
 
-  const activeId = datasetId ?? storePreview?.id;
-  const { data: preview } = useQuery({
-    queryKey: ["dataset-preview", activeId],
-    queryFn: () => api.datasetPreview(activeId!),
-    enabled: !!activeId,
-    initialData: activeId === storePreview?.id ? storePreview ?? undefined : undefined,
-  });
+  const { activeId, preview } = useSyncedDataset(datasetId);
+  const { data: health } = useHealth();
+  const modelReady = health?.model_status === "ready";
 
   const handleMappingChange = useCallback(
     (m: ColumnMapping) => {
@@ -54,17 +49,11 @@ export function DiagnosticsPage() {
 
   if (!activeId) {
     return (
-      <div className="mx-auto max-w-2xl space-y-6 py-12">
-        <h1 className="font-display text-2xl font-semibold text-text-primary">Forecast Diagnostics</h1>
-        <PageIntro pageKey="diagnostics" />
-        <p className="text-text-secondary">Upload a dataset first.</p>
-        <CSVUpload
-          onUploaded={(p: DatasetPreview) => {
-            setStorePreview(p);
-            navigate(`/diagnostics/${p.id}`);
-          }}
-        />
-      </div>
+      <EmptyDatasetState
+        title="Forecast Diagnostics"
+        pageKey="diagnostics"
+        basePath="/diagnostics"
+      />
     );
   }
 
@@ -130,11 +119,14 @@ export function DiagnosticsPage() {
 
           <button
             onClick={() => runMutation.mutate()}
-            disabled={!mapping || runMutation.isPending}
+            disabled={!mapping || runMutation.isPending || !modelReady}
             className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-bg-base transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            {runMutation.isPending ? "Running…" : "Run diagnostics"}
+            {runMutation.isPending ? "Running..." : "Run diagnostics"}
           </button>
+          {!modelReady && (
+            <p className="text-xs text-text-muted text-center">Model still loading, the Run button will enable when it's ready.</p>
+          )}
         </div>
       )}
 
