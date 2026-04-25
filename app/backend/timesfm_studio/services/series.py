@@ -9,8 +9,12 @@ ingestion refactor.
 
 from __future__ import annotations
 
+import logging
+
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 from ..schemas.dataset import (
     ColumnDType,
@@ -95,6 +99,47 @@ def _resolve_date_column(df: pd.DataFrame, mapping: ColumnMapping) -> pd.Series:
     return pd.to_datetime(iso, errors="coerce")
 
 
+def aggregate_duplicates_by_date(
+    df: pd.DataFrame,
+    mapping: ColumnMapping,
+) -> pd.DataFrame:
+    """Collapse rows that share a resolved date into one row.
+
+    Used when ``mapping.series_id_col`` is ``None`` but the DataFrame actually
+    contains multiple series stacked under a shared value column. Numeric
+    columns are summed; non-numeric columns keep their first value. If the
+    resolved dates have no duplicates, the original DataFrame is returned
+    unchanged.
+    """
+
+    parsed = _resolve_date_column(df, mapping)
+    if not parsed.duplicated().any():
+        return df
+
+    tmp = df.copy()
+    tmp["__agg_date__"] = parsed
+
+    agg_spec: dict[str, str] = {}
+    for col in df.columns:
+        if pd.api.types.is_numeric_dtype(df[col]):
+            agg_spec[col] = "sum"
+        else:
+            agg_spec[col] = "first"
+
+    grouped = (
+        tmp.groupby("__agg_date__", as_index=False, sort=True)
+        .agg(agg_spec)
+        .drop(columns=["__agg_date__"])
+        .reset_index(drop=True)
+    )
+    logger.info(
+        "Aggregated DataFrame from %d to %d rows by summing duplicate dates.",
+        len(df),
+        len(grouped),
+    )
+    return grouped
+
+
 def extract_series(
     df: pd.DataFrame,
     mapping: ColumnMapping,
@@ -133,6 +178,22 @@ def extract_series(
 
     if mapping.series_id_col is None:
         sub = work.sort_values("__date__").reset_index(drop=True)
+        # If the CSV contains multiple series stacked in a single value column
+        # and the user left the series column as "none", auto-aggregate by
+        # summing values on matching dates. This keeps the series column
+        # genuinely optional instead of failing the request.
+        dup_count = int(sub["__date__"].duplicated().sum())
+        if dup_count > 0:
+            logger.info(
+                "Auto-aggregating %d duplicate timestamps by sum (series column not specified).",
+                dup_count,
+            )
+            sub = (
+                sub.groupby("__date__", as_index=False)["__value__"]
+                .sum()
+                .sort_values("__date__")
+                .reset_index(drop=True)
+            )
         vals = sub["__value__"].to_numpy(dtype=float)
         dts = pd.DatetimeIndex(sub["__date__"])
         _validate_series("this series", vals, dts)
@@ -202,6 +263,7 @@ def build_extraction(
 
 __all__ = [
     "extract_series",
+    "aggregate_duplicates_by_date",
     "build_extraction",
     "summarize_series",
     "infer_frequency",

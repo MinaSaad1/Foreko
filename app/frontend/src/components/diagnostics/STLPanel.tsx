@@ -1,4 +1,5 @@
 import ReactECharts from "echarts-for-react";
+import { useChartTheme, type ChartTheme } from "@/charts/theme";
 
 interface STLPanelProps {
   dates: string[];
@@ -8,28 +9,28 @@ interface STLPanelProps {
   residual: number[];
 }
 
-function miniChart(dates: string[], values: number[], color: string) {
+function miniChart(t: ChartTheme, dates: string[], values: number[], color: string) {
   return {
     backgroundColor: "transparent",
     grid: { left: 44, right: 16, top: 10, bottom: 20, containLabel: false },
     xAxis: {
       type: "category",
       data: dates,
-      axisLine: { lineStyle: { color: "#252830" } },
+      axisLine: { lineStyle: { color: t.grid } },
       axisTick: { show: false },
       axisLabel: { show: false },
     },
     yAxis: {
       type: "value",
       axisLine: { show: false },
-      axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 9 },
-      splitLine: { lineStyle: { color: "#252830" } },
+      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 9 },
+      splitLine: { lineStyle: { color: t.grid } },
     },
     tooltip: {
       trigger: "axis",
-      backgroundColor: "#1A1D25",
-      borderColor: "#252830",
-      textStyle: { color: "#F0F2F5", fontFamily: "DM Mono", fontSize: 11 },
+      backgroundColor: t.bgElevated,
+      borderColor: t.grid,
+      textStyle: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 11 },
     },
     series: [
       {
@@ -44,11 +45,12 @@ function miniChart(dates: string[], values: number[], color: string) {
 }
 
 export function STLPanel({ dates, observed, trend, seasonal, residual }: STLPanelProps) {
+  const t = useChartTheme();
   const panels = [
-    { label: "Observed", data: observed, color: "#F0F2F5" },
-    { label: "Trend", data: trend, color: "#00E5C8" },
-    { label: "Seasonal", data: seasonal, color: "#4A90D9" },
-    { label: "Residual", data: residual, color: "#8A8F9E" },
+    { label: "Observed", data: observed, color: t.textPrimary },
+    { label: "Trend", data: trend, color: t.accent },
+    { label: "Seasonal", data: seasonal, color: t.neutral },
+    { label: "Residual", data: residual, color: t.textMuted },
   ];
   return (
     <div className="space-y-3">
@@ -56,7 +58,7 @@ export function STLPanel({ dates, observed, trend, seasonal, residual }: STLPane
         <div key={p.label}>
           <p className="mb-1 font-mono text-xs uppercase tracking-widest text-text-muted">{p.label}</p>
           <ReactECharts
-            option={miniChart(dates, p.data, p.color)}
+            option={miniChart(t, dates, p.data, p.color)}
             style={{ height: 100, width: "100%" }}
             notMerge
           />

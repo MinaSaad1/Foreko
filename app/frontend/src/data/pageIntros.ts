@@ -1,4 +1,5 @@
 export type PageIntroKey =
+  | "data"
   | "upload"
   | "datasets"
   | "preflight"
@@ -22,6 +23,19 @@ export interface PageIntroContent {
 }
 
 export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
+  data: {
+    title: "Your data, all in one place",
+    summary:
+      "Upload a file, connect a database, or pick a sample. Re-open anything you've added before to keep working.",
+    whenToUse:
+      "Whenever you want to start a new analysis, refresh an existing dataset, or clean up files you no longer need.",
+    businessQuestions: [
+      "What numbers do I want to forecast?",
+      "Which dataset was the one I used last time?",
+      "Can I try Foresee on a sample before bringing my own data?",
+    ],
+    relatedTerms: ["preflight", "zero-shot"],
+  },
   upload: {
     title: "Start here, bring in your data",
     summary:

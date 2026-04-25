@@ -5,6 +5,7 @@ import { api } from "@/api/endpoints";
 import { useDatasetStore } from "@/stores/datasetStore";
 import { ColumnMapper } from "@/components/ColumnMapper";
 import ReactECharts from "echarts-for-react";
+import { useChartTheme } from "@/charts/theme";
 import { PageIntro } from "@/components/common/PageIntro";
 import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
 import { Term } from "@/components/common/Term";
@@ -79,13 +80,13 @@ export function SegmentsPage() {
               max={200}
               value={topN}
               onChange={(e) => setTopN(Math.max(1, Number(e.target.value)))}
-              className="w-24 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+              className="w-24 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
             />
           </div>
           <button
             onClick={() => runMutation.mutate()}
             disabled={!mapping?.series_id_col || runMutation.isPending || !modelReady}
-            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm text-bg-base hover:opacity-90 disabled:opacity-40"
+            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm text-on-accent hover:opacity-90 disabled:opacity-40"
           >
             {runMutation.isPending ? "Running..." : "Compare segments"}
           </button>
@@ -172,7 +173,8 @@ function SegmentRanking({ ranking, sortBy }: { ranking: { id: string; value: num
 }
 
 function MultiLineSegments({ segments }: { segments: SegmentsResult["segments"] }) {
-  const colors = ["#00E5C8", "#4A90D9", "#22D17A", "#F5A623", "#FF4757", "#8A8F9E", "#00C4B4", "#D9A34A"];
+  const t = useChartTheme();
+  const colors = [t.accent, t.neutral, t.positive, t.warning, t.anomaly, t.textMuted, t.alternative, t.historical];
   const series = segments.map((s, i) => ({
     name: s.id,
     type: "line",
@@ -186,19 +188,19 @@ function MultiLineSegments({ segments }: { segments: SegmentsResult["segments"] 
     grid: { left: 56, right: 24, top: 24, bottom: 40, containLabel: false },
     legend: {
       data: segments.map((s) => s.id),
-      textStyle: { color: "#8A8F9E", fontFamily: "DM Mono", fontSize: 10 },
+      textStyle: { color: t.textSecondary, fontFamily: "JetBrains Mono", fontSize: 10 },
       top: 0,
     },
     xAxis: {
       type: "time",
-      axisLine: { lineStyle: { color: "#252830" } },
-      axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10 },
+      axisLine: { lineStyle: { color: t.grid } },
+      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
     },
     yAxis: {
       type: "value",
       axisLine: { show: false },
-      axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10 },
-      splitLine: { lineStyle: { color: "#252830" } },
+      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+      splitLine: { lineStyle: { color: t.grid } },
     },
     tooltip: { trigger: "axis" },
     dataZoom: [

@@ -132,7 +132,7 @@ export function Popover({
           role="dialog"
           aria-label={ariaLabel}
           aria-labelledby={labelId}
-          className={`absolute z-50 w-72 border border-border/80 bg-bg-surface/95 backdrop-blur-md px-4 py-3 text-sm text-text-primary shadow-[0_8px_32px_rgba(0,0,0,0.6)] ${PLACEMENT_CLASSES[placement]} ${panelClassName}`}
+          className={`absolute z-50 w-72 border border-border/80 bg-bg-surface/95 backdrop-blur-md px-4 py-3 text-sm text-text-primary shadow-[var(--shadow-elev-2)] ${PLACEMENT_CLASSES[placement]} ${panelClassName}`}
         >
           <span id={labelId} className="sr-only">
             {ariaLabel}

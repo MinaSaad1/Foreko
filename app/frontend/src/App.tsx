@@ -4,12 +4,13 @@ import { Toaster } from "sonner";
 import { ModelStatusBar } from "@/components/ModelStatusBar";
 import { LoadingSplash } from "@/components/LoadingSplash";
 import { Tour } from "@/components/Tour";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { useDocumentTitle } from "@/utils/useDocumentTitle";
-import { APP_VERSION } from "@/utils/version";
+import { useThemeStore } from "@/stores/themeStore";
 
 const LandingPage = lazy(() => import("@/pages/LandingPage").then((m) => ({ default: m.LandingPage })));
-const UploadPage = lazy(() => import("@/pages/UploadPage").then((m) => ({ default: m.UploadPage })));
+const DataPage = lazy(() => import("@/pages/DataPage").then((m) => ({ default: m.DataPage })));
 const GlossaryPage = lazy(() => import("@/pages/GlossaryPage").then((m) => ({ default: m.GlossaryPage })));
 const PrivacyPage = lazy(() => import("@/pages/PrivacyPage").then((m) => ({ default: m.PrivacyPage })));
 const AboutPage = lazy(() => import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage })));
@@ -17,7 +18,6 @@ const NotFoundPage = lazy(() => import("@/pages/NotFoundPage").then((m) => ({ de
 const ComparisonPage = lazy(() => import("@/pages/ComparisonPage").then((m) => ({ default: m.ComparisonPage })));
 const AnomalyPage = lazy(() => import("@/pages/AnomalyPage").then((m) => ({ default: m.AnomalyPage })));
 const CovariatesPage = lazy(() => import("@/pages/CovariatesPage").then((m) => ({ default: m.CovariatesPage })));
-const DatasetsPage = lazy(() => import("@/pages/DatasetsPage").then((m) => ({ default: m.DatasetsPage })));
 const BacktestPage = lazy(() => import("@/pages/BacktestPage").then((m) => ({ default: m.BacktestPage })));
 const DiagnosticsPage = lazy(() => import("@/pages/DiagnosticsPage").then((m) => ({ default: m.DiagnosticsPage })));
 const PreflightPage = lazy(() => import("@/pages/PreflightPage").then((m) => ({ default: m.PreflightPage })));
@@ -31,17 +31,23 @@ interface SideNavItemProps {
   label: string;
   icon: string;
   isOpen: boolean;
+  /** Extra path prefixes that should also light up this nav entry. Used so
+   * `/upload` and `/datasets` aliases still highlight the consolidated Data
+   * entry. */
+  alsoActiveOn?: string[];
 }
 
-function SideNavItem({ to, label, icon, isOpen }: SideNavItemProps) {
+function SideNavItem({ to, label, icon, isOpen, alsoActiveOn }: SideNavItemProps) {
+  const location = useLocation();
+  const aliasMatch = alsoActiveOn?.some((p) => location.pathname.startsWith(p)) ?? false;
   return (
     <NavLink
       to={to}
       title={!isOpen ? label : undefined}
       className={({ isActive }) =>
         `group flex items-center px-3 py-2.5 text-sm transition-all duration-300 border-l-2 overflow-hidden whitespace-nowrap ${
-          isActive
-            ? "border-accent bg-accent/10 text-accent font-medium shadow-[inset_2px_0_10px_rgba(0,240,255,0.1)]"
+          isActive || aliasMatch
+            ? "border-accent bg-accent/15 text-accent font-medium shadow-[inset_2px_0_10px_rgb(var(--color-accent)/0.15)]"
             : "border-transparent text-text-secondary hover:border-text-muted/30 hover:bg-bg-elevated/50 hover:text-text-primary hover:shadow-sm"
         }`
       }
@@ -69,8 +75,9 @@ function DocumentTitleSync() {
   const location = useLocation();
   const PAGE_TITLES: Record<string, string | undefined> = {
     "/": undefined,
-    "/upload": "Upload",
-    "/datasets": "Datasets",
+    "/data": "Data",
+    "/upload": "Data",
+    "/datasets": "Data",
     "/compare": "Forecast",
     "/backtest": "Backtest",
     "/diagnostics": "Diagnostics",
@@ -95,6 +102,13 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
   const isLanding = location.pathname === "/";
+  const theme = useThemeStore((s) => s.theme);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+    root.classList.toggle("light", theme === "light");
+  }, [theme]);
 
   // Reset scroll on route change, keeps long analysis pages from leaving users in the middle.
   useEffect(() => {
@@ -106,7 +120,7 @@ export default function App() {
     <div className="flex h-full flex-col bg-transparent relative z-10">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-accent focus:text-bg-base focus:px-3 focus:py-1 focus:font-mono focus:text-xs focus:uppercase focus:tracking-widest"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-accent focus:text-on-accent focus:px-3 focus:py-1 focus:font-mono focus:text-xs focus:uppercase focus:tracking-widest"
       >
         Skip to content
       </a>
@@ -115,7 +129,7 @@ export default function App() {
       <DocumentTitleSync />
 
       {/* Top bar */}
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/50 bg-bg-surface/60 backdrop-blur-md px-4 sticky top-0 z-50">
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/50 bg-bg-surface/85 backdrop-blur-md px-4 sticky top-0 z-50">
         <div className="flex items-center gap-4">
           {!isLanding && (
             <button
@@ -137,23 +151,25 @@ export default function App() {
               src="/foresee-logo.png"
               alt=""
               aria-hidden="true"
-              className="h-8 w-8 object-contain drop-shadow-[0_0_6px_rgba(0,240,255,0.35)] group-hover:drop-shadow-[0_0_10px_rgba(0,240,255,0.55)] transition-all duration-300"
+              className="h-8 w-8 object-contain drop-shadow-[0_0_6px_rgb(var(--color-accent)/0.35)] group-hover:drop-shadow-[0_0_10px_rgb(var(--color-accent)/0.55)] transition-all duration-300"
             />
-            <span className="font-display text-lg font-semibold bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent tracking-wide group-hover:from-white group-hover:to-text-primary transition-all duration-300">
+            <span className="font-display text-lg font-semibold bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent tracking-wide group-hover:from-accent group-hover:to-text-primary transition-all duration-300">
               Foresee
             </span>
           </Link>
         </div>
-        {!isLanding && <ModelStatusBar />}
+        <div className="flex items-center gap-2">
+          {!isLanding && <ModelStatusBar />}
+          <ThemeToggle />
+        </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar, hidden on landing */}
         {!isLanding && (
-          <aside className={`flex shrink-0 flex-col border-r border-border/50 bg-bg-surface/40 backdrop-blur-md relative z-40 transition-all duration-300 ease-in-out ${isSidebarOpen ? "w-56 px-2 py-6" : "w-[68px] px-1 py-6"}`}>
+          <aside className={`flex shrink-0 flex-col border-r border-border/50 bg-bg-surface/85 backdrop-blur-md relative z-40 transition-all duration-300 ease-in-out ${isSidebarOpen ? "w-56 px-2 py-6" : "w-[68px] px-1 py-6"}`}>
             <nav className={`flex flex-col gap-1 transition-all duration-300 ${isSidebarOpen ? "pr-1" : ""}`} aria-label="Primary">
-              <SideNavItem to="/upload" label="Upload" icon="↑" isOpen={isSidebarOpen} />
-              <SideNavItem to="/datasets" label="Datasets" icon="⊞" isOpen={isSidebarOpen} />
+              <SideNavItem to="/data" label="Data" icon="⊞" isOpen={isSidebarOpen} alsoActiveOn={["/upload", "/datasets"]} />
             </nav>
 
             <div className="mt-6 border-t border-border/30 pt-6">
@@ -212,11 +228,12 @@ export default function App() {
             <Suspense fallback={<RouteFallback />}>
               <Routes>
                 <Route path="/" element={<LandingPage />} />
-                <Route path="/upload" element={<UploadPage />} />
+                <Route path="/data" element={<DataPage />} />
+                <Route path="/upload" element={<DataPage />} />
+                <Route path="/datasets" element={<DataPage />} />
                 <Route path="/glossary" element={<GlossaryPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/about" element={<AboutPage />} />
-                <Route path="/datasets" element={<DatasetsPage />} />
                 <Route path="/compare/:datasetId?" element={<ComparisonPage />} />
                 <Route path="/anomaly/:datasetId?" element={<AnomalyPage />} />
                 <Route path="/covariates/:datasetId?" element={<CovariatesPage />} />
@@ -231,34 +248,21 @@ export default function App() {
               </Routes>
             </Suspense>
           </ErrorBoundary>
-          {!isLanding && (
-            <footer className="mt-16 border-t border-border/40 pt-4 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-widest text-text-muted">
-              <span>Foresee v{APP_VERSION} · Local forecasting studio</span>
-              <div className="flex gap-3">
-                <Link to="/privacy" className="hover:text-accent">Privacy</Link>
-                <Link to="/about" className="hover:text-accent">About</Link>
-                <Link to="/glossary" className="hover:text-accent">Glossary</Link>
-              </div>
-            </footer>
-          )}
         </main>
       </div>
 
       <Toaster
         richColors
+        theme={theme}
         position="top-right"
         toastOptions={{
           style: {
-            background: "rgba(15, 23, 42, 0.8)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(30, 41, 59, 1)",
-            color: "#F8FAFC",
             borderRadius: "0",
             fontFamily: "Outfit, sans-serif",
             textTransform: "uppercase",
             letterSpacing: "0.05em",
           },
-          className: "shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-xl",
+          className: "shadow-[var(--shadow-elev-2)] backdrop-blur-xl",
         }}
       />
     </div>

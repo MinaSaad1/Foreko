@@ -38,9 +38,6 @@ export function SamplesPicker({ redirectTo, compact = false }: SamplesPickerProp
         <h2 className="font-display text-sm font-medium text-text-primary uppercase tracking-widest">
           Or try a sample
         </h2>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
-          No account, no cloud
-        </span>
       </div>
       <div className={`grid gap-3 ${compact ? "sm:grid-cols-2" : "md:grid-cols-2"}`}>
         {SAMPLES.map((sample) => {
@@ -52,7 +49,7 @@ export function SamplesPicker({ redirectTo, compact = false }: SamplesPickerProp
               type="button"
               onClick={() => pick(sample)}
               disabled={disabled}
-              className="group relative overflow-hidden rounded-panel border border-border/60 bg-bg-surface/30 backdrop-blur-sm p-4 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/60 hover:bg-accent/[0.04] hover:shadow-[0_0_24px_-8px_rgba(0,240,255,0.35)] disabled:opacity-40 disabled:hover:translate-y-0"
+              className="group relative overflow-hidden rounded-panel border border-border/60 bg-bg-surface/30 backdrop-blur-sm p-4 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/60 hover:bg-accent/[0.08] hover:shadow-[0_0_24px_-8px_rgb(var(--color-accent)/0.35)] disabled:opacity-40 disabled:hover:translate-y-0"
             >
               <div className="flex items-start justify-between gap-3">
                 <span className="font-mono text-[10px] uppercase tracking-widest text-accent">

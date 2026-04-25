@@ -51,7 +51,7 @@ export function NextStepsCallout({ datasetId }: NextStepsCalloutProps) {
           <Link
             key={step.to}
             to={step.to}
-            className="group relative overflow-hidden rounded-panel border border-border/60 bg-bg-base/40 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/60 hover:bg-accent/[0.05] hover:shadow-[0_0_20px_-8px_rgba(0,240,255,0.35)]"
+            className="group relative overflow-hidden rounded-panel border border-border/60 bg-bg-base/40 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/60 hover:bg-accent/[0.08] hover:shadow-[0_0_20px_-8px_rgb(var(--color-accent)/0.35)]"
           >
             <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
               {step.eyebrow}

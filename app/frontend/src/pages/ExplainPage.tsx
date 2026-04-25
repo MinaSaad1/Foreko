@@ -19,6 +19,7 @@ import type {
   GrangerRow,
 } from "@/types/phases";
 import ReactECharts from "echarts-for-react";
+import { useChartTheme } from "@/charts/theme";
 
 export function ExplainPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
@@ -162,7 +163,7 @@ export function ExplainPage() {
           <button
             onClick={() => anomalyMethods.mutate()}
             disabled={!mapping || anomalyMethods.isPending}
-            className="rounded-md bg-accent px-3 py-2 text-sm text-bg-base hover:opacity-90 disabled:opacity-40"
+            className="rounded-md bg-accent px-3 py-2 text-sm text-on-accent hover:opacity-90 disabled:opacity-40"
           >
             {anomalyMethods.isPending ? "Running…" : "Detect anomalies (5 methods)"}
           </button>
@@ -321,6 +322,7 @@ export function ExplainPage() {
 }
 
 function LagCharts({ data }: { data: LagResult[] }) {
+  const t = useChartTheme();
   if (!data.length) return null;
   return (
     <div className="rounded-panel border border-border bg-bg-surface p-5 space-y-3">
@@ -337,23 +339,23 @@ function LagCharts({ data }: { data: LagResult[] }) {
             grid: { left: 40, right: 16, top: 24, bottom: 24, containLabel: false },
             title: {
               text: `${r.factor} · peak lag=${r.peak_lag} (${r.peak_corr.toFixed(2)})`,
-              textStyle: { color: "#F0F2F5", fontFamily: "DM Mono", fontSize: 11 },
+              textStyle: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 11 },
               top: 0,
               left: 0,
             },
             xAxis: {
               type: "category",
               data: r.lags.map((l) => l.lag),
-              axisLine: { lineStyle: { color: "#252830" } },
-              axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10 },
+              axisLine: { lineStyle: { color: t.grid } },
+              axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
             },
             yAxis: {
               type: "value",
               min: -1,
               max: 1,
               axisLine: { show: false },
-              axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10 },
-              splitLine: { lineStyle: { color: "#252830" } },
+              axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+              splitLine: { lineStyle: { color: t.grid } },
             },
             tooltip: { trigger: "axis" },
             series: [
@@ -362,7 +364,7 @@ function LagCharts({ data }: { data: LagResult[] }) {
                 data: r.lags.map((l) => l.corr),
                 barMaxWidth: 8,
                 itemStyle: {
-                  color: (p: { value: number }) => (p.value >= 0 ? "#00E5C8" : "#FF4757"),
+                  color: (p: { value: number }) => (p.value >= 0 ? t.accent : t.anomaly),
                 },
               },
             ],

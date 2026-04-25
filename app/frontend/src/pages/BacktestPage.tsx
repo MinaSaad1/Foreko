@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/api/endpoints";
 import { useDatasetStore } from "@/stores/datasetStore";
+import { useBacktestStore } from "@/stores/backtestStore";
 import { ColumnMapper } from "@/components/ColumnMapper";
 import { JobProgress } from "@/components/common/JobProgress";
 import { FoldResultsTable } from "@/components/backtest/FoldResultsTable";
@@ -242,6 +243,26 @@ export function BacktestPage() {
   const { activeId, preview } = useSyncedDataset(datasetId);
   const { data: health } = useHealth();
   const modelReady = health?.model_status === "ready";
+  const setBacktestSummary = useBacktestStore((s) => s.setResult);
+
+  const persistBacktestSummary = useCallback(
+    (r: BacktestResult) => {
+      if (!activeId || !r.winner) return;
+      const mapeByModel: Record<string, number> = {};
+      for (const [model, agg] of Object.entries(r.aggregate)) {
+        mapeByModel[model] = agg.mape_mean;
+      }
+      setBacktestSummary({
+        datasetId: activeId,
+        winner: r.winner,
+        mapeByModel,
+        horizon: r.horizon,
+        folds: r.folds,
+        completedAt: Date.now(),
+      });
+    },
+    [activeId, setBacktestSummary],
+  );
 
   const handleMappingChange = useCallback(
     (m: ColumnMapping) => {
@@ -264,7 +285,10 @@ export function BacktestPage() {
     },
     onSuccess: (handle) => {
       if (handle.status === "done") {
-        api.getBacktestJob(handle.job_id).then((j) => setResult(j.result));
+        api.getBacktestJob(handle.job_id).then((j) => {
+          setResult(j.result);
+          if (j.result) persistBacktestSummary(j.result);
+        });
       } else {
         setJobId(handle.job_id);
       }
@@ -329,7 +353,7 @@ export function BacktestPage() {
                 max={256}
                 value={horizon}
                 onChange={(e) => setHorizon(Math.max(1, Number(e.target.value)))}
-                className="w-24 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+                className="w-24 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
               />
             </div>
             <div>
@@ -342,7 +366,7 @@ export function BacktestPage() {
                 max={10}
                 value={folds}
                 onChange={(e) => setFolds(Math.max(1, Number(e.target.value)))}
-                className="w-20 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+                className="w-20 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
               />
             </div>
           </div>
@@ -371,7 +395,7 @@ export function BacktestPage() {
           <button
             onClick={() => startMutation.mutate()}
             disabled={!mapping || models.length === 0 || startMutation.isPending || !!jobId || !modelReady}
-            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-bg-base transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             {startMutation.isPending ? "Starting..." : "Run walk-forward backtest"}
           </button>
@@ -394,10 +418,28 @@ export function BacktestPage() {
           kind="backtest"
           eventStreamUrl={api.backtestEventStreamUrl(jobId)}
           onDone={(r) => {
-            setResult(r as BacktestResult);
+            const br = r as BacktestResult;
+            setResult(br);
+            persistBacktestSummary(br);
             setJobId(null);
           }}
-          onError={() => setJobId(null)}
+          onError={async () => {
+            // Defense-in-depth: SSE may drop right at the finish line. Poll once
+            // for the final job state before giving up so the user doesn't see
+            // a stuck progress bar after a successful run.
+            try {
+              const j = await api.getBacktestJob(jobId);
+              if (j.status === "done" && j.result) {
+                const br = j.result as BacktestResult;
+                setResult(br);
+                persistBacktestSummary(br);
+              }
+            } catch {
+              // swallow, fall through to clearing the job
+            } finally {
+              setJobId(null);
+            }
+          }}
         />
       )}
 

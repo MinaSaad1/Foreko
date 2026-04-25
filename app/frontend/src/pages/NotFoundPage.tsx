@@ -19,12 +19,12 @@ export function NotFoundPage() {
       <div className="flex flex-wrap gap-3 pt-2">
         <Link
           to="/"
-          className="border border-accent bg-accent px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-bg-base hover:opacity-90"
+          className="border border-accent bg-accent px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-on-accent hover:opacity-90"
         >
           Back to home
         </Link>
         <Link
-          to="/upload"
+          to="/data"
           className="border border-text-muted/40 bg-transparent px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-text-secondary transition-all hover:border-accent hover:text-accent"
         >
           Upload a CSV

@@ -26,8 +26,8 @@ export function DeviceBadge() {
 
   if (isError || !data) {
     return (
-      <span className="inline-flex items-center gap-2 rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-600">
-        <span className="h-2 w-2 rounded-full bg-slate-400" />
+      <span className="inline-flex items-center gap-2 rounded-full border border-border bg-bg-elevated px-3 py-1 text-xs font-medium text-text-secondary">
+        <span className="h-2 w-2 rounded-full bg-anomaly" />
         Backend offline
       </span>
     );
@@ -40,36 +40,58 @@ export function DeviceBadge() {
       : "CPU (no GPU detected)";
   const tone =
     device.kind === "cuda"
-      ? "bg-emerald-100 text-emerald-800"
-      : "bg-amber-100 text-amber-900";
+      ? "border-positive/40 bg-positive/10 text-positive"
+      : "border-warning/40 bg-warning/10 text-warning";
   const statusDot =
     model_status === "ready"
-      ? "bg-emerald-500"
+      ? "bg-positive"
       : model_status === "loading"
-        ? "bg-amber-500 animate-pulse"
-        : "bg-red-500";
+        ? "bg-warning animate-pulse"
+        : "bg-anomaly";
 
   return (
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${tone}`}
+        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${tone}`}
         title={`Model: ${model_status}`}
       >
         <span className={`h-2 w-2 rounded-full ${statusDot}`} />
         {kindLabel} · {model_status}
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 z-40 w-64 rounded-lg border border-slate-200 bg-white p-3 shadow-lg text-sm">
-          <div className="flex justify-between py-0.5"><span className="text-slate-500">Device</span><span className="font-medium">{modelInfo?.device.name ?? "-"}</span></div>
+        <div className="absolute right-0 top-full mt-2 z-40 w-64 border border-border bg-bg-elevated p-3 text-sm text-text-primary shadow-[var(--shadow-elev-2)]">
+          <div className="flex justify-between py-0.5">
+            <span className="text-text-muted">Device</span>
+            <span className="font-medium">{modelInfo?.device.name ?? "-"}</span>
+          </div>
           {modelInfo?.device.memory_total_mb && (
-            <div className="flex justify-between py-0.5"><span className="text-slate-500">VRAM</span><span className="font-medium">{modelInfo.device.memory_free_mb} / {modelInfo.device.memory_total_mb} MB</span></div>
+            <div className="flex justify-between py-0.5">
+              <span className="text-text-muted">VRAM</span>
+              <span className="font-medium">
+                {modelInfo.device.memory_free_mb} / {modelInfo.device.memory_total_mb} MB
+              </span>
+            </div>
           )}
-          <div className="flex justify-between py-0.5"><span className="text-slate-500">Model status</span><span className="font-medium">{modelInfo?.model_status ?? "-"}</span></div>
-          <div className="flex justify-between py-0.5"><span className="text-slate-500">Compile count</span><span className="font-medium">{modelInfo?.compile_count ?? 0}</span></div>
-          <div className="flex justify-between py-0.5"><span className="text-slate-500">Queue depth</span><span className="font-medium">{modelInfo?.queue_depth ?? 0}</span></div>
+          <div className="flex justify-between py-0.5">
+            <span className="text-text-muted">Model status</span>
+            <span className="font-medium">{modelInfo?.model_status ?? "-"}</span>
+          </div>
+          <div className="flex justify-between py-0.5">
+            <span className="text-text-muted">Compile count</span>
+            <span className="font-medium">{modelInfo?.compile_count ?? 0}</span>
+          </div>
+          <div className="flex justify-between py-0.5">
+            <span className="text-text-muted">Queue depth</span>
+            <span className="font-medium">{modelInfo?.queue_depth ?? 0}</span>
+          </div>
           {modelInfo?.current_config && (
-            <div className="flex justify-between py-0.5"><span className="text-slate-500">Config hash</span><span className="font-mono text-xs">{String(modelInfo.current_config).slice(0, 8) || "-"}</span></div>
+            <div className="flex justify-between py-0.5">
+              <span className="text-text-muted">Config hash</span>
+              <span className="font-mono text-xs">
+                {String(modelInfo.current_config).slice(0, 8) || "-"}
+              </span>
+            </div>
           )}
         </div>
       )}

@@ -177,7 +177,7 @@ function Select({ value, onChange, options }: SelectProps) {
       </button>
       
       {isOpen && (
-        <div className="absolute z-[100] mt-1.5 max-h-64 w-full overflow-y-auto rounded-md border border-border/80 bg-bg-elevated/95 backdrop-blur-2xl py-1 shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex flex-col no-scrollbar rounded-b-lg">
+        <div className="absolute z-[100] mt-1.5 max-h-64 w-full overflow-y-auto rounded-md border border-border/80 bg-bg-elevated/95 backdrop-blur-2xl py-1 shadow-[var(--shadow-elev-2)] flex flex-col no-scrollbar rounded-b-lg">
           {options.length === 0 && <div className="px-3 py-2 text-sm text-text-muted italic">(no columns)</div>}
           {options.map((o) => (
             <button

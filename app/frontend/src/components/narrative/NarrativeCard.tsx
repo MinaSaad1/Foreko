@@ -74,7 +74,7 @@ export function NarrativeCard({ kind, payload }: Props) {
         <button
           type="button"
           onClick={grantConsent}
-          className="border border-accent bg-accent px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-bg-base hover:opacity-90"
+          className="border border-accent bg-accent px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-on-accent hover:opacity-90"
         >
           Allow narratives
         </button>
@@ -83,7 +83,7 @@ export function NarrativeCard({ kind, payload }: Props) {
   }
 
   return (
-    <div className="rounded-panel border border-border bg-bg-surface p-5 space-y-3">
+    <div className="rounded-panel border border-border border-l-2 border-l-accent-2 bg-bg-surface p-5 space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="font-display text-sm font-medium uppercase tracking-widest text-text-secondary">
           Explain this

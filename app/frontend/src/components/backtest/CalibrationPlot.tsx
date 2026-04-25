@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import ReactECharts from "echarts-for-react";
 import { getChartPng, type ChartHandle } from "@/hooks/useChartExport";
+import { useChartTheme } from "@/charts/theme";
 import type { CalibrationResult } from "@/types/phases";
 
 interface CalibrationPlotProps {
@@ -11,6 +12,7 @@ export type CalibrationPlotHandle = ChartHandle;
 
 export const CalibrationPlot = forwardRef<CalibrationPlotHandle, CalibrationPlotProps>(
   function CalibrationPlot({ data }, ref) {
+  const t = useChartTheme();
   const chartRef = useRef<ReactECharts>(null);
   useImperativeHandle(ref, () => ({
     getPng: (opts) => getChartPng(chartRef, opts),
@@ -23,17 +25,17 @@ export const CalibrationPlot = forwardRef<CalibrationPlotHandle, CalibrationPlot
       type: "value",
       min: 0,
       max: 1,
-      axisLine: { lineStyle: { color: "#252830" } },
+      axisLine: { lineStyle: { color: t.grid } },
       axisTick: { show: false },
       axisLabel: {
-        color: "#565B6A",
-        fontFamily: "DM Mono",
+        color: t.axisLabel,
+        fontFamily: "JetBrains Mono",
         fontSize: 10,
         formatter: (v: number) => `${(v * 100).toFixed(0)}%`,
       },
       splitLine: { show: false },
       name: "Nominal coverage",
-      nameTextStyle: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10 },
+      nameTextStyle: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
       nameLocation: "middle",
       nameGap: 28,
     },
@@ -44,20 +46,20 @@ export const CalibrationPlot = forwardRef<CalibrationPlotHandle, CalibrationPlot
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {
-        color: "#565B6A",
-        fontFamily: "DM Mono",
+        color: t.axisLabel,
+        fontFamily: "JetBrains Mono",
         fontSize: 10,
         formatter: (v: number) => `${(v * 100).toFixed(0)}%`,
       },
-      splitLine: { lineStyle: { color: "#252830" } },
+      splitLine: { lineStyle: { color: t.grid } },
       name: "Empirical",
-      nameTextStyle: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10 },
+      nameTextStyle: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
     },
     tooltip: {
       trigger: "item",
-      backgroundColor: "#1A1D25",
-      borderColor: "#252830",
-      textStyle: { color: "#F0F2F5", fontFamily: "DM Mono", fontSize: 11 },
+      backgroundColor: t.bgElevated,
+      borderColor: t.grid,
+      textStyle: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 11 },
       formatter: (params: { value: [number, number] }) =>
         `Nominal: ${(params.value[0] * 100).toFixed(0)}%<br/>Empirical: ${(params.value[1] * 100).toFixed(1)}%`,
     },
@@ -66,7 +68,7 @@ export const CalibrationPlot = forwardRef<CalibrationPlotHandle, CalibrationPlot
         name: "Ideal",
         type: "line",
         data: [[0, 0], [1, 1]],
-        lineStyle: { color: "#565B6A", width: 1, type: "dashed" },
+        lineStyle: { color: t.textMuted, width: 1, type: "dashed" },
         symbol: "none",
         z: 1,
       },
@@ -74,14 +76,14 @@ export const CalibrationPlot = forwardRef<CalibrationPlotHandle, CalibrationPlot
         name: "Observed",
         type: "scatter",
         data: points,
-        itemStyle: { color: "#00E5C8" },
+        itemStyle: { color: t.accent },
         symbolSize: 10,
         z: 3,
       },
       {
         type: "line",
         data: points,
-        lineStyle: { color: "#00E5C8", width: 2 },
+        lineStyle: { color: t.accent, width: 2 },
         symbol: "none",
         z: 2,
       },

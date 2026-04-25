@@ -108,7 +108,7 @@ export function LoadingSplash() {
           src="/foresee-logo.png"
           alt=""
           aria-hidden="true"
-          className="relative z-10 h-24 w-24 object-contain drop-shadow-[0_0_20px_rgba(0,240,255,0.35)] animate-pulse-slow"
+          className="relative z-10 h-24 w-24 object-contain drop-shadow-[0_0_20px_rgb(var(--color-accent)/0.35)] animate-pulse-slow"
         />
         <span className="text-3xl font-display font-semibold bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent relative z-10 tracking-widest uppercase">
           Foresee Setup

@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import ReactECharts from "echarts-for-react";
 import { getChartPng, type ChartHandle } from "@/hooks/useChartExport";
+import { useChartTheme } from "@/charts/theme";
 
 interface PerHorizonMAPEProps {
   perHorizon: Record<string, number[]>;
@@ -8,10 +9,10 @@ interface PerHorizonMAPEProps {
 
 export type PerHorizonMAPEHandle = ChartHandle;
 
-const COLORS = ["#00E5C8", "#4A90D9", "#22D17A", "#F5A623", "#FF4757", "#8A8F9E"];
-
 export const PerHorizonMAPE = forwardRef<PerHorizonMAPEHandle, PerHorizonMAPEProps>(
   function PerHorizonMAPE({ perHorizon }, ref) {
+  const t = useChartTheme();
+  const COLORS = [t.accent, t.neutral, t.positive, t.warning, t.anomaly, t.textMuted];
   const chartRef = useRef<ReactECharts>(null);
   useImperativeHandle(ref, () => ({
     getPng: (opts) => getChartPng(chartRef, opts),
@@ -36,34 +37,34 @@ export const PerHorizonMAPE = forwardRef<PerHorizonMAPEHandle, PerHorizonMAPEPro
     grid: { left: 48, right: 24, top: 32, bottom: 44, containLabel: false },
     legend: {
       data: models,
-      textStyle: { color: "#8A8F9E", fontFamily: "DM Mono", fontSize: 11 },
+      textStyle: { color: t.textSecondary, fontFamily: "JetBrains Mono", fontSize: 11 },
       top: 0,
       right: 16,
     },
     xAxis: {
       type: "category",
       data: xs,
-      axisLine: { lineStyle: { color: "#252830" } },
+      axisLine: { lineStyle: { color: t.grid } },
       axisTick: { show: false },
-      axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10 },
+      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
     },
     yAxis: {
       type: "value",
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {
-        color: "#565B6A",
-        fontFamily: "DM Mono",
+        color: t.axisLabel,
+        fontFamily: "JetBrains Mono",
         fontSize: 10,
         formatter: "{value}%",
       },
-      splitLine: { lineStyle: { color: "#252830" } },
+      splitLine: { lineStyle: { color: t.grid } },
     },
     tooltip: {
       trigger: "axis",
-      backgroundColor: "#1A1D25",
-      borderColor: "#252830",
-      textStyle: { color: "#F0F2F5", fontFamily: "DM Mono", fontSize: 11 },
+      backgroundColor: t.bgElevated,
+      borderColor: t.grid,
+      textStyle: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 11 },
     },
     series,
   };

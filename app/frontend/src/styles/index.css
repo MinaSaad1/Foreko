@@ -2,7 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* Default + explicit light theme. RGB channel triplets (no rgb() wrapper)
+   so Tailwind's `bg-accent/40` style alpha modifiers continue to work. */
+:root,
+html.light {
+  --color-bg-base: 248 250 252;
+  --color-bg-surface: 255 255 255;
+  --color-bg-elevated: 241 245 249;
+  --color-border: 203 213 225;
+  --color-border-strong: 148 163 184;
+  --color-text-primary: 15 23 42;
+  --color-text-secondary: 71 85 105;
+  --color-text-muted: 100 116 139;
+  --color-accent: 14 116 144;
+  --color-on-accent: 255 255 255;
+  --color-accent-2: 234 88 12;
+  --color-on-accent-2: 255 255 255;
+  --color-positive: 5 150 105;
+  --color-warning: 217 119 6;
+  --color-anomaly: 220 38 38;
+  --color-neutral: 37 99 235;
+  --grid-line-alpha: 0.08;
+  --hero-glow-alpha: 0.10;
+  --focus-glow-alpha: 0.35;
+  --shadow-elev-1: 0 2px 8px rgb(15 23 42 / 0.06), 0 1px 2px rgb(15 23 42 / 0.04);
+  --shadow-elev-2: 0 8px 24px rgb(15 23 42 / 0.10), 0 2px 6px rgb(15 23 42 / 0.06);
+  color-scheme: light;
+}
+
+html.dark {
+  --color-bg-base: 3 7 18;
+  --color-bg-surface: 15 23 42;
+  --color-bg-elevated: 30 41 59;
+  --color-border: 30 41 59;
+  --color-border-strong: 51 65 85;
+  --color-text-primary: 248 250 252;
+  --color-text-secondary: 148 163 184;
+  --color-text-muted: 100 116 139;
+  --color-accent: 0 240 255;
+  --color-on-accent: 3 7 18;
+  --color-accent-2: 251 146 60;
+  --color-on-accent-2: 23 12 0;
+  --color-positive: 16 185 129;
+  --color-warning: 245 158 11;
+  --color-anomaly: 239 68 68;
+  --color-neutral: 59 130 246;
+  --grid-line-alpha: 0.06;
+  --hero-glow-alpha: 0.15;
+  --focus-glow-alpha: 0.15;
+  --shadow-elev-1: 0 4px 16px rgb(0 0 0 / 0.4);
+  --shadow-elev-2: 0 8px 32px rgb(0 0 0 / 0.6);
   color-scheme: dark;
 }
 
@@ -13,33 +62,33 @@ body,
 }
 
 body {
-  background-color: theme('colors.bg.base');
+  background-color: rgb(var(--color-bg-base));
   background-image:
-    linear-gradient(to right, theme('colors.border.DEFAULT' / 6%) 1px, transparent 1px),
-    linear-gradient(to bottom, theme('colors.border.DEFAULT' / 6%) 1px, transparent 1px);
+    linear-gradient(to right, rgb(var(--color-border) / var(--grid-line-alpha)) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(var(--color-border) / var(--grid-line-alpha)) 1px, transparent 1px);
   background-size: 40px 40px;
   background-attachment: fixed;
-  caret-color: theme('colors.accent.DEFAULT');
-  accent-color: theme('colors.accent.DEFAULT');
+  caret-color: rgb(var(--color-accent));
+  accent-color: rgb(var(--color-accent));
 }
 
 /* Terminal-style text selection, consistent across browsers/OS */
 ::selection {
-  background: theme('colors.accent.DEFAULT');
-  color: theme('colors.bg.base');
+  background: rgb(var(--color-accent));
+  color: rgb(var(--color-on-accent));
   text-shadow: none;
 }
 ::-moz-selection {
-  background: theme('colors.accent.DEFAULT');
-  color: theme('colors.bg.base');
+  background: rgb(var(--color-accent));
+  color: rgb(var(--color-on-accent));
   text-shadow: none;
 }
 
-/* Focus ring, accent cyan with a subtle outer glow */
+/* Focus ring, accent with a theme-aware outer glow */
 :focus-visible {
-  outline: 1px solid theme('colors.accent.DEFAULT');
+  outline: 2px solid rgb(var(--color-accent));
   outline-offset: 2px;
-  box-shadow: 0 0 8px theme('colors.accent.dim');
+  box-shadow: 0 0 8px rgb(var(--color-accent) / var(--focus-glow-alpha));
 }
 /* Suppress default ring on interactive elements we already style */
 button:focus:not(:focus-visible),
@@ -57,7 +106,7 @@ body::before {
   left: 0;
   right: 0;
   height: 60vh;
-  background: radial-gradient(ellipse at 50% 0%, theme('colors.accent.dim'), transparent 70%);
+  background: radial-gradient(ellipse at 50% 0%, rgb(var(--color-accent) / var(--hero-glow-alpha)), transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -83,8 +132,19 @@ body::before {
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  background: rgba(255, 71, 87, 0.4);
+  background: rgb(var(--color-anomaly) / 0.4);
   animation: pulse-ring 2s ease-out infinite;
+}
+
+/* SVG children transformed via CSS (scale/rotate) need fill-box origin so the
+   transform pivots around the element's own center, not the SVG viewport's
+   top-left. Without this, ping/pulse rings shoot off toward (0,0) and escape
+   the illustration box. */
+svg .animate-ping-slow,
+svg .animate-pulse-slow,
+svg .animate-wobble {
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 /* Custom CSS Scrollbar - Terminal Aesthetic */
@@ -93,19 +153,19 @@ body::before {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: theme('colors.bg.base');
-  border-left: 1px solid theme('colors.border.DEFAULT');
-  border-top: 1px solid theme('colors.border.DEFAULT');
+  background: rgb(var(--color-bg-base));
+  border-left: 1px solid rgb(var(--color-border));
+  border-top: 1px solid rgb(var(--color-border));
 }
 ::-webkit-scrollbar-thumb {
-  background: theme('colors.bg.elevated');
-  border: 1px solid theme('colors.border.strong');
+  background: rgb(var(--color-bg-elevated));
+  border: 1px solid rgb(var(--color-border-strong));
   border-radius: 0;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: theme('colors.accent.DEFAULT' / 40%);
-  border-color: theme('colors.accent.DEFAULT' / 80%);
+  background: rgb(var(--color-accent) / 0.4);
+  border-color: rgb(var(--color-accent) / 0.8);
 }
 ::-webkit-scrollbar-corner {
-  background: theme('colors.bg.base');
+  background: rgb(var(--color-bg-base));
 }

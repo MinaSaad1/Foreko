@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useJobsStore } from "@/stores/jobsStore";
 
 interface JobProgressProps {
@@ -14,6 +14,20 @@ export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCa
   const updateJob = useJobsStore((s) => s.updateJob);
   const job = useJobsStore((s) => s.jobs[jobId]);
 
+  // Stable refs so the SSE effect below depends only on jobId/url/kind.
+  // Without this, parent re-renders (e.g. from React Query background refetches
+  // of useHealth) recreated the inline onDone closure, retriggered the effect,
+  // and tore down the EventSource right before the "done" event arrived,
+  // leaving the UI stuck at 100%.
+  const onDoneRef = useRef(onDone);
+  const onErrorRef = useRef(onError);
+  const onCancelRef = useRef(onCancel);
+  useEffect(() => {
+    onDoneRef.current = onDone;
+    onErrorRef.current = onError;
+    onCancelRef.current = onCancel;
+  }, [onDone, onError, onCancel]);
+
   useEffect(() => {
     updateJob(jobId, {
       job_id: jobId,
@@ -25,6 +39,8 @@ export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCa
     });
 
     const es = new EventSource(eventStreamUrl);
+    let settled = false;
+
     es.onmessage = (evt) => {
       try {
         const data = JSON.parse(evt.data);
@@ -34,30 +50,41 @@ export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCa
         } else if (data.type === "state") {
           updateJob(jobId, { status: data.status, progress: data.progress });
         } else if (data.type === "done") {
+          settled = true;
           updateJob(jobId, { status: "done", result: data.result });
-          onDone?.(data.result);
+          onDoneRef.current?.(data.result);
           es.close();
         } else if (data.type === "error") {
+          settled = true;
           updateJob(jobId, { status: "error", error: data.error });
-          onError?.(data.error);
+          onErrorRef.current?.(data.error);
           es.close();
         } else if (data.type === "cancelled") {
+          settled = true;
           updateJob(jobId, { status: "cancelled" });
-          onCancel?.();
+          onCancelRef.current?.();
           es.close();
         }
-      } catch (e) {
+      } catch {
         // ignore malformed SSE messages
       }
     };
     es.onerror = () => {
-      es.close();
+      // Browser will retry automatically if readyState is CONNECTING.
+      // Only close if the stream is fully dead and we haven't settled yet.
+      if (es.readyState === EventSource.CLOSED && !settled) {
+        updateJob(jobId, {
+          status: "error",
+          error: "Connection lost before the job finished. Try running again.",
+        });
+        onErrorRef.current?.("connection lost");
+      }
     };
 
     return () => {
       es.close();
     };
-  }, [jobId, eventStreamUrl, kind, updateJob, onDone, onError, onCancel]);
+  }, [jobId, eventStreamUrl, kind, updateJob]);
 
   if (!job) return null;
 

@@ -25,6 +25,7 @@ from ..schemas.factors import (
 from . import csv_loader
 from .forecaster import _infer_future_dates
 from .model_registry import ModelRegistry
+from .series import aggregate_duplicates_by_date
 
 logger = logging.getLogger(__name__)
 
@@ -180,6 +181,11 @@ async def analyze_factors(
     """
 
     df = csv_loader.load_dataset(request.dataset_id, datasets_dir)
+    # When the user left series_id_col empty but the CSV stacks multiple
+    # series, collapse duplicate dates so factor stats and covariate arrays
+    # line up with the single aggregated series extract_series will return.
+    if request.mapping.series_id_col is None:
+        df = aggregate_duplicates_by_date(df, request.mapping)
     ids, values, dates = csv_loader.extract_series(df, request.mapping)
 
     if not ids:

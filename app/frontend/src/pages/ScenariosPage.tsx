@@ -5,6 +5,7 @@ import { api } from "@/api/endpoints";
 import { useDatasetStore } from "@/stores/datasetStore";
 import { ColumnMapper } from "@/components/ColumnMapper";
 import ReactECharts from "echarts-for-react";
+import { useChartTheme } from "@/charts/theme";
 import { PageIntro } from "@/components/common/PageIntro";
 import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
 import { Term } from "@/components/common/Term";
@@ -150,7 +151,7 @@ export function ScenariosPage() {
             max={256}
             value={horizon}
             onChange={(e) => setHorizon(Math.max(1, Number(e.target.value)))}
-            className="w-24 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+            className="w-24 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
           />
         </div>
 
@@ -249,7 +250,7 @@ export function ScenariosPage() {
           <button
             onClick={() => runMutation.mutate()}
             disabled={!mapping || runMutation.isPending || !modelReady}
-            className="rounded-md bg-accent px-3 py-2 text-sm text-bg-base hover:opacity-90 disabled:opacity-40"
+            className="rounded-md bg-accent px-3 py-2 text-sm text-on-accent hover:opacity-90 disabled:opacity-40"
           >
             {runMutation.isPending ? "Running..." : "Run scenario"}
           </button>
@@ -258,7 +259,7 @@ export function ScenariosPage() {
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder="Scenario label"
-            className="flex-1 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+            className="flex-1 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
           />
           <button
             onClick={() => saveMutation.mutate()}
@@ -329,6 +330,7 @@ export function ScenariosPage() {
 }
 
 function ScenarioResultChart({ data }: { data: ScenarioRunResult }) {
+  const t = useChartTheme();
   const allDates = [...data.historical_dates, ...data.forecast_dates];
   const histSeries = data.historical_values.map((v, i) => [data.historical_dates[i], v]);
   const fcSeries = data.forecast.map((v, i) => [data.forecast_dates[i], v]);
@@ -339,26 +341,26 @@ function ScenarioResultChart({ data }: { data: ScenarioRunResult }) {
       xAxis: {
         type: "category",
         data: allDates,
-        axisLine: { lineStyle: { color: "#252830" } },
-        axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10, rotate: 30, formatter: (v: string) => v.slice(0, 7) },
+        axisLine: { lineStyle: { color: t.grid } },
+        axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10, rotate: 30, formatter: (v: string) => v.slice(0, 7) },
       },
       yAxis: {
         type: "value",
         axisLine: { show: false },
-        axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10 },
-        splitLine: { lineStyle: { color: "#252830" } },
+        axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+        splitLine: { lineStyle: { color: t.grid } },
       },
       tooltip: { trigger: "axis" },
       dataZoom: [
         { type: "inside", xAxisIndex: 0 },
-        { type: "slider", xAxisIndex: 0, height: 16, bottom: 8, handleStyle: { color: "#00E5C8" } },
+        { type: "slider", xAxisIndex: 0, height: 16, bottom: 8, handleStyle: { color: t.accent } },
       ],
       series: [
-        { name: "Historical", type: "line", data: histSeries, lineStyle: { color: "#565B6A", width: 2 }, symbol: "none" },
-        { name: "Scenario", type: "line", data: fcSeries, lineStyle: { color: "#00E5C8", width: 2 }, symbol: "none" },
+        { name: "Historical", type: "line", data: histSeries, lineStyle: { color: t.historical, width: 2 }, symbol: "none" },
+        { name: "Scenario", type: "line", data: fcSeries, lineStyle: { color: t.accent, width: 2 }, symbol: "none" },
       ],
     }),
-    [allDates, histSeries, fcSeries],
+    [allDates, histSeries, fcSeries, t],
   );
   return (
     <div className="rounded-panel border border-accent/30 bg-bg-surface p-5 space-y-3">
@@ -374,7 +376,8 @@ function ScenarioResultChart({ data }: { data: ScenarioRunResult }) {
 }
 
 function ScenarioCompareChart({ data }: { data: ScenarioCompareResult }) {
-  const colors = ["#00E5C8", "#4A90D9", "#22D17A", "#F5A623", "#FF4757"];
+  const t = useChartTheme();
+  const colors = [t.accent, t.neutral, t.positive, t.warning, t.anomaly];
   const histSeries = data.historical_values.map((v, i) => [data.historical_dates[i], v]);
   const allDates = [
     ...data.historical_dates,
@@ -385,7 +388,7 @@ function ScenarioCompareChart({ data }: { data: ScenarioCompareResult }) {
       name: "Historical",
       type: "line",
       data: histSeries,
-      lineStyle: { color: "#565B6A", width: 2 },
+      lineStyle: { color: t.historical, width: 2 },
       symbol: "none",
     },
     ...data.scenarios.map((s, i) => ({
@@ -424,19 +427,19 @@ function ScenarioCompareChart({ data }: { data: ScenarioCompareResult }) {
           xAxis: {
             type: "category",
             data: allDates,
-            axisLine: { lineStyle: { color: "#252830" } },
-            axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10, rotate: 30, formatter: (v: string) => v.slice(0, 7) },
+            axisLine: { lineStyle: { color: t.grid } },
+            axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10, rotate: 30, formatter: (v: string) => v.slice(0, 7) },
           },
           yAxis: {
             type: "value",
             axisLine: { show: false },
-            axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10 },
-            splitLine: { lineStyle: { color: "#252830" } },
+            axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+            splitLine: { lineStyle: { color: t.grid } },
           },
           tooltip: { trigger: "axis" },
           legend: {
             data: ["Historical", ...data.scenarios.map((s) => s.label)],
-            textStyle: { color: "#8A8F9E", fontFamily: "DM Mono", fontSize: 10 },
+            textStyle: { color: t.textSecondary, fontFamily: "JetBrains Mono", fontSize: 10 },
             top: 0,
             right: 16,
           },

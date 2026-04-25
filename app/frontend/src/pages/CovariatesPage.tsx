@@ -197,7 +197,7 @@ export function CovariatesPage() {
                   max={256}
                   value={horizon}
                   onChange={(e) => setHorizon(Math.max(1, Number(e.target.value)))}
-                  className="w-32 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+                  className="w-32 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
                 />
               </div>
               <div>
@@ -273,7 +273,7 @@ export function CovariatesPage() {
             <button
               onClick={() => analyze.mutate()}
               disabled={!mapping || !hasSelectedFactors || analyze.isPending || !modelReady}
-              className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-bg-base transition-opacity hover:opacity-90 disabled:opacity-40"
+              className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               {analyze.isPending ? "Running analysis..." : "Analyze factor impact"}
             </button>

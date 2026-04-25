@@ -15,8 +15,8 @@ const LABELS: Record<string, string> = {
 };
 
 function cellColor(v: number): string {
-  if (v >= 0.75) return "bg-accent text-bg-base";
-  if (v >= 0.5) return "bg-accent/70 text-bg-base";
+  if (v >= 0.75) return "bg-accent text-on-accent";
+  if (v >= 0.5) return "bg-accent/70 text-on-accent";
   if (v >= 0.25) return "bg-accent/30 text-text-primary";
   if (v >= 0.1) return "bg-accent-dim text-text-secondary";
   return "bg-bg-elevated text-text-muted";

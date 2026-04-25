@@ -59,7 +59,7 @@ export function AboutPage() {
             <span className="text-text-muted">, what stays local, what is opt-in</span>
           </li>
           <li>
-            <Link to="/upload" className="text-accent hover:underline">Upload a CSV</Link>
+            <Link to="/data" className="text-accent hover:underline">Upload a CSV</Link>
           </li>
         </ul>
       </section>

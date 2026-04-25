@@ -4,13 +4,23 @@ import { MetricBadge, ConfidencePill } from "./MetricBadge";
 import { FeatureImportance } from "./FeatureImportance";
 import { ComparisonChart, type ComparisonChartHandle } from "./ComparisonChart";
 
+export type RecommendationSource = "holdout" | "backtest";
+
 interface WinnerCardProps {
   data: ComparisonResponse;
   onSelectionChange?: (name: ModelName) => void;
   chartRef?: Ref<ComparisonChartHandle>;
+  recommendationSource?: RecommendationSource;
+  recommendationNote?: string;
 }
 
-export function WinnerCard({ data, onSelectionChange, chartRef }: WinnerCardProps) {
+export function WinnerCard({
+  data,
+  onSelectionChange,
+  chartRef,
+  recommendationSource = "holdout",
+  recommendationNote,
+}: WinnerCardProps) {
   const [selected, setSelected] = useState<ModelName>(data.winner.name);
   const [showBoth, setShowBoth] = useState(false);
 
@@ -45,8 +55,13 @@ export function WinnerCard({ data, onSelectionChange, chartRef }: WinnerCardProp
         {/* Header, recommendation is constant */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-accent text-sm">
-            <span>★ Recommended:</span>
+          <div className="flex items-center gap-2 text-accent-2 text-sm">
+            <span>
+              ★{" "}
+              {recommendationSource === "backtest"
+                ? "Recommended (backtest winner):"
+                : "Best on most recent window:"}
+            </span>
             <span className="font-semibold">{winner.display_name}</span>
           </div>
           <div className="flex items-baseline gap-3">
@@ -90,7 +105,7 @@ export function WinnerCard({ data, onSelectionChange, chartRef }: WinnerCardProp
 
       {/* Winner explanation, constant */}
       <p className="rounded-md border border-border bg-bg-elevated px-4 py-3 text-sm text-text-secondary">
-        {data.winner_explanation}
+        {recommendationNote ?? data.winner_explanation}
       </p>
 
       {/* Feature importance, only when the active model has any (LightGBM) */}
@@ -108,7 +123,7 @@ export function WinnerCard({ data, onSelectionChange, chartRef }: WinnerCardProp
             onClick={() => handleSelect(winner.name)}
             className={`flex-1 border px-4 py-2 font-mono text-xs tracking-widest uppercase transition-colors flex items-center justify-center gap-2 ${
               selected === winner.name
-                ? "border-accent bg-accent text-bg-base"
+                ? "border-accent bg-accent text-on-accent"
                 : "border-border text-text-secondary hover:border-accent/40 hover:text-accent"
             }`}
           >
@@ -119,7 +134,7 @@ export function WinnerCard({ data, onSelectionChange, chartRef }: WinnerCardProp
             onClick={() => handleSelect(alternative.name)}
             className={`flex-1 border px-4 py-2 font-mono text-xs tracking-widest uppercase transition-colors flex items-center justify-center gap-2 ${
               selected === alternative.name
-                ? "border-neutral bg-neutral text-bg-base"
+                ? "border-neutral bg-neutral text-on-accent"
                 : "border-border text-text-secondary hover:border-neutral/40 hover:text-neutral"
             }`}
           >

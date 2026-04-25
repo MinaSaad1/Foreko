@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/api/endpoints";
 import { useDatasetStore } from "@/stores/datasetStore";
+import { useBacktestStore } from "@/stores/backtestStore";
 import { ColumnMapper } from "@/components/ColumnMapper";
 import { WinnerCard } from "@/components/WinnerCard";
 import { AlternativeCard } from "@/components/AlternativeCard";
@@ -18,6 +19,57 @@ import { useHealth } from "@/hooks/useHealth";
 import type { ColumnMapping } from "@/types/dataset";
 import type { ComparisonResponse } from "@/types/comparison";
 import type { ComparisonChartHandle } from "@/components/ComparisonChart";
+import type { BacktestSummary } from "@/stores/backtestStore";
+
+// Comparison response uses ModelName ("global_model" | "your_model"),
+// the backtest stores a model id ("timesfm" | "lightgbm" | ...). This
+// maps backtest ids onto comparison-card model names so we can decide
+// whether the backtest winner should override the holdout winner.
+const BACKTEST_TO_COMPARISON_NAME: Record<string, "global_model" | "your_model"> = {
+  timesfm: "global_model",
+  lightgbm: "your_model",
+};
+
+interface ResolvedRecommendation {
+  data: ComparisonResponse;
+  source: "holdout" | "backtest";
+  note?: string;
+}
+
+function resolveRecommendation(
+  base: ComparisonResponse,
+  backtest: BacktestSummary | undefined,
+): ResolvedRecommendation {
+  if (!backtest) return { data: base, source: "holdout" };
+
+  const backtestWinnerName = BACKTEST_TO_COMPARISON_NAME[backtest.winner];
+  if (!backtestWinnerName) return { data: base, source: "holdout" };
+
+  // Already in agreement, just upgrade the source label so the user knows
+  // it's been confirmed by walk-forward backtest.
+  if (base.winner.name === backtestWinnerName) {
+    return {
+      data: base,
+      source: "backtest",
+      note:
+        `Confirmed by walk-forward backtest across ${backtest.folds} folds at horizon ${backtest.horizon}.`,
+    };
+  }
+
+  // Disagreement, swap winner and alternative so the recommended model
+  // matches the more reliable multi-fold result.
+  if (base.alternative.name === backtestWinnerName) {
+    return {
+      data: { ...base, winner: base.alternative, alternative: base.winner },
+      source: "backtest",
+      note:
+        `${base.alternative.display_name} won the walk-forward backtest across ${backtest.folds} folds at horizon ${backtest.horizon}, ` +
+        `even though ${base.winner.display_name} fit the most recent window better. The multi-fold result is the more reliable signal.`,
+    };
+  }
+
+  return { data: base, source: "holdout" };
+}
 
 const HORIZON_OPTIONS = [
   { value: 4, label: "4 periods" },
@@ -215,6 +267,9 @@ export function ComparisonPage() {
   const { activeId, preview } = useSyncedDataset(datasetId);
   const { data: health } = useHealth();
   const modelReady = health?.model_status === "ready";
+  const backtestSummary = useBacktestStore((s) =>
+    activeId ? s.results[activeId] : undefined,
+  );
 
   const handleMappingChange = useCallback(
     (m: ColumnMapping) => {
@@ -302,7 +357,7 @@ export function ComparisonPage() {
           <button
             onClick={() => compareMutation.mutate()}
             disabled={!mapping || compareMutation.isPending || !modelReady}
-            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-bg-base transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             {compareMutation.isPending
               ? "Running comparison..."
@@ -323,13 +378,15 @@ export function ComparisonPage() {
         </div>
       )}
 
-      {result && (
+      {result && (() => {
+        const resolved = resolveRecommendation(result, backtestSummary);
+        return (
         <div className="space-y-4">
           <div className="flex justify-end">
             <DownloadPdfButton
               title="Foresee, Forecast report"
               filename="foresee-forecast.pdf"
-              sections={() => buildForecastReport(result, {
+              sections={() => buildForecastReport(resolved.data, {
                 horizon,
                 datasetName: preview?.filename,
                 rowCount: preview?.row_count,
@@ -337,10 +394,15 @@ export function ComparisonPage() {
               })}
             />
           </div>
-          <WinnerCard data={result} chartRef={chartHandleRef} />
+          <WinnerCard
+            data={resolved.data}
+            chartRef={chartHandleRef}
+            recommendationSource={resolved.source}
+            recommendationNote={resolved.note}
+          />
           <AlternativeCard
-            model={result.alternative}
-            winnerAccuracy={result.winner.accuracy}
+            model={resolved.data.alternative}
+            winnerAccuracy={resolved.data.winner.accuracy}
           />
           <NextStepsCallout datasetId={activeId} />
           <button
@@ -350,7 +412,8 @@ export function ComparisonPage() {
             ← Change settings
           </button>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

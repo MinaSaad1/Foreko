@@ -2,6 +2,7 @@ import type { Config } from "tailwindcss";
 
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       fontFamily: {
@@ -11,27 +12,33 @@ export default {
       },
       colors: {
         bg: {
-          base: "#030712",
-          surface: "#0F172A",
-          elevated: "#1E293B",
+          base: "rgb(var(--color-bg-base) / <alpha-value>)",
+          surface: "rgb(var(--color-bg-surface) / <alpha-value>)",
+          elevated: "rgb(var(--color-bg-elevated) / <alpha-value>)",
         },
         border: {
-          DEFAULT: "#1E293B",
-          strong: "#334155",
+          DEFAULT: "rgb(var(--color-border) / <alpha-value>)",
+          strong: "rgb(var(--color-border-strong) / <alpha-value>)",
         },
         text: {
-          primary: "#F8FAFC",
-          secondary: "#94A3B8",
-          muted: "#64748B",
+          primary: "rgb(var(--color-text-primary) / <alpha-value>)",
+          secondary: "rgb(var(--color-text-secondary) / <alpha-value>)",
+          muted: "rgb(var(--color-text-muted) / <alpha-value>)",
         },
         accent: {
-          DEFAULT: "#00F0FF",
-          dim: "rgba(0, 240, 255, 0.15)",
+          DEFAULT: "rgb(var(--color-accent) / <alpha-value>)",
+          dim: "rgb(var(--color-accent) / 0.15)",
         },
-        positive: "#10B981",
-        warning: "#F59E0B",
-        anomaly: "#EF4444",
-        neutral: "#3B82F6",
+        "on-accent": "rgb(var(--color-on-accent) / <alpha-value>)",
+        "accent-2": {
+          DEFAULT: "rgb(var(--color-accent-2) / <alpha-value>)",
+          dim: "rgb(var(--color-accent-2) / 0.15)",
+        },
+        "on-accent-2": "rgb(var(--color-on-accent-2) / <alpha-value>)",
+        positive: "rgb(var(--color-positive) / <alpha-value>)",
+        warning: "rgb(var(--color-warning) / <alpha-value>)",
+        anomaly: "rgb(var(--color-anomaly) / <alpha-value>)",
+        neutral: "rgb(var(--color-neutral) / <alpha-value>)",
       },
       borderRadius: {
         none: '0',

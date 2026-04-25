@@ -92,7 +92,7 @@ export function DiagnosticsPage() {
                 max={256}
                 value={horizon}
                 onChange={(e) => setHorizon(Math.max(1, Number(e.target.value)))}
-                className="w-24 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+                className="w-24 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
               />
             </div>
             <div>
@@ -102,7 +102,7 @@ export function DiagnosticsPage() {
               <select
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
-                className="rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+                className="rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
               >
                 <option value="timesfm">TimesFM</option>
                 <option value="ets">ETS</option>
@@ -120,7 +120,7 @@ export function DiagnosticsPage() {
           <button
             onClick={() => runMutation.mutate()}
             disabled={!mapping || runMutation.isPending || !modelReady}
-            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-bg-base transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             {runMutation.isPending ? "Running..." : "Run diagnostics"}
           </button>

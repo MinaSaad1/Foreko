@@ -2,6 +2,7 @@ import { useRef } from "react";
 import ReactECharts from "echarts-for-react";
 import { useChartExport } from "@/hooks/useChartExport";
 import { ExportChartButton } from "@/components/common/ExportChartButton";
+import { useChartTheme } from "@/charts/theme";
 import type { FactorStat } from "@/types/factors";
 
 interface FactorInfluenceChartProps {
@@ -9,6 +10,7 @@ interface FactorInfluenceChartProps {
 }
 
 export function FactorInfluenceChart({ factors }: FactorInfluenceChartProps) {
+  const t = useChartTheme();
   const chartRef = useRef<ReactECharts>(null);
   const { export: exportChart } = useChartExport(chartRef, {
     filename: "factor-influence",
@@ -28,28 +30,28 @@ export function FactorInfluenceChart({ factors }: FactorInfluenceChartProps) {
     xAxis: {
       type: "value",
       max: 100,
-      axisLine: { lineStyle: { color: "#252830" } },
+      axisLine: { lineStyle: { color: t.grid } },
       axisTick: { show: false },
       axisLabel: {
-        color: "#565B6A",
-        fontFamily: "DM Mono",
+        color: t.axisLabel,
+        fontFamily: "JetBrains Mono",
         fontSize: 10,
         formatter: "{value}%",
       },
-      splitLine: { lineStyle: { color: "#252830" } },
+      splitLine: { lineStyle: { color: t.grid } },
     },
     yAxis: {
       type: "category",
       data: labels,
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: "#F0F2F5", fontFamily: "DM Mono", fontSize: 11 },
+      axisLabel: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 11 },
     },
     tooltip: {
       trigger: "axis",
-      backgroundColor: "#1A1D25",
-      borderColor: "#252830",
-      textStyle: { color: "#F0F2F5", fontFamily: "DM Mono", fontSize: 11 },
+      backgroundColor: t.bgElevated,
+      borderColor: t.grid,
+      textStyle: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 11 },
       formatter: (params: { dataIndex: number }[]) => {
         const i = params[0].dataIndex;
         const f = sorted[i];
@@ -63,14 +65,14 @@ export function FactorInfluenceChart({ factors }: FactorInfluenceChartProps) {
         data: values.map((v, i) => ({
           value: v,
           itemStyle: {
-            color: directions[i] === "up" ? "#00E5C8" : "#4A90D9",
+            color: directions[i] === "up" ? t.accent : t.neutral,
             borderRadius: [0, 2, 2, 0],
           },
           label: {
             show: true,
             position: "right",
-            color: "#8A8F9E",
-            fontFamily: "DM Mono",
+            color: t.textSecondary,
+            fontFamily: "JetBrains Mono",
             fontSize: 10,
             formatter: `${v.toFixed(1)}%`,
           },

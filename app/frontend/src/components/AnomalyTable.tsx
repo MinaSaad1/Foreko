@@ -123,7 +123,7 @@ export function AnomalyTable({ records, filename }: AnomalyTableProps) {
           />
           <button
             onClick={exportCsv}
-            className="group/btn border border-accent/40 bg-transparent px-3 py-1 font-mono text-xs uppercase tracking-widest text-accent transition-all hover:bg-accent hover:text-bg-base flex items-center justify-center min-w-[100px]"
+            className="group/btn border border-accent/40 bg-transparent px-3 py-1 font-mono text-xs uppercase tracking-widest text-accent transition-all hover:bg-accent hover:text-on-accent flex items-center justify-center min-w-[100px]"
           >
             EXPORT CSV <span className="opacity-0 group-hover/btn:opacity-100 absolute right-2 animate-[pulse_1s_infinite]">▌</span>
           </button>
@@ -180,7 +180,7 @@ export function AnomalyTable({ records, filename }: AnomalyTableProps) {
               return (
                 <tr
                   key={r.date}
-                  className="border-b border-border/40 last:border-0 hover:bg-accent/5 transition-colors group"
+                  className="border-b border-border/40 last:border-0 hover:bg-accent/10 transition-colors group"
                 >
                   <td className="px-4 py-2 font-mono text-text-primary group-hover:text-accent transition-colors">{r.date}</td>
                   <td className="px-4 py-2 text-right font-mono text-text-primary">

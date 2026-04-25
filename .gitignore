@@ -36,3 +36,8 @@ uv.lock
 
 # Claude Code workspace state
 .claude/
+
+# Playwright run output
+app/frontend/e2e/artifacts/
+app/frontend/playwright-report/
+app/frontend/test-results/

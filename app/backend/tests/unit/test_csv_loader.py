@@ -107,7 +107,11 @@ def test_extract_series_rejects_constant() -> None:
 
 
 @pytest.mark.unit
-def test_extract_series_rejects_duplicate_timestamps() -> None:
+def test_extract_series_auto_aggregates_duplicate_timestamps_when_no_series_col() -> None:
+    # When the user leaves series_id_col=None but the CSV actually contains
+    # multiple series stacked under one value column, extract_series now sums
+    # the duplicates per date instead of failing. This keeps the series
+    # column genuinely optional.
     df = pd.DataFrame(
         {
             "Date": ["2021-01-01"] * 2 + [f"2021-{m:02d}-01" for m in range(2, 12)],
@@ -115,8 +119,24 @@ def test_extract_series_rejects_duplicate_timestamps() -> None:
         }
     )
     mapping = ColumnMapping(value_col="QTY", date_col="Date")
+    ids, values, dates = csv_loader.extract_series(df, mapping)
+    assert ids == ["series"]
+    # Jan sums 0+1=1, Feb..Dec pass through as-is
+    assert values[0][0] == 1.0
+    assert len(values[0]) == 11
+    # Still rejects duplicates when user explicitly picked a series_id_col
+    # but that column contains the same id with colliding dates.
+    dup_df = pd.DataFrame(
+        {
+            "Date": ["2021-01-01", "2021-01-01"],
+            "QTY": [1.0, 2.0],
+            "sid": ["A", "A"],
+        }
+    )
     with pytest.raises(ValueError, match="duplicate timestamps"):
-        csv_loader.extract_series(df, mapping)
+        csv_loader.extract_series(
+            dup_df, ColumnMapping(value_col="QTY", date_col="Date", series_id_col="sid")
+        )
 
 
 @pytest.mark.unit

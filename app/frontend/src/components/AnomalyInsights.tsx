@@ -2,6 +2,7 @@ import { useMemo, useRef } from "react";
 import ReactECharts from "echarts-for-react";
 import { useChartExport } from "@/hooks/useChartExport";
 import { ExportChartButton } from "@/components/common/ExportChartButton";
+import { useChartTheme } from "@/charts/theme";
 import type { ContextAnomalyRecord } from "@/types/anomaly";
 
 interface AnomalyInsightsProps {
@@ -165,8 +166,8 @@ function HighlightTile({ h }: { h: Highlight }) {
     h.direction === "up" ? "text-anomaly" : h.direction === "down" ? "text-neutral" : "text-text-muted";
 
   return (
-    <div className={`rounded-panel border px-4 py-3 ${toneClass}`}>
-      <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
+    <div className={`rounded-panel border border-l-2 border-l-accent-2 px-4 py-3 ${toneClass}`}>
+      <p className="font-mono text-xs uppercase tracking-widest text-accent-2">
         {h.label}
       </p>
       <p className="mt-1 font-mono text-sm text-text-primary">{h.date}</p>
@@ -182,6 +183,7 @@ function HighlightTile({ h }: { h: Highlight }) {
 }
 
 function MonthlyDistributionChart({ data }: { data: [string, number][] }) {
+  const t = useChartTheme();
   const chartRef = useRef<ReactECharts>(null);
   const { export: exportChart } = useChartExport(chartRef, {
     filename: "anomaly-distribution",
@@ -193,11 +195,11 @@ function MonthlyDistributionChart({ data }: { data: [string, number][] }) {
     xAxis: {
       type: "category",
       data: data.map((d) => d[0]),
-      axisLine: { lineStyle: { color: "#252830" } },
+      axisLine: { lineStyle: { color: t.grid } },
       axisTick: { show: false },
       axisLabel: {
-        color: "#565B6A",
-        fontFamily: "DM Mono",
+        color: t.axisLabel,
+        fontFamily: "JetBrains Mono",
         fontSize: 10,
         rotate: 30,
       },
@@ -208,14 +210,14 @@ function MonthlyDistributionChart({ data }: { data: [string, number][] }) {
       minInterval: 1,
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10 },
-      splitLine: { lineStyle: { color: "#252830" } },
+      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+      splitLine: { lineStyle: { color: t.grid } },
     },
     tooltip: {
       trigger: "axis",
-      backgroundColor: "#1A1D25",
-      borderColor: "#252830",
-      textStyle: { color: "#F0F2F5", fontFamily: "DM Mono", fontSize: 11 },
+      backgroundColor: t.bgElevated,
+      borderColor: t.grid,
+      textStyle: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 11 },
       formatter: (params: { name: string; value: number }[]) => {
         const p = params[0];
         return `${p.name}<br/>${p.value} anomal${p.value === 1 ? "y" : "ies"}`;
@@ -225,7 +227,7 @@ function MonthlyDistributionChart({ data }: { data: [string, number][] }) {
       {
         type: "bar",
         data: data.map((d) => d[1]),
-        itemStyle: { color: "rgba(255,71,87,0.55)", borderRadius: [2, 2, 0, 0] },
+        itemStyle: { color: t.anomaly, opacity: 0.55, borderRadius: [2, 2, 0, 0] },
         barMaxWidth: 18,
       },
     ],

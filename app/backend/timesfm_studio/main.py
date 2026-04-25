@@ -7,8 +7,9 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from . import __version__
 from .jobs.manager import JobManager
@@ -115,6 +116,48 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
+
+    # Global exception handlers. Without these, unhandled ValueError/KeyError
+    # in service code bubble up as bare 500 "Internal Server Error" with no
+    # detail, so the frontend shows nothing useful. These handlers preserve
+    # the original message in the `detail` field so the UI can display it.
+    def _truncate(msg: str, limit: int = 500) -> str:
+        return msg if len(msg) <= limit else msg[: limit - 1] + "…"
+
+    @app.exception_handler(ValueError)
+    async def _value_error_handler(_request: Request, exc: ValueError) -> JSONResponse:
+        # ValueError in service layer = the request/data is unprocessable.
+        # 422 keeps the frontend's existing friendly-message patterns working.
+        logger.info("ValueError handled: %s", exc)
+        return JSONResponse(
+            status_code=422,
+            content={"detail": _truncate(str(exc)) or "The request could not be processed."},
+        )
+
+    @app.exception_handler(KeyError)
+    async def _key_error_handler(_request: Request, exc: KeyError) -> JSONResponse:
+        # KeyError typically means a referenced column/id is missing.
+        key = exc.args[0] if exc.args else ""
+        detail = f"Missing required field or column: {key!r}" if key else "Missing required field."
+        logger.info("KeyError handled: %s", detail)
+        return JSONResponse(status_code=422, content={"detail": detail})
+
+    @app.exception_handler(FileNotFoundError)
+    async def _not_found_handler(_request: Request, exc: FileNotFoundError) -> JSONResponse:
+        logger.info("FileNotFoundError handled: %s", exc)
+        return JSONResponse(
+            status_code=404,
+            content={"detail": _truncate(str(exc)) or "Requested file was not found."},
+        )
+
+    @app.exception_handler(Exception)
+    async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        # Last-resort handler: log with traceback, but still return a useful
+        # detail string so the UI can show WHY the request failed rather than
+        # the generic "Internal Server Error".
+        logger.exception("Unhandled exception at %s %s", request.method, request.url.path)
+        detail = _truncate(f"{type(exc).__name__}: {exc}") or "Unexpected server error."
+        return JSONResponse(status_code=500, content={"detail": detail})
 
     app.include_router(system_router.router, prefix="/api")
     app.include_router(datasets_router.router, prefix="/api")

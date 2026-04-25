@@ -49,7 +49,7 @@ export function ModelStatusBar() {
   const ramLabel = ramMb ? `${(ramMb / 1024).toFixed(1)} GB` : null;
 
   return (
-    <div className="flex items-center gap-3 font-mono text-xs text-text-muted bg-bg-surface/30 px-3 py-1.5 rounded-full border border-border/50 backdrop-blur shadow-[0_0_10px_rgba(0,0,0,0.2)]">
+    <div className="flex items-center gap-3 font-mono text-xs text-text-muted bg-bg-surface/30 px-3 py-1.5 rounded-full border border-border/50 backdrop-blur shadow-[var(--shadow-elev-1)]">
       {dot(statusColor, isPulsing)}
       <span className="text-text-secondary">{statusLabel}</span>
       <span className="text-border-strong">|</span>

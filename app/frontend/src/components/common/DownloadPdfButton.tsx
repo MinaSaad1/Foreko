@@ -66,7 +66,7 @@ export function DownloadPdfButton({
       type="button"
       onClick={handleClick}
       disabled={disabled || busy}
-      className={`inline-flex items-center gap-2 border border-accent/30 bg-accent/5 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-accent transition-all hover:bg-accent/10 hover:shadow-[0_0_10px_rgba(0,240,255,0.15)] disabled:opacity-40 ${className}`}
+      className={`inline-flex items-center gap-2 border border-accent/30 bg-accent/5 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-accent transition-all hover:bg-accent/10 hover:shadow-[0_0_10px_rgb(var(--color-accent)/0.2)] disabled:opacity-40 ${className}`}
     >
       {busy ? "Exporting…" : label}
     </button>

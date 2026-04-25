@@ -49,7 +49,7 @@ export function DataSourceSelector({ onDatasetReady }: DataSourceSelectorProps) 
 
   const keyringWarning =
     secretsInfo && !secretsInfo.available ? (
-      <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
+      <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
         Your operating system's keychain is not available. Saved database
         connections are disabled until it is. On Linux, install gnome-keyring
         or libsecret and restart Foresee.
@@ -88,7 +88,7 @@ export function DataSourceSelector({ onDatasetReady }: DataSourceSelectorProps) 
       </div>
 
       {secretsError && (
-        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
+        <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
           {secretsError}
         </p>
       )}

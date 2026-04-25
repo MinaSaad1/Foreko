@@ -9,20 +9,47 @@ export class ApiError extends Error {
   }
 }
 
+function extractMessage(detail: unknown, fallback: string): string {
+  if (typeof detail === "string" && detail.trim()) return detail;
+  if (Array.isArray(detail)) {
+    // FastAPI/Pydantic validation errors: [{loc, msg, type}, ...]
+    const parts = detail
+      .map((item) => {
+        if (item && typeof item === "object") {
+          const rec = item as Record<string, unknown>;
+          const loc = Array.isArray(rec.loc) ? rec.loc.join(".") : undefined;
+          const msg = typeof rec.msg === "string" ? rec.msg : undefined;
+          if (loc && msg) return `${loc}: ${msg}`;
+          if (msg) return msg;
+        }
+        return typeof item === "string" ? item : "";
+      })
+      .filter(Boolean);
+    if (parts.length) return parts.join("; ");
+  }
+  if (detail && typeof detail === "object") {
+    const rec = detail as Record<string, unknown>;
+    if (typeof rec.message === "string" && rec.message.trim()) return rec.message;
+    if (typeof rec.error === "string" && rec.error.trim()) return rec.error;
+  }
+  return fallback;
+}
+
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text();
-    let detail: unknown = text;
+    let parsed: unknown = text;
     try {
-      detail = JSON.parse(text);
+      parsed = JSON.parse(text);
     } catch {
       // keep raw text
     }
-    const msg =
-      typeof detail === "object" && detail !== null && "detail" in detail
-        ? String((detail as { detail: unknown }).detail)
-        : text || res.statusText;
-    throw new ApiError(res.status, msg, detail);
+    const payloadDetail =
+      parsed && typeof parsed === "object" && "detail" in parsed
+        ? (parsed as { detail: unknown }).detail
+        : parsed;
+    const msg = extractMessage(payloadDetail, text || res.statusText || `HTTP ${res.status}`);
+    throw new ApiError(res.status, msg, parsed);
   }
   return (await res.json()) as T;
 }

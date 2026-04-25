@@ -64,7 +64,7 @@ export function PreflightPage() {
           <button
             onClick={() => runMutation.mutate()}
             disabled={!mapping || runMutation.isPending}
-            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-bg-base transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             {runMutation.isPending ? "Scanning…" : "Run preflight"}
           </button>

@@ -2,6 +2,7 @@ import { forwardRef, useImperativeHandle, useRef } from "react";
 import ReactECharts from "echarts-for-react";
 import { useChartExport, getChartPng, type ChartHandle } from "@/hooks/useChartExport";
 import { ExportChartButton } from "@/components/common/ExportChartButton";
+import { useChartTheme } from "@/charts/theme";
 import type { ContextAnomalyRecord } from "@/types/anomaly";
 
 interface AnomalyChartProps {
@@ -10,17 +11,17 @@ interface AnomalyChartProps {
 
 export type AnomalyChartHandle = ChartHandle;
 
-const COLORS = {
-  normal: "#00F0FF",
-  warning: "#F59E0B",
-  critical: "#EF4444",
-  trend: "#64748B",
-  grid: "#1E293B",
-  axisLabel: "#64748B",
-};
-
 export const AnomalyChart = forwardRef<AnomalyChartHandle, AnomalyChartProps>(
   function AnomalyChart({ records }, ref) {
+  const theme = useChartTheme();
+  const COLORS = {
+    normal: theme.accent,
+    warning: theme.warning,
+    critical: theme.anomaly,
+    trend: theme.trend,
+    grid: theme.grid,
+    axisLabel: theme.axisLabel,
+  };
   const chartRef = useRef<ReactECharts>(null);
   const { export: exportChart } = useChartExport(chartRef, {
     filename: "anomaly-chart",
@@ -63,16 +64,16 @@ export const AnomalyChart = forwardRef<AnomalyChartHandle, AnomalyChartProps>(
         bottom: 8,
         borderColor: COLORS.grid,
         backgroundColor: "transparent",
-        fillerColor: "rgba(0,240,255,0.08)",
-        handleStyle: { color: "#00F0FF", borderColor: "#00F0FF" },
-        moveHandleStyle: { color: "#334155" },
+        fillerColor: theme.band,
+        handleStyle: { color: theme.accent, borderColor: theme.accent },
+        moveHandleStyle: { color: theme.grid },
         dataBackground: {
-          lineStyle: { color: "#334155", width: 1 },
-          areaStyle: { color: "rgba(100,116,139,0.2)" },
+          lineStyle: { color: theme.grid, width: 1 },
+          areaStyle: { color: theme.holdout },
         },
         selectedDataBackground: {
-          lineStyle: { color: "#00F0FF", width: 1 },
-          areaStyle: { color: "rgba(0,240,255,0.15)" },
+          lineStyle: { color: theme.accent, width: 1 },
+          areaStyle: { color: theme.accentDim },
         },
         textStyle: { color: COLORS.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
         labelFormatter: (_v: number, s: string) => (s ? s.slice(0, 7) : ""),
@@ -108,9 +109,9 @@ export const AnomalyChart = forwardRef<AnomalyChartHandle, AnomalyChartProps>(
     },
     tooltip: {
       trigger: "axis",
-      backgroundColor: "#1A1D25",
-      borderColor: "#252830",
-      textStyle: { color: "#F0F2F5", fontFamily: "JetBrains Mono", fontSize: 12 },
+      backgroundColor: theme.bgElevated,
+      borderColor: theme.grid,
+      textStyle: { color: theme.textPrimary, fontFamily: "JetBrains Mono", fontSize: 12 },
       formatter: (params: { name: string; data: unknown; seriesName: string }[]) => {
         const main = params.find((p) => p.seriesName === "Value");
         if (!main) return "";
@@ -118,9 +119,9 @@ export const AnomalyChart = forwardRef<AnomalyChartHandle, AnomalyChartProps>(
         if (!rec) return `${main.name}`;
         const badge =
           rec.severity === "CRITICAL"
-            ? " · <span style='color:#EF4444'>ANOMALY</span>"
+            ? ` · <span style='color:${theme.anomaly}'>ANOMALY</span>`
             : rec.severity === "WARNING"
-              ? " · <span style='color:#F59E0B'>WARNING</span>"
+              ? ` · <span style='color:${theme.warning}'>WARNING</span>`
               : "";
         return `${main.name}${badge}<br/>Value: ${rec.value.toLocaleString()}<br/>Z-score: ${rec.z_score.toFixed(2)}`;
       },

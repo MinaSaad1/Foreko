@@ -2,6 +2,7 @@ import { forwardRef, useImperativeHandle, useRef } from "react";
 import ReactECharts from "echarts-for-react";
 import { useChartExport, getChartPng, type ChartHandle } from "@/hooks/useChartExport";
 import { ExportChartButton } from "@/components/common/ExportChartButton";
+import { useChartTheme } from "@/charts/theme";
 import type { ComparisonResponse } from "@/types/comparison";
 
 interface ComparisonChartProps {
@@ -12,21 +13,21 @@ interface ComparisonChartProps {
 
 export type ComparisonChartHandle = ChartHandle;
 
-const CHART_COLORS = {
-  historical: "#64748B",
-  winner: "#00F0FF",
-  alternative: "#8A2BE2",
-  band: "rgba(0,240,255,0.08)",
-  holdout: "rgba(255,255,255,0.03)",
-  grid: "#1E293B",
-  axisLabel: "#64748B",
-};
-
 export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChartProps>(
   function ComparisonChart(
     { data, showBothModels = false, activeModel = "winner" },
     ref,
   ) {
+  const theme = useChartTheme();
+  const CHART_COLORS = {
+    historical: theme.historical,
+    winner: theme.winner,
+    alternative: theme.alternative,
+    band: theme.band,
+    holdout: theme.holdout,
+    grid: theme.grid,
+    axisLabel: theme.axisLabel,
+  };
   const chartRef = useRef<ReactECharts>(null);
   const { export: exportChart } = useChartExport(chartRef, {
     filename: "comparison-chart",
@@ -159,16 +160,16 @@ export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChart
         bottom: 8,
         borderColor: CHART_COLORS.grid,
         backgroundColor: "transparent",
-        fillerColor: "rgba(0,240,255,0.08)",
-        handleStyle: { color: "#00F0FF", borderColor: "#00F0FF" },
-        moveHandleStyle: { color: "#334155" },
+        fillerColor: theme.band,
+        handleStyle: { color: theme.accent, borderColor: theme.accent },
+        moveHandleStyle: { color: theme.grid },
         dataBackground: {
-          lineStyle: { color: "#334155", width: 1 },
-          areaStyle: { color: "rgba(100,116,139,0.2)" },
+          lineStyle: { color: theme.grid, width: 1 },
+          areaStyle: { color: theme.holdout },
         },
         selectedDataBackground: {
-          lineStyle: { color: "#00F0FF", width: 1 },
-          areaStyle: { color: "rgba(0,240,255,0.15)" },
+          lineStyle: { color: theme.accent, width: 1 },
+          areaStyle: { color: theme.accentDim },
         },
         textStyle: { color: CHART_COLORS.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
         labelFormatter: (_v: number, s: string) => (s ? s.slice(0, 7) : ""),
@@ -183,9 +184,9 @@ export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChart
     ],
     tooltip: {
       trigger: "axis",
-      backgroundColor: "#1A1D25",
-      borderColor: "#252830",
-      textStyle: { color: "#F0F2F5", fontFamily: "JetBrains Mono", fontSize: 12 },
+      backgroundColor: theme.bgElevated,
+      borderColor: theme.grid,
+      textStyle: { color: theme.textPrimary, fontFamily: "JetBrains Mono", fontSize: 12 },
       formatter: (params: { seriesName: string; data: [string, number] }[]) => {
         return params
           .filter((p) => !["P90", "P10"].includes(p.seriesName))
@@ -196,7 +197,7 @@ export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChart
     legend: showBothModels
       ? {
           data: [primary.display_name, overlay.display_name, "Historical"],
-          textStyle: { color: "#8A8F9E", fontFamily: "JetBrains Mono", fontSize: 11 },
+          textStyle: { color: theme.textSecondary, fontFamily: "JetBrains Mono", fontSize: 11 },
           itemWidth: 16,
           itemHeight: 2,
         }

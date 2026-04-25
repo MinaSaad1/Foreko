@@ -216,26 +216,26 @@ export function OperationsPage() {
             type="date"
             value={annoDate}
             onChange={(e) => setAnnoDate(e.target.value)}
-            className="rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+            className="rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
           />
           <input
             type="text"
             value={annoLabel}
             onChange={(e) => setAnnoLabel(e.target.value)}
             placeholder="Label (e.g. Product launch)"
-            className="flex-1 min-w-[220px] rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+            className="flex-1 min-w-[220px] rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
           />
           <input
             type="text"
             value={annoNote}
             onChange={(e) => setAnnoNote(e.target.value)}
             placeholder="Note (optional)"
-            className="flex-1 min-w-[220px] rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+            className="flex-1 min-w-[220px] rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
           />
           <button
             onClick={() => createAnno.mutate()}
             disabled={!annoDate || !annoLabel}
-            className="rounded-md bg-accent px-3 py-2 font-mono text-xs text-bg-base hover:opacity-90 disabled:opacity-40"
+            className="rounded-md bg-accent px-3 py-2 font-mono text-xs text-on-accent hover:opacity-90 disabled:opacity-40"
           >
             Add
           </button>
@@ -285,11 +285,11 @@ export function OperationsPage() {
             type="text"
             value={cron}
             onChange={(e) => setCron(e.target.value)}
-            className="flex-1 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm font-mono text-text-primary focus:border-accent focus:outline-none"
+            className="flex-1 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm font-mono text-text-primary focus:border-accent"
           />
           <button
             onClick={() => createSchedule.mutate()}
-            className="rounded-md bg-accent px-3 py-2 font-mono text-xs text-bg-base hover:opacity-90"
+            className="rounded-md bg-accent px-3 py-2 font-mono text-xs text-on-accent hover:opacity-90"
           >
             Schedule refresh
           </button>
@@ -343,11 +343,11 @@ export function OperationsPage() {
             value={webhookUrl}
             onChange={(e) => setWebhookUrl(e.target.value)}
             placeholder="Webhook URL (optional)"
-            className="flex-1 min-w-[260px] rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+            className="flex-1 min-w-[260px] rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
           />
           <button
             onClick={() => createAlert.mutate()}
-            className="rounded-md bg-accent px-3 py-2 font-mono text-xs text-bg-base hover:opacity-90"
+            className="rounded-md bg-accent px-3 py-2 font-mono text-xs text-on-accent hover:opacity-90"
           >
             Add rule
           </button>

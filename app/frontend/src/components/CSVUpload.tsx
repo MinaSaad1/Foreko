@@ -76,8 +76,8 @@ export function CSVUpload({ onUploaded }: CSVUploadProps) {
         {...getRootProps()}
         className={`relative overflow-hidden flex cursor-pointer flex-col items-center justify-center rounded-panel border-2 border-dashed p-14 text-center transition-all duration-300 ${
           isDragActive
-            ? "border-accent bg-accent/10 shadow-[inset_0_0_30px_rgba(0,240,255,0.2)] animate-pulse"
-            : "border-border/60 bg-bg-surface/30 backdrop-blur hover:border-accent/60 hover:bg-accent/5 hover:shadow-[0_0_20px_rgba(0,240,255,0.15)]"
+            ? "border-accent bg-accent/10 shadow-[inset_0_0_30px_rgb(var(--color-accent)/0.2)] animate-pulse"
+            : "border-border/60 bg-bg-surface/30 backdrop-blur hover:border-accent/60 hover:bg-accent/10 hover:shadow-[0_0_20px_rgb(var(--color-accent)/0.2)]"
         }`}
       >
         <input {...getInputProps()} />

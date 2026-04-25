@@ -1,10 +1,12 @@
 import ReactECharts from "echarts-for-react";
+import { useChartTheme } from "@/charts/theme";
 
 interface Props {
   points: [number, number][];
 }
 
 export function QQPlot({ points }: Props) {
+  const t = useChartTheme();
   if (!points.length) return <p className="text-xs text-text-muted">Not enough residuals.</p>;
   const xs = points.map((p) => p[0]);
   const minX = Math.min(...xs);
@@ -14,28 +16,28 @@ export function QQPlot({ points }: Props) {
     grid: { left: 44, right: 16, top: 16, bottom: 36, containLabel: false },
     xAxis: {
       type: "value",
-      axisLine: { lineStyle: { color: "#252830" } },
-      axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10 },
+      axisLine: { lineStyle: { color: t.grid } },
+      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
       splitLine: { show: false },
     },
     yAxis: {
       type: "value",
       axisLine: { show: false },
-      axisLabel: { color: "#565B6A", fontFamily: "DM Mono", fontSize: 10 },
-      splitLine: { lineStyle: { color: "#252830" } },
+      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+      splitLine: { lineStyle: { color: t.grid } },
     },
     tooltip: { trigger: "item" },
     series: [
       {
         type: "line",
         data: [[minX, minX], [maxX, maxX]],
-        lineStyle: { color: "#565B6A", type: "dashed" },
+        lineStyle: { color: t.textMuted, type: "dashed" },
         symbol: "none",
       },
       {
         type: "scatter",
         data: points,
-        itemStyle: { color: "#00E5C8" },
+        itemStyle: { color: t.accent },
         symbolSize: 5,
       },
     ],

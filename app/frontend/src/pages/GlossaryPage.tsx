@@ -50,7 +50,7 @@ export function GlossaryPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search terms, definitions, or aliases..."
-          className="flex-1 min-w-[240px] border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+          className="flex-1 min-w-[240px] border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
         />
         <span className="font-mono text-xs uppercase tracking-widest text-text-muted">
           {Object.values(filtered).flat().length} / {Object.keys(TERMS).length} terms

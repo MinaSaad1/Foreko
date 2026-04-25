@@ -121,7 +121,7 @@ export function Tour({ force = false, onClose }: TourProps) {
       aria-labelledby="tour-title"
       className="fixed inset-0 z-[60] flex items-center justify-center bg-bg-base/80 backdrop-blur-xl px-4"
     >
-      <div className="relative w-full max-w-lg rounded-panel border border-accent/40 bg-bg-surface/90 backdrop-blur-2xl shadow-[0_0_40px_rgba(0,240,255,0.25)]">
+      <div className="relative w-full max-w-lg rounded-panel border border-accent/40 bg-bg-surface/90 backdrop-blur-2xl shadow-[0_0_40px_rgb(var(--color-accent)/0.25)]">
         <div className="px-6 pt-6 pb-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
@@ -167,7 +167,7 @@ export function Tour({ force = false, onClose }: TourProps) {
             <button
               type="button"
               onClick={close}
-              className="border border-accent bg-accent px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-bg-base transition-colors hover:bg-accent/90"
+              className="border border-accent bg-accent px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-on-accent transition-colors hover:bg-accent/90"
             >
               Got it
             </button>
@@ -175,7 +175,7 @@ export function Tour({ force = false, onClose }: TourProps) {
             <button
               type="button"
               onClick={() => setStep((s) => Math.min(s + 1, STEPS.length - 1))}
-              className="border border-accent bg-accent px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-bg-base transition-colors hover:bg-accent/90"
+              className="border border-accent bg-accent px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-on-accent transition-colors hover:bg-accent/90"
             >
               Next →
             </button>

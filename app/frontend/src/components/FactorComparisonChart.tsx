@@ -2,6 +2,7 @@ import { useRef } from "react";
 import ReactECharts from "echarts-for-react";
 import { useChartExport } from "@/hooks/useChartExport";
 import { ExportChartButton } from "@/components/common/ExportChartButton";
+import { useChartTheme } from "@/charts/theme";
 import type { FactorAnalysisResponse } from "@/types/factors";
 
 interface FactorComparisonChartProps {
@@ -10,20 +11,20 @@ interface FactorComparisonChartProps {
   showBand?: boolean;
 }
 
-const COLORS = {
-  history: "#565B6A",
-  baseline: "#4A90D9",
-  factors: "#00E5C8",
-  band: "rgba(0,229,200,0.10)",
-  grid: "#252830",
-  axisLabel: "#565B6A",
-};
-
 export function FactorComparisonChart({
   data,
   showBaseline = true,
   showBand = true,
 }: FactorComparisonChartProps) {
+  const t = useChartTheme();
+  const COLORS = {
+    history: t.historical,
+    baseline: t.neutral,
+    factors: t.accent,
+    band: t.band,
+    grid: t.grid,
+    axisLabel: t.axisLabel,
+  };
   const chartRef = useRef<ReactECharts>(null);
   const { export: exportChart } = useChartExport(chartRef, {
     filename: "factor-comparison",
@@ -132,7 +133,7 @@ export function FactorComparisonChart({
       axisTick: { show: false },
       axisLabel: {
         color: COLORS.axisLabel,
-        fontFamily: "DM Mono",
+        fontFamily: "JetBrains Mono",
         fontSize: 11,
         rotate: 30,
         formatter: (v: string) => v.slice(0, 7),
@@ -143,7 +144,7 @@ export function FactorComparisonChart({
       type: "value",
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: COLORS.axisLabel, fontFamily: "DM Mono", fontSize: 11 },
+      axisLabel: { color: COLORS.axisLabel, fontFamily: "JetBrains Mono", fontSize: 11 },
       splitLine: { lineStyle: { color: COLORS.grid } },
     },
     dataZoom: [
@@ -165,18 +166,18 @@ export function FactorComparisonChart({
         bottom: 8,
         borderColor: COLORS.grid,
         backgroundColor: "transparent",
-        fillerColor: "rgba(0,229,200,0.08)",
-        handleStyle: { color: "#00E5C8", borderColor: "#00E5C8" },
-        moveHandleStyle: { color: "#353840" },
+        fillerColor: t.band,
+        handleStyle: { color: t.accent, borderColor: t.accent },
+        moveHandleStyle: { color: t.grid },
         dataBackground: {
-          lineStyle: { color: "#353840", width: 1 },
-          areaStyle: { color: "rgba(86,91,106,0.2)" },
+          lineStyle: { color: t.grid, width: 1 },
+          areaStyle: { color: t.holdout },
         },
         selectedDataBackground: {
-          lineStyle: { color: "#00E5C8", width: 1 },
-          areaStyle: { color: "rgba(0,229,200,0.15)" },
+          lineStyle: { color: t.accent, width: 1 },
+          areaStyle: { color: t.accentDim },
         },
-        textStyle: { color: COLORS.axisLabel, fontFamily: "DM Mono", fontSize: 10 },
+        textStyle: { color: COLORS.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
         labelFormatter: (_v: number, s: string) => (s ? s.slice(0, 7) : ""),
       },
       {
@@ -189,9 +190,9 @@ export function FactorComparisonChart({
     ],
     tooltip: {
       trigger: "axis",
-      backgroundColor: "#1A1D25",
-      borderColor: "#252830",
-      textStyle: { color: "#F0F2F5", fontFamily: "DM Mono", fontSize: 12 },
+      backgroundColor: t.bgElevated,
+      borderColor: t.grid,
+      textStyle: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 12 },
       formatter: (params: { seriesName: string; data: [string, number] }[]) => {
         return params
           .filter((p) => !["P90", "P10"].includes(p.seriesName))
@@ -205,7 +206,7 @@ export function FactorComparisonChart({
         "With factors",
         ...(showBaseline ? ["Baseline (no factors)"] : []),
       ],
-      textStyle: { color: "#8A8F9E", fontFamily: "DM Mono", fontSize: 11 },
+      textStyle: { color: t.textSecondary, fontFamily: "JetBrains Mono", fontSize: 11 },
       itemWidth: 16,
       itemHeight: 2,
       right: 16,

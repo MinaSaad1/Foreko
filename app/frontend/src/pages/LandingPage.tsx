@@ -14,7 +14,6 @@ import {
   ScenariosIllustration,
   SegmentsIllustration,
 } from "@/components/landing/FeatureIllustrations";
-import { QuickstartAnimation } from "@/components/landing/QuickstartAnimation";
 
 interface FeatureTile {
   title: string;
@@ -147,8 +146,8 @@ export function LandingPage() {
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <Link
-                to="/upload"
-                className="inline-flex items-center gap-2 border border-accent bg-accent px-5 py-3 font-mono text-xs font-medium uppercase tracking-widest text-bg-base transition-all hover:bg-accent/90 hover:shadow-[0_0_24px_rgba(0,240,255,0.35)]"
+                to="/data"
+                className="inline-flex items-center gap-2 border border-accent bg-accent px-5 py-3 font-mono text-xs font-medium uppercase tracking-widest text-on-accent transition-all hover:bg-accent/90 hover:shadow-[0_0_24px_rgb(var(--color-accent)/0.35)]"
               >
                 <span>↑</span> Upload your CSV
               </Link>
@@ -161,7 +160,7 @@ export function LandingPage() {
                 {loadingDemo ? "Loading demo..." : "Try demo dataset"}
               </button>
               <Link
-                to="/upload"
+                to="/data"
                 className="inline-flex items-center gap-2 px-3 py-3 font-mono text-xs font-medium uppercase tracking-widest text-text-muted transition-colors hover:text-accent"
               >
                 Or pick a sample →
@@ -183,22 +182,10 @@ export function LandingPage() {
             <img
               src="/foresee-logo.png"
               alt="Foresee mascot"
-              className="absolute inset-0 m-auto z-10 h-64 w-64 lg:h-80 lg:w-80 object-contain animate-float-y-slow drop-shadow-[0_0_30px_rgba(0,240,255,0.45)]"
+              className="absolute inset-0 m-auto z-10 h-64 w-64 lg:h-80 lg:w-80 object-contain animate-float-y-slow drop-shadow-[0_0_30px_rgb(var(--color-accent)/0.45)]"
             />
           </div>
         </div>
-      </section>
-
-      <section className="pt-4 pb-10">
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="font-display text-xl font-semibold text-text-primary">
-            See it in 6 seconds
-          </h2>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
-            No data required
-          </span>
-        </div>
-        <QuickstartAnimation />
       </section>
 
       <section className="pt-4">
@@ -215,7 +202,7 @@ export function LandingPage() {
             <Link
               key={f.title}
               to={f.to}
-              className="group relative overflow-hidden rounded-panel border border-border/60 bg-bg-surface/30 backdrop-blur-sm p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/60 hover:bg-accent/[0.04] hover:shadow-[0_0_32px_-8px_rgba(0,240,255,0.35)]"
+              className="group relative overflow-hidden rounded-panel border border-border/60 bg-bg-surface/30 backdrop-blur-sm p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/60 hover:bg-accent/[0.08] hover:shadow-[0_0_32px_-8px_rgb(var(--color-accent)/0.35)]"
             >
               {/* Corner sweep on hover */}
               <span
@@ -229,7 +216,7 @@ export function LandingPage() {
               />
 
               <div className="relative flex items-start justify-between gap-3">
-                <div className="rounded-panel border border-accent/10 bg-bg-base/60 p-2 transition-all duration-300 group-hover:border-accent/40 group-hover:bg-bg-base/80 group-hover:shadow-[0_0_18px_-4px_rgba(0,240,255,0.35)]">
+                <div className="rounded-panel border border-accent/10 bg-bg-base/60 p-2 transition-all duration-300 group-hover:border-accent/40 group-hover:bg-bg-base/80 group-hover:shadow-[0_0_18px_-4px_rgb(var(--color-accent)/0.35)]">
                   {f.illustration}
                 </div>
                 <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted transition-colors group-hover:text-accent">
@@ -294,10 +281,10 @@ export function LandingPage() {
           <Link to="/glossary" className="hover:text-accent">
             Glossary
           </Link>
-          <Link to="/datasets" className="hover:text-accent">
+          <Link to="/data" className="hover:text-accent">
             Datasets
           </Link>
-          <Link to="/upload" className="hover:text-accent">
+          <Link to="/data" className="hover:text-accent">
             Upload
           </Link>
         </div>

@@ -80,6 +80,13 @@ function friendlyFromApiError(err: ApiError): string {
     return "Foresee couldn't read that CSV. Check the shape of the file and try again.";
   }
   if (err.status >= 500) {
+    // Prefer the backend's actual reason (our global handler always fills in
+    // `detail`) over a generic fallback, so users see WHY the request failed.
+    const humane = humanize422(err.message ?? "");
+    if (humane) return humane;
+    if (err.message && err.message.length < 300 && err.message !== "Internal Server Error") {
+      return err.message;
+    }
     return "Something went wrong on the backend. Check the log file or restart Foresee.";
   }
   if (err.message && err.message.length < 200) {

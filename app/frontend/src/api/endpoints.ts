@@ -40,7 +40,7 @@ import type {
   Schedule,
   AlertRule,
 } from "@/types/phases";
-import { apiGet, apiPost, apiUpload } from "./client";
+import { apiGet, apiPost, apiUpload, ApiError } from "./client";
 
 async function apiDelete<T>(path: string): Promise<T> {
   const res = await fetch(`/api${path}`, { method: "DELETE" });
@@ -222,7 +222,20 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, sections }),
     });
-    if (!res.ok) throw new Error("PDF export failed");
+    if (!res.ok) {
+      const text = await res.text();
+      let detail: unknown = text;
+      try {
+        detail = JSON.parse(text);
+      } catch {
+        // keep raw text
+      }
+      const msg =
+        detail && typeof detail === "object" && "detail" in detail
+          ? String((detail as { detail: unknown }).detail)
+          : text || res.statusText || `HTTP ${res.status}`;
+      throw new ApiError(res.status, `PDF export failed: ${msg}`, detail);
+    }
     return res.blob();
   },
   createSchedule: (req: { dataset_id: string; cron: string; action: Record<string, unknown> }) =>

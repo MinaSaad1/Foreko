@@ -19,7 +19,7 @@ export function HelpHint({ termKey, ariaLabel, className = "" }: HelpHintProps) 
         <button
           type="button"
           aria-label={ariaLabel ?? `What is ${term.label}?`}
-          className={`ml-1 inline-flex h-4 w-4 items-center justify-center border border-text-muted/60 text-[10px] font-mono text-text-muted transition-colors hover:border-accent hover:text-accent focus:outline-none focus:border-accent focus:text-accent ${className}`}
+          className={`ml-1 inline-flex h-4 w-4 items-center justify-center border border-text-muted/60 text-[10px] font-mono text-text-muted transition-colors hover:border-accent hover:text-accent focus:border-accent focus:text-accent ${className}`}
         >
           ?
         </button>
