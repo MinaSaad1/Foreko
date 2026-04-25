@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { api } from "@/api/endpoints";
-import { friendlyError } from "@/utils/toast";
-import type { Connection, TableInfo } from "@/types/connection";
-import type { DatasetPreview } from "@/types/dataset";
+import { useEffect, useMemo, useState } from"react";
+import { api } from"@/api/endpoints";
+import { friendlyError } from"@/utils/toast";
+import type { Connection, TableInfo } from"@/types/connection";
+import type { DatasetPreview } from"@/types/dataset";
 
 interface TablePickerProps {
   connection: Connection;
@@ -49,7 +49,7 @@ export function TablePicker({ connection, onBack, onImported }: TablePickerProps
     if (!tables) return null;
     const out = new Map<string, TableInfo[]>();
     for (const t of tables) {
-      const key = t.schema_name ?? "default";
+      const key = t.schema_name ??"default";
       if (!out.has(key)) out.set(key, []);
       out.get(key)!.push(t);
     }
@@ -95,17 +95,17 @@ export function TablePicker({ connection, onBack, onImported }: TablePickerProps
         <button
           type="button"
           onClick={onBack}
-          className="rounded-md border border-border px-3 py-1.5 text-xs text-text-muted"
+          className="border border-border px-3 py-1.5 text-xs text-text-muted"
         >
           Back
         </button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_2fr]">
-        <div className="rounded-md border border-border/60 bg-bg-surface/30 p-3">
+        <div className="border border-border/60 bg-bg-surface/30 p-3">
           <p className="mb-2 text-xs uppercase tracking-wide text-text-muted">Tables</p>
           {listError && (
-            <p className="rounded-md border border-anomaly/30 bg-anomaly/10 px-2 py-1.5 text-xs text-anomaly">
+            <p className="border border-anomaly/30 bg-anomaly/10 px-2 py-1.5 text-xs text-anomaly">
               {listError}
             </p>
           )}
@@ -145,7 +145,7 @@ export function TablePicker({ connection, onBack, onImported }: TablePickerProps
               value={sql}
               onChange={(e) => setSql(e.target.value)}
               rows={8}
-              className="rounded-md border border-border bg-bg-surface/60 px-3 py-2 font-mono text-sm text-text-primary"
+              className="border border-border bg-bg-surface/60 px-3 py-2 font-mono text-sm text-text-primary"
               placeholder="SELECT date, value FROM sales ORDER BY date"
             />
           </label>
@@ -154,31 +154,31 @@ export function TablePicker({ connection, onBack, onImported }: TablePickerProps
               type="button"
               onClick={runPreview}
               disabled={!sql.trim() || previewing}
-              className="rounded-md border border-border px-4 py-2 text-sm text-text-primary disabled:opacity-50"
+              className="border border-border px-4 py-2 text-sm text-text-primary disabled:opacity-50"
             >
-              {previewing ? "Running..." : "Preview"}
+              {previewing ?"Running..." :"Preview"}
             </button>
             <button
               type="button"
               onClick={runImport}
               disabled={!sql.trim() || importing}
-              className="rounded-md border border-accent/60 bg-accent/20 px-4 py-2 text-sm text-accent disabled:opacity-50"
+              className="border border-accent/60 bg-accent/20 px-4 py-2 text-sm text-accent disabled:opacity-50"
             >
-              {importing ? "Importing..." : "Import"}
+              {importing ?"Importing..." :"Import"}
             </button>
           </div>
           {previewError && (
-            <p className="rounded-md border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-sm text-anomaly">
+            <p className="border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-sm text-anomaly">
               {previewError}
             </p>
           )}
           {preview && (
-            <div className="rounded-md border border-border/60 bg-bg-surface/30 p-3 text-xs text-text-muted">
+            <div className="border border-border/60 bg-bg-surface/30 p-3 text-xs text-text-muted">
               <p>
                 {preview.row_count} rows &middot; {preview.columns.length} columns
               </p>
               <p className="mt-1 truncate">
-                Columns: {preview.columns.map((c) => c.name).join(", ")}
+                Columns: {preview.columns.map((c) => c.name).join(",")}
               </p>
             </div>
           )}

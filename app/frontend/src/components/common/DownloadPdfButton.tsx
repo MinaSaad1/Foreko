@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { api } from "@/api/endpoints";
-import { toast } from "@/utils/toast";
+import { useState } from"react";
+import { api } from"@/api/endpoints";
+import { toast } from"@/utils/toast";
 
 export interface PdfTable {
   headers?: string[];
@@ -29,10 +29,10 @@ interface DownloadPdfButtonProps {
 export function DownloadPdfButton({
   title,
   sections,
-  filename = "foresee-report.pdf",
-  label = "Export PDF",
+  filename ="foresee-report.pdf",
+  label ="Export PDF",
   disabled,
-  className = "",
+  className ="",
 }: DownloadPdfButtonProps) {
   const [busy, setBusy] = useState(false);
 
@@ -68,7 +68,7 @@ export function DownloadPdfButton({
       disabled={disabled || busy}
       className={`inline-flex items-center gap-2 border border-accent/30 bg-accent/5 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-accent transition-all hover:bg-accent/10 hover:shadow-[0_0_10px_rgb(var(--color-accent)/0.2)] disabled:opacity-40 ${className}`}
     >
-      {busy ? "Exporting…" : label}
+      {busy ?"Exporting…" : label}
     </button>
   );
 }

@@ -1,16 +1,16 @@
-import { useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { api } from "@/api/endpoints";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { ColumnMapper } from "@/components/ColumnMapper";
-import { DataQualityCard } from "@/components/preflight/DataQualityCard";
-import { PageIntro } from "@/components/common/PageIntro";
-import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
-import { Term } from "@/components/common/Term";
-import { useSyncedDataset } from "@/hooks/useSyncedDataset";
-import type { ColumnMapping } from "@/types/dataset";
-import type { PreflightResult } from "@/types/phases";
+import { useCallback, useState } from"react";
+import { useParams } from"react-router-dom";
+import { useMutation } from"@tanstack/react-query";
+import { api } from"@/api/endpoints";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { ColumnMapper } from"@/components/ColumnMapper";
+import { DataQualityCard } from"@/components/preflight/DataQualityCard";
+import { PageIntro } from"@/components/common/PageIntro";
+import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
+import { Term } from"@/components/common/Term";
+import { useSyncedDataset } from"@/hooks/useSyncedDataset";
+import type { ColumnMapping } from"@/types/dataset";
+import type { PreflightResult } from"@/types/phases";
 
 export function PreflightPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
@@ -51,7 +51,7 @@ export function PreflightPage() {
       <div>
         <h1 className="font-display text-2xl font-semibold text-text-primary">Data Quality Preflight</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Run this before forecasting. Checks <Term k="stationarity">stationarity</Term>,{" "}
+          Run this before forecasting. Checks <Term k="stationarity">stationarity</Term>,{""}
           <Term k="seasonality">seasonality</Term>, outliers, and missing data, and recommends transformations.
         </p>
       </div>
@@ -64,12 +64,12 @@ export function PreflightPage() {
           <button
             onClick={() => runMutation.mutate()}
             disabled={!mapping || runMutation.isPending}
-            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="w-full btn-terminal-primary"
           >
-            {runMutation.isPending ? "Scanning…" : "Run preflight"}
+            {runMutation.isPending ?"Scanning…" :"Run preflight"}
           </button>
           {runMutation.isError && (
-            <p className="rounded-md border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
+            <p className="border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
               {runMutation.error.message}
             </p>
           )}

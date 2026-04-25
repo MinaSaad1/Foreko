@@ -1,34 +1,34 @@
-import { useCallback, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { api } from "@/api/endpoints";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { useBacktestStore } from "@/stores/backtestStore";
-import { ColumnMapper } from "@/components/ColumnMapper";
-import { JobProgress } from "@/components/common/JobProgress";
-import { FoldResultsTable } from "@/components/backtest/FoldResultsTable";
-import { PerHorizonMAPE, type PerHorizonMAPEHandle } from "@/components/backtest/PerHorizonMAPE";
-import { CalibrationPlot, type CalibrationPlotHandle } from "@/components/backtest/CalibrationPlot";
-import { PageIntro } from "@/components/common/PageIntro";
-import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
-import { HelpHint } from "@/components/common/HelpHint";
-import { Term } from "@/components/common/Term";
-import { DownloadPdfButton, type PdfSection } from "@/components/common/DownloadPdfButton";
-import { useDocumentTitle } from "@/utils/useDocumentTitle";
-import { useSyncedDataset } from "@/hooks/useSyncedDataset";
-import { useHealth } from "@/hooks/useHealth";
-import type { ColumnMapping } from "@/types/dataset";
-import type { BacktestResult, CalibrationResult } from "@/types/phases";
+import { useCallback, useRef, useState } from"react";
+import { useParams } from"react-router-dom";
+import { useMutation } from"@tanstack/react-query";
+import { api } from"@/api/endpoints";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { useBacktestStore } from"@/stores/backtestStore";
+import { ColumnMapper } from"@/components/ColumnMapper";
+import { JobProgress } from"@/components/common/JobProgress";
+import { FoldResultsTable } from"@/components/backtest/FoldResultsTable";
+import { PerHorizonMAPE, type PerHorizonMAPEHandle } from"@/components/backtest/PerHorizonMAPE";
+import { CalibrationPlot, type CalibrationPlotHandle } from"@/components/backtest/CalibrationPlot";
+import { PageIntro } from"@/components/common/PageIntro";
+import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
+import { HelpHint } from"@/components/common/HelpHint";
+import { Term } from"@/components/common/Term";
+import { DownloadPdfButton, type PdfSection } from"@/components/common/DownloadPdfButton";
+import { useDocumentTitle } from"@/utils/useDocumentTitle";
+import { useSyncedDataset } from"@/hooks/useSyncedDataset";
+import { useHealth } from"@/hooks/useHealth";
+import type { ColumnMapping } from"@/types/dataset";
+import type { BacktestResult, CalibrationResult } from"@/types/phases";
 
-const ALL_MODELS = ["timesfm", "lightgbm", "seasonal_naive", "ets"];
+const ALL_MODELS = ["timesfm","lightgbm","seasonal_naive","ets"];
 
 function formatPct(v: number): string {
-  if (!Number.isFinite(v)) return "-";
+  if (!Number.isFinite(v)) return"-";
   return `${(v * 100).toFixed(2)}%`;
 }
 
 function formatNumber(v: number, digits = 3): string {
-  if (!Number.isFinite(v)) return "-";
+  if (!Number.isFinite(v)) return"-";
   return v.toFixed(digits);
 }
 
@@ -52,7 +52,7 @@ function buildBacktestReport(
   const byMape = modelNames
     .map((m) => ({ m, mape: result.aggregate[m].mape_mean }))
     .sort((a, b) => a.mape - b.mape);
-  const winner = result.winner ?? byMape[0]?.m ?? "-";
+  const winner = result.winner ?? byMape[0]?.m ??"-";
   const best = byMape[0];
   const second = byMape[1];
   const winnerAgg = best ? result.aggregate[best.m] : null;
@@ -76,34 +76,34 @@ function buildBacktestReport(
   }
 
   sections.push({
-    heading: "Executive summary",
+    heading:"Executive summary",
     body: best
       ? `${winner} is the best performer with ${formatPct(best.mape)} MAPE across ${ctx.folds} expanding-window folds, beating the next-best model by ${liftPct.toFixed(1)}%.`
-      : "No model produced usable backtest metrics.",
+      :"No model produced usable backtest metrics.",
     kv: [
       ["Winner model", winner],
-      ["Winner MAPE (mean)", winnerAgg ? formatPct(winnerAgg.mape_mean) : "-"],
-      ["Winner MAPE (std)", winnerAgg ? formatPct(winnerAgg.mape_std) : "-"],
-      ["Winner RMSE", winnerAgg ? formatNumber(winnerAgg.rmse_mean) : "-"],
-      ["Winner MASE", winnerAgg ? formatNumber(winnerAgg.mase_mean) : "-"],
-      ["Lift vs 2nd best", best && second ? `+${liftPct.toFixed(1)}%` : "-"],
-      ["Models evaluated", ctx.models.length ? ctx.models.join(", ") : "-"],
+      ["Winner MAPE (mean)", winnerAgg ? formatPct(winnerAgg.mape_mean) :"-"],
+      ["Winner MAPE (std)", winnerAgg ? formatPct(winnerAgg.mape_std) :"-"],
+      ["Winner RMSE", winnerAgg ? formatNumber(winnerAgg.rmse_mean) :"-"],
+      ["Winner MASE", winnerAgg ? formatNumber(winnerAgg.mase_mean) :"-"],
+      ["Lift vs 2nd best", best && second ? `+${liftPct.toFixed(1)}%` :"-"],
+      ["Models evaluated", ctx.models.length ? ctx.models.join(",") :"-"],
       ["Folds", `${ctx.folds}`],
       ["Horizon", `${ctx.horizon} periods`],
-      ["Horizon degradation (winner)", winnerPerH.length >= 2 ? `${degradation >= 0 ? "+" : ""}${degradation.toFixed(1)}%` : "-"],
-      ["PI miscalibration (mean gap)", calibration ? `${(miscalibration * 100).toFixed(2)} pp` : "not computed"],
-      ["Calibration observations", calibration ? calibration.n_observations.toString() : "-"],
-      ["Dataset", ctx.datasetName ?? "-"],
-      ["Historical rows", ctx.rowCount ? ctx.rowCount.toLocaleString() : "-"],
+      ["Horizon degradation (winner)", winnerPerH.length >= 2 ? `${degradation >= 0 ?"+" :""}${degradation.toFixed(1)}%` :"-"],
+      ["PI miscalibration (mean gap)", calibration ? `${(miscalibration * 100).toFixed(2)} pp` :"not computed"],
+      ["Calibration observations", calibration ? calibration.n_observations.toString() :"-"],
+      ["Dataset", ctx.datasetName ??"-"],
+      ["Historical rows", ctx.rowCount ? ctx.rowCount.toLocaleString() :"-"],
     ],
   });
 
   // Aggregate metrics table (one row per model).
   sections.push({
-    heading: "Aggregate metrics by model",
-    body: "Averages across all folds. Lower MAPE / RMSE / MASE are better; pinball losses quantify P10/P50/P90 accuracy.",
+    heading:"Aggregate metrics by model",
+    body:"Averages across all folds. Lower MAPE / RMSE / MASE are better; pinball losses quantify P10/P50/P90 accuracy.",
     table: {
-      headers: ["Model", "MAPE", "± std", "RMSE", "MAE", "MASE", "Pinball 10/50/90"],
+      headers: ["Model","MAPE","± std","RMSE","MAE","MASE","Pinball 10/50/90"],
       rows: byMape.map(({ m }) => {
         const a = result.aggregate[m];
         return [
@@ -121,9 +121,9 @@ function buildBacktestReport(
 
   if (ctx.perHorizonPng) {
     sections.push({
-      heading: "Accuracy by forecast horizon",
+      heading:"Accuracy by forecast horizon",
       image_base64: ctx.perHorizonPng,
-      caption: "MAPE at each step h+1 through h+N. A flat line means the model is stable out to the full horizon.",
+      caption:"MAPE at each step h+1 through h+N. A flat line means the model is stable out to the full horizon.",
     });
   }
 
@@ -139,7 +139,7 @@ function buildBacktestReport(
       rows.push(row);
     }
     sections.push({
-      heading: `Per-horizon MAPE${winnerPerH.length > 12 ? ` (every ${step} steps)` : ""}`,
+      heading: `Per-horizon MAPE${winnerPerH.length > 12 ? ` (every ${step} steps)` :""}`,
       table: { headers, rows },
     });
   }
@@ -151,7 +151,7 @@ function buildBacktestReport(
       heading: `Fold details, ${winner}`,
       body: `Per-fold breakdown shows variance across time windows. High fold-to-fold swings suggest instability.`,
       table: {
-        headers: ["Fold", "MAPE", "sMAPE", "RMSE", "MASE", "Pinball 50"],
+        headers: ["Fold","MAPE","sMAPE","RMSE","MASE","Pinball 50"],
         rows: winnerFolds.map((f) => [
           f.fold,
           formatPct(f.mape),
@@ -168,15 +168,15 @@ function buildBacktestReport(
   if (calibration) {
     if (ctx.calibrationPng) {
       sections.push({
-        heading: "Prediction-interval calibration",
+        heading:"Prediction-interval calibration",
         image_base64: ctx.calibrationPng,
-        caption: "Dots on the dashed diagonal ⇒ stated confidence intervals are honest; below ⇒ over-confident, above ⇒ under-confident.",
+        caption:"Dots on the dashed diagonal ⇒ stated confidence intervals are honest; below ⇒ over-confident, above ⇒ under-confident.",
       });
     }
     sections.push({
-      heading: "Reliability table",
+      heading:"Reliability table",
       table: {
-        headers: ["Nominal", "Empirical", "Gap"],
+        headers: ["Nominal","Empirical","Gap"],
         rows: calibration.reliability.map((r) => [
           `${(r.nominal * 100).toFixed(0)}%`,
           `${(r.empirical * 100).toFixed(1)}%`,
@@ -200,7 +200,7 @@ function buildBacktestReport(
   }
   if (Math.abs(degradation) > 25 && winnerPerH.length >= 2) {
     takeaways.push(
-      `Error ${degradation > 0 ? "grows" : "shrinks"} by ${Math.abs(degradation).toFixed(0)}% from the first to the last forecast step, ${degradation > 0 ? "consider a shorter operating horizon" : "the model holds up well over long horizons"}.`,
+      `Error ${degradation > 0 ?"grows" :"shrinks"} by ${Math.abs(degradation).toFixed(0)}% from the first to the last forecast step, ${degradation > 0 ?"consider a shorter operating horizon" :"the model holds up well over long horizons"}.`,
     );
   }
   if (calibration) {
@@ -217,7 +217,7 @@ function buildBacktestReport(
   }
 
   sections.push({
-    heading: "Takeaways",
+    heading:"Takeaways",
     body: takeaways.map((t, i) => `${i + 1}. ${t}`).join("\n"),
   });
 
@@ -233,7 +233,7 @@ export function BacktestPage() {
   const [mapping, setMapping] = useState<ColumnMapping | null>(storeMapping);
   const [horizon, setHorizon] = useState(12);
   const [folds, setFolds] = useState(3);
-  const [models, setModels] = useState<string[]>(["timesfm", "lightgbm", "seasonal_naive"]);
+  const [models, setModels] = useState<string[]>(["timesfm","lightgbm","seasonal_naive"]);
   const [jobId, setJobId] = useState<string | null>(null);
   const [result, setResult] = useState<BacktestResult | null>(null);
   const [calibration, setCalibration] = useState<CalibrationResult | null>(null);
@@ -242,7 +242,7 @@ export function BacktestPage() {
 
   const { activeId, preview } = useSyncedDataset(datasetId);
   const { data: health } = useHealth();
-  const modelReady = health?.model_status === "ready";
+  const modelReady = health?.model_status ==="ready";
   const setBacktestSummary = useBacktestStore((s) => s.setResult);
 
   const persistBacktestSummary = useCallback(
@@ -284,7 +284,7 @@ export function BacktestPage() {
       return handle;
     },
     onSuccess: (handle) => {
-      if (handle.status === "done") {
+      if (handle.status ==="done") {
         api.getBacktestJob(handle.job_id).then((j) => {
           setResult(j.result);
           if (j.result) persistBacktestSummary(j.result);
@@ -325,8 +325,8 @@ export function BacktestPage() {
       <div>
         <h1 className="font-display text-2xl font-semibold text-text-primary">Walk-Forward Backtest</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Evaluate multiple models across {folds} expanding-window <Term k="fold">folds</Term> with{" "}
-          <Term k="mape">MAPE</Term>, <Term k="rmse">RMSE</Term>, <Term k="mase">MASE</Term>, and{" "}
+          Evaluate multiple models across {folds} expanding-window <Term k="fold">folds</Term> with{""}
+          <Term k="mape">MAPE</Term>, <Term k="rmse">RMSE</Term>, <Term k="mase">MASE</Term>, and{""}
           <Term k="pinball-loss">pinball loss</Term>.
         </p>
         {preview && (
@@ -353,7 +353,7 @@ export function BacktestPage() {
                 max={256}
                 value={horizon}
                 onChange={(e) => setHorizon(Math.max(1, Number(e.target.value)))}
-                className="w-24 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
+                className="w-24 border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
               />
             </div>
             <div>
@@ -366,7 +366,7 @@ export function BacktestPage() {
                 max={10}
                 value={folds}
                 onChange={(e) => setFolds(Math.max(1, Number(e.target.value)))}
-                className="w-20 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
+                className="w-20 border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
               />
             </div>
           </div>
@@ -380,10 +380,10 @@ export function BacktestPage() {
                 <button
                   key={m}
                   onClick={() => toggleModel(m)}
-                  className={`rounded-md border px-3 py-1.5 font-mono text-xs transition-colors ${
+                  className={`border px-3 py-1.5 font-mono text-xs transition-colors ${
                     models.includes(m)
-                      ? "border-accent bg-accent-dim text-accent"
-                      : "border-border text-text-secondary hover:border-border-strong"
+                      ?"border-accent bg-accent-dim text-accent"
+                      :"border-border text-text-secondary hover:border-border-strong"
                   }`}
                 >
                   {m}
@@ -395,9 +395,9 @@ export function BacktestPage() {
           <button
             onClick={() => startMutation.mutate()}
             disabled={!mapping || models.length === 0 || startMutation.isPending || !!jobId || !modelReady}
-            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="w-full btn-terminal-primary"
           >
-            {startMutation.isPending ? "Starting..." : "Run walk-forward backtest"}
+            {startMutation.isPending ?"Starting..." :"Run walk-forward backtest"}
           </button>
 
           {!modelReady && (
@@ -405,7 +405,7 @@ export function BacktestPage() {
           )}
 
           {startMutation.isError && (
-            <p className="rounded-md border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
+            <p className="border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
               {String(startMutation.error)}
             </p>
           )}
@@ -429,7 +429,7 @@ export function BacktestPage() {
             // a stuck progress bar after a successful run.
             try {
               const j = await api.getBacktestJob(jobId);
-              if (j.status === "done" && j.result) {
+              if (j.status ==="done" && j.result) {
                 const br = j.result as BacktestResult;
                 setResult(br);
                 persistBacktestSummary(br);
@@ -455,8 +455,8 @@ export function BacktestPage() {
                 models,
                 datasetName: preview?.filename,
                 rowCount: preview?.row_count,
-                perHorizonPng: perHorizonRef.current?.getPng({ backgroundColor: "#ffffff", pixelRatio: 3 }) ?? null,
-                calibrationPng: calibrationRef.current?.getPng({ backgroundColor: "#ffffff", pixelRatio: 3 }) ?? null,
+                perHorizonPng: perHorizonRef.current?.getPng({ backgroundColor:"#ffffff", pixelRatio: 3 }) ?? null,
+                calibrationPng: calibrationRef.current?.getPng({ backgroundColor:"#ffffff", pixelRatio: 3 }) ?? null,
               })}
             />
           </div>
@@ -486,9 +486,9 @@ export function BacktestPage() {
                 <button
                   onClick={() => calibrationMutation.mutate()}
                   disabled={calibrationMutation.isPending}
-                  className="rounded-md border border-accent/30 bg-accent-dim px-3 py-1.5 font-mono text-xs text-accent hover:opacity-80 disabled:opacity-40"
+                  className="border border-accent/30 bg-accent-dim px-3 py-1.5 font-mono text-xs text-accent hover:opacity-80 disabled:opacity-40"
                 >
-                  {calibrationMutation.isPending ? "Running…" : "Compute calibration"}
+                  {calibrationMutation.isPending ?"Running…" :"Compute calibration"}
                 </button>
               )}
             </div>

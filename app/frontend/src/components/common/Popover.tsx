@@ -10,17 +10,14 @@ import {
   type ReactNode,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
-} from "react";
+} from"react";
 
-type Placement = "bottom" | "top" | "right" | "left";
+type Placement ="bottom" |"top" |"right" |"left";
 
 interface PopoverProps {
   trigger: ReactElement<{
     onClick?: (e: ReactMouseEvent) => void;
-    onKeyDown?: (e: ReactKeyboardEvent) => void;
-    "aria-expanded"?: boolean;
-    "aria-haspopup"?: boolean | "dialog";
-    "aria-controls"?: string;
+    onKeyDown?: (e: ReactKeyboardEvent) => void;"aria-expanded"?: boolean;"aria-haspopup"?: boolean |"dialog";"aria-controls"?: string;
   }>;
   children: ReactNode;
   ariaLabel: string;
@@ -30,19 +27,19 @@ interface PopoverProps {
 }
 
 const PLACEMENT_CLASSES: Record<Placement, string> = {
-  bottom: "top-full left-0 mt-2",
-  top: "bottom-full left-0 mb-2",
-  right: "left-full top-0 ml-2",
-  left: "right-full top-0 mr-2",
+  bottom:"top-full left-0 mt-2",
+  top:"bottom-full left-0 mb-2",
+  right:"left-full top-0 ml-2",
+  left:"right-full top-0 mr-2",
 };
 
 export function Popover({
   trigger,
   children,
   ariaLabel,
-  placement = "bottom",
+  placement ="bottom",
   openOnHover = false,
-  panelClassName = "",
+  panelClassName ="",
 }: PopoverProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLSpanElement>(null);
@@ -67,7 +64,7 @@ export function Popover({
       }
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key ==="Escape") {
         e.stopPropagation();
         close();
       }
@@ -91,7 +88,7 @@ export function Popover({
   };
 
   const handleTriggerKey = (e: ReactKeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
+    if (e.key ==="Enter" || e.key ==="") {
       e.preventDefault();
       triggerReturnRef.current = e.currentTarget as HTMLElement;
       setOpen((o) => !o);
@@ -116,10 +113,7 @@ export function Popover({
 
   const triggerWithHandlers = cloneElement(trigger, {
     onClick: handleTriggerClick,
-    onKeyDown: handleTriggerKey,
-    "aria-expanded": open,
-    "aria-haspopup": "dialog" as const,
-    "aria-controls": panelId,
+    onKeyDown: handleTriggerKey,"aria-expanded": open,"aria-haspopup":"dialog" as const,"aria-controls": panelId,
   });
 
   return (

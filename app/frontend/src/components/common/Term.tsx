@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
-import { Popover } from "./Popover";
-import { TermPopoverBody } from "./TermPopoverBody";
-import { getTerm } from "@/data/termDictionary";
+import type { ReactNode } from"react";
+import { Popover } from"./Popover";
+import { TermPopoverBody } from"./TermPopoverBody";
+import { getTerm } from"@/data/termDictionary";
 
 interface TermProps {
   k: string;
@@ -9,7 +9,7 @@ interface TermProps {
   className?: string;
 }
 
-export function Term({ k, children, className = "" }: TermProps) {
+export function Term({ k, children, className ="" }: TermProps) {
   const term = getTerm(k);
   if (!term) {
     return <span className={className}>{children ?? k}</span>;

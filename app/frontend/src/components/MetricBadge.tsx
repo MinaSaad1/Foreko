@@ -1,4 +1,4 @@
-import type { Confidence } from "@/types/comparison";
+import type { Confidence } from"@/types/comparison";
 
 interface MetricBadgeProps {
   label: string;
@@ -18,9 +18,9 @@ export function MetricBadge({ label, value, sub }: MetricBadgeProps) {
 
 export function ConfidencePill({ level }: { level: Confidence }) {
   const styles: Record<Confidence, string> = {
-    High: "bg-positive/10 text-positive border-positive/20",
-    Medium: "bg-warning/10 text-warning border-warning/20",
-    Low: "bg-anomaly/10 text-anomaly border-anomaly/20",
+    High:"bg-positive/10 text-positive border-positive/20",
+    Medium:"bg-warning/10 text-warning border-warning/20",
+    Low:"bg-anomaly/10 text-anomaly border-anomaly/20",
   };
   return (
     <span

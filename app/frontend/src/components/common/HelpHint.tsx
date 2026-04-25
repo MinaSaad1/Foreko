@@ -1,6 +1,6 @@
-import { Popover } from "./Popover";
-import { TermPopoverBody } from "./TermPopoverBody";
-import { getTerm } from "@/data/termDictionary";
+import { Popover } from"./Popover";
+import { TermPopoverBody } from"./TermPopoverBody";
+import { getTerm } from"@/data/termDictionary";
 
 interface HelpHintProps {
   termKey: string;
@@ -8,7 +8,7 @@ interface HelpHintProps {
   className?: string;
 }
 
-export function HelpHint({ termKey, ariaLabel, className = "" }: HelpHintProps) {
+export function HelpHint({ termKey, ariaLabel, className ="" }: HelpHintProps) {
   const term = getTerm(termKey);
   if (!term) return null;
 

@@ -1,24 +1,24 @@
-import { useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { api } from "@/api/endpoints";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { ColumnMapper } from "@/components/ColumnMapper";
-import { FactorImpactCards } from "@/components/FactorImpactCards";
-import { FactorInfluenceChart } from "@/components/FactorInfluenceChart";
-import { FactorComparisonChart } from "@/components/FactorComparisonChart";
-import { FactorDetailsTable } from "@/components/FactorDetailsTable";
-import { PageIntro } from "@/components/common/PageIntro";
-import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
-import { Term } from "@/components/common/Term";
-import { useSyncedDataset } from "@/hooks/useSyncedDataset";
-import { useHealth } from "@/hooks/useHealth";
-import type { ColumnInfo, ColumnMapping } from "@/types/dataset";
+import { useCallback, useState } from"react";
+import { useParams } from"react-router-dom";
+import { useMutation } from"@tanstack/react-query";
+import { api } from"@/api/endpoints";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { ColumnMapper } from"@/components/ColumnMapper";
+import { FactorImpactCards } from"@/components/FactorImpactCards";
+import { FactorInfluenceChart } from"@/components/FactorInfluenceChart";
+import { FactorComparisonChart } from"@/components/FactorComparisonChart";
+import { FactorDetailsTable } from"@/components/FactorDetailsTable";
+import { PageIntro } from"@/components/common/PageIntro";
+import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
+import { Term } from"@/components/common/Term";
+import { useSyncedDataset } from"@/hooks/useSyncedDataset";
+import { useHealth } from"@/hooks/useHealth";
+import type { ColumnInfo, ColumnMapping } from"@/types/dataset";
 import type {
   FactorAnalysisRequest,
   FactorAnalysisResponse,
   XregMode,
-} from "@/types/factors";
+} from"@/types/factors";
 
 function FactorToggle({
   column,
@@ -32,14 +32,14 @@ function FactorToggle({
   return (
     <button
       onClick={onToggle}
-      className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+      className={`flex w-full items-center gap-2 border px-3 py-2 text-left text-sm transition-colors ${
         selected
-          ? "border-accent bg-accent-dim text-accent"
-          : "border-border text-text-secondary hover:border-border-strong hover:text-text-primary"
+          ?"border-accent bg-accent-dim text-accent"
+          :"border-border text-text-secondary hover:border-border-strong hover:text-text-primary"
       }`}
     >
       <span
-        className={`h-2 w-2 rounded-full ${selected ? "bg-accent" : "bg-border-strong"}`}
+        className={`h-2 w-2 rounded-full ${selected ?"bg-accent" :"bg-border-strong"}`}
       />
       <span className="font-mono">{column.name}</span>
       <span className="text-xs text-text-muted">({column.dtype})</span>
@@ -62,7 +62,7 @@ export function CovariatesPage() {
 
   const { activeId, preview } = useSyncedDataset(datasetId);
   const { data: health } = useHealth();
-  const modelReady = health?.model_status === "ready";
+  const modelReady = health?.model_status ==="ready";
 
   const handleMappingChange = useCallback(
     (m: ColumnMapping) => {
@@ -110,10 +110,10 @@ export function CovariatesPage() {
 
   const numericCols =
     preview?.columns.filter(
-      (c) => c.dtype === "numeric" && c.name !== mapping?.value_col,
+      (c) => c.dtype ==="numeric" && c.name !== mapping?.value_col,
     ) ?? [];
   const categoricalCols =
-    preview?.columns.filter((c) => c.dtype === "categorical" || c.dtype === "string") ?? [];
+    preview?.columns.filter((c) => c.dtype ==="categorical" || c.dtype ==="string") ?? [];
 
   const result = analyze.data;
   const hasSelectedFactors = numericFactors.length > 0 || categoricalFactors.length > 0;
@@ -150,9 +150,9 @@ export function CovariatesPage() {
               </h2>
               <button
                 onClick={() => setShowBaseline((v) => !v)}
-                className="rounded-md border border-border px-3 py-1 font-mono text-xs text-text-secondary hover:border-border-strong hover:text-text-primary transition-colors"
+                className="border border-border px-3 py-1 font-mono text-xs text-text-secondary hover:border-border-strong hover:text-text-primary transition-colors"
               >
-                {showBaseline ? "Hide baseline" : "Show baseline"}
+                {showBaseline ?"Hide baseline" :"Show baseline"}
               </button>
             </div>
             <FactorComparisonChart data={result} showBaseline={showBaseline} />
@@ -197,7 +197,7 @@ export function CovariatesPage() {
                   max={256}
                   value={horizon}
                   onChange={(e) => setHorizon(Math.max(1, Number(e.target.value)))}
-                  className="w-32 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
+                  className="w-32 border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
                 />
               </div>
               <div>
@@ -205,14 +205,14 @@ export function CovariatesPage() {
                   How factors apply
                 </label>
                 <div className="flex gap-2">
-                  {(["additive", "multiplicative"] as const).map((m) => (
+                  {(["additive","multiplicative"] as const).map((m) => (
                     <button
                       key={m}
                       onClick={() => setXregMode(m)}
-                      className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                      className={`border px-3 py-2 text-sm transition-colors ${
                         xregMode === m
-                          ? "border-accent bg-accent-dim text-accent"
-                          : "border-border text-text-secondary hover:border-border-strong"
+                          ?"border-accent bg-accent-dim text-accent"
+                          :"border-border text-text-secondary hover:border-border-strong"
                       }`}
                     >
                       {m}
@@ -259,13 +259,13 @@ export function CovariatesPage() {
             )}
 
             {!hasSelectedFactors && (
-              <p className="rounded-md border border-border bg-bg-elevated px-4 py-3 text-sm text-text-muted">
+              <p className="border border-border bg-bg-elevated px-4 py-3 text-sm text-text-muted">
                 Select at least one factor above to quantify its influence on the forecast.
               </p>
             )}
 
             {analyze.isError && (
-              <p className="rounded-md border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
+              <p className="border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
                 {analyze.error.message}
               </p>
             )}
@@ -273,9 +273,9 @@ export function CovariatesPage() {
             <button
               onClick={() => analyze.mutate()}
               disabled={!mapping || !hasSelectedFactors || analyze.isPending || !modelReady}
-              className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-40"
+              className="w-full btn-terminal-primary"
             >
-              {analyze.isPending ? "Running analysis..." : "Analyze factor impact"}
+              {analyze.isPending ?"Running analysis..." :"Analyze factor impact"}
             </button>
             {!modelReady && (
               <p className="text-xs text-text-muted text-center">Model still loading, the Run button will enable when it's ready.</p>

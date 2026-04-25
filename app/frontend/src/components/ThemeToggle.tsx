@@ -1,17 +1,17 @@
-import { useThemeStore } from "@/stores/themeStore";
+import { useThemeStore } from"@/stores/themeStore";
 
 export function ThemeToggle() {
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
-  const isDark = theme === "dark";
+  const isDark = theme ==="dark";
 
   return (
     <button
       type="button"
       onClick={toggleTheme}
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      aria-label={isDark ?"Switch to light theme" :"Switch to dark theme"}
       aria-pressed={isDark}
-      title={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      title={isDark ?"Switch to light theme" :"Switch to dark theme"}
       className="flex h-8 w-8 items-center justify-center text-text-secondary hover:text-accent hover:bg-bg-elevated transition-colors"
     >
       {isDark ? (

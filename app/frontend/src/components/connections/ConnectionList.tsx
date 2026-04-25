@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import { api } from "@/api/endpoints";
-import { friendlyError } from "@/utils/toast";
-import { DIALECT_LABEL, type Connection } from "@/types/connection";
+import { useEffect, useState } from"react";
+import { api } from"@/api/endpoints";
+import { friendlyError } from"@/utils/toast";
+import { DIALECT_LABEL, type Connection } from"@/types/connection";
 
 interface ConnectionListProps {
   onSelect: (connection: Connection) => void;
@@ -43,7 +43,7 @@ export function ConnectionList({ onSelect, refreshToken = 0 }: ConnectionListPro
 
   if (error) {
     return (
-      <p className="rounded-md border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-sm text-anomaly">
+      <p className="border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-sm text-anomaly">
         {error}
       </p>
     );
@@ -56,13 +56,13 @@ export function ConnectionList({ onSelect, refreshToken = 0 }: ConnectionListPro
   if (connections.length === 0) {
     return (
       <p className="text-sm text-text-muted">
-        No saved connections yet. Add one under "Connect database".
+        No saved connections yet. Add one under"Connect database".
       </p>
     );
   }
 
   return (
-    <ul className="divide-y divide-border/60 rounded-md border border-border/60 bg-bg-surface/30">
+    <ul className="divide-y divide-border/60 border border-border/60 bg-bg-surface/30">
       {connections.map((connection) => (
         <li
           key={connection.id}
@@ -73,17 +73,17 @@ export function ConnectionList({ onSelect, refreshToken = 0 }: ConnectionListPro
               {connection.name}
             </p>
             <p className="truncate text-xs text-text-muted">
-              {DIALECT_LABEL[connection.dialect]} &middot;{" "}
-              {connection.dialect === "sqlite"
+              {DIALECT_LABEL[connection.dialect]} &middot;{""}
+              {connection.dialect ==="sqlite"
                 ? connection.database
-                : `${connection.host ?? "localhost"}${connection.port ? `:${connection.port}` : ""} / ${connection.database}`}
+                : `${connection.host ??"localhost"}${connection.port ? `:${connection.port}` :""} / ${connection.database}`}
             </p>
           </div>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => onSelect(connection)}
-              className="rounded-md border border-accent/60 bg-accent/20 px-3 py-1.5 text-xs text-accent"
+              className="border border-accent/60 bg-accent/20 px-3 py-1.5 text-xs text-accent"
             >
               Connect
             </button>
@@ -91,9 +91,9 @@ export function ConnectionList({ onSelect, refreshToken = 0 }: ConnectionListPro
               type="button"
               onClick={() => remove(connection.id)}
               disabled={deletingId === connection.id}
-              className="rounded-md border border-border px-3 py-1.5 text-xs text-text-muted disabled:opacity-50"
+              className="border border-border px-3 py-1.5 text-xs text-text-muted disabled:opacity-50"
             >
-              {deletingId === connection.id ? "Removing..." : "Remove"}
+              {deletingId === connection.id ?"Removing..." :"Remove"}
             </button>
           </div>
         </li>

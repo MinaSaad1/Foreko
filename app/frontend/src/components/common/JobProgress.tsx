@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { useJobsStore } from "@/stores/jobsStore";
+import { useEffect, useRef } from"react";
+import { useJobsStore } from"@/stores/jobsStore";
 
 interface JobProgressProps {
   jobId: string;
@@ -17,7 +17,7 @@ export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCa
   // Stable refs so the SSE effect below depends only on jobId/url/kind.
   // Without this, parent re-renders (e.g. from React Query background refetches
   // of useHealth) recreated the inline onDone closure, retriggered the effect,
-  // and tore down the EventSource right before the "done" event arrived,
+  // and tore down the EventSource right before the"done" event arrived,
   // leaving the UI stuck at 100%.
   const onDoneRef = useRef(onDone);
   const onErrorRef = useRef(onError);
@@ -32,8 +32,8 @@ export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCa
     updateJob(jobId, {
       job_id: jobId,
       kind,
-      status: "running",
-      progress: { current: 0, total: 0, stage: "queued" },
+      status:"running",
+      progress: { current: 0, total: 0, stage:"queued" },
       result: null,
       error: null,
     });
@@ -44,24 +44,24 @@ export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCa
     es.onmessage = (evt) => {
       try {
         const data = JSON.parse(evt.data);
-        if (data.type === "heartbeat") return;
-        if (data.type === "progress") {
-          updateJob(jobId, { progress: data.progress, status: "running" });
-        } else if (data.type === "state") {
+        if (data.type ==="heartbeat") return;
+        if (data.type ==="progress") {
+          updateJob(jobId, { progress: data.progress, status:"running" });
+        } else if (data.type ==="state") {
           updateJob(jobId, { status: data.status, progress: data.progress });
-        } else if (data.type === "done") {
+        } else if (data.type ==="done") {
           settled = true;
-          updateJob(jobId, { status: "done", result: data.result });
+          updateJob(jobId, { status:"done", result: data.result });
           onDoneRef.current?.(data.result);
           es.close();
-        } else if (data.type === "error") {
+        } else if (data.type ==="error") {
           settled = true;
-          updateJob(jobId, { status: "error", error: data.error });
+          updateJob(jobId, { status:"error", error: data.error });
           onErrorRef.current?.(data.error);
           es.close();
-        } else if (data.type === "cancelled") {
+        } else if (data.type ==="cancelled") {
           settled = true;
-          updateJob(jobId, { status: "cancelled" });
+          updateJob(jobId, { status:"cancelled" });
           onCancelRef.current?.();
           es.close();
         }
@@ -74,8 +74,8 @@ export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCa
       // Only close if the stream is fully dead and we haven't settled yet.
       if (es.readyState === EventSource.CLOSED && !settled) {
         updateJob(jobId, {
-          status: "error",
-          error: "Connection lost before the job finished. Try running again.",
+          status:"error",
+          error:"Connection lost before the job finished. Try running again.",
         });
         onErrorRef.current?.("connection lost");
       }
@@ -96,7 +96,7 @@ export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCa
         <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
           {kind} job · {job.status}
         </p>
-        <p className="font-mono text-xs text-text-secondary">{job.progress.stage || "…"}</p>
+        <p className="font-mono text-xs text-text-secondary">{job.progress.stage ||"…"}</p>
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-bg-elevated">
         <div
@@ -108,7 +108,7 @@ export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCa
         {job.progress.current}/{job.progress.total} · {pct}%
       </p>
       {job.error && (
-        <p className="rounded-md border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-xs text-anomaly">
+        <p className="border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-xs text-anomaly">
           {job.error}
         </p>
       )}

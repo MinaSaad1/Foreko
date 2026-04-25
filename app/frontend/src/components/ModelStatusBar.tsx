@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/api/endpoints";
+import { useQuery } from"@tanstack/react-query";
+import { api } from"@/api/endpoints";
 
 function dot(color: string, isPulsing: boolean) {
   return (
@@ -27,24 +27,24 @@ export function ModelStatusBar() {
     retry: 1,
   });
 
-  const status = health?.model_status ?? "loading";
+  const status = health?.model_status ??"loading";
   const device = health?.device;
 
   const statusColor =
-    status === "ready"
-      ? "bg-positive"
-      : status === "error"
-        ? "bg-anomaly"
-        : "bg-warning";
+    status ==="ready"
+      ?"bg-positive"
+      : status ==="error"
+        ?"bg-anomaly"
+        :"bg-warning";
         
-  const isPulsing = status !== "error";
+  const isPulsing = status !=="error";
 
   const statusLabel =
-    status === "ready" ? "Model loaded" : status === "error" ? "Model error" : "Loading model";
+    status ==="ready" ?"Model loaded" : status ==="error" ?"Model error" :"Loading model";
 
-  const modelId = modelInfo?.model_id ?? "timesfm-2.5-200m";
-  const shortId = modelId.replace("google/", "");
-  const deviceLabel = device?.kind === "cuda" ? "GPU" : "CPU";
+  const modelId = modelInfo?.model_id ??"timesfm-2.5-200m";
+  const shortId = modelId.replace("google/","");
+  const deviceLabel = device?.kind ==="cuda" ?"GPU" :"CPU";
   const ramMb = device?.memory_total_mb;
   const ramLabel = ramMb ? `${(ramMb / 1024).toFixed(1)} GB` : null;
 

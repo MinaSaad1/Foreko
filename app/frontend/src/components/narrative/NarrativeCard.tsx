@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { api } from "@/api/endpoints";
-import { friendlyError } from "@/utils/toast";
+import { useState } from"react";
+import { api } from"@/api/endpoints";
+import { friendlyError } from"@/utils/toast";
 
-const CONSENT_STORAGE_KEY = "foresee:llm-consent";
+const CONSENT_STORAGE_KEY ="foresee:llm-consent";
 
 function readConsent(): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window ==="undefined") return false;
   try {
-    return window.localStorage.getItem(CONSENT_STORAGE_KEY) === "1";
+    return window.localStorage.getItem(CONSENT_STORAGE_KEY) ==="1";
   } catch {
     return false;
   }
@@ -15,14 +15,14 @@ function readConsent(): boolean {
 
 function writeConsent(value: boolean): void {
   try {
-    window.localStorage.setItem(CONSENT_STORAGE_KEY, value ? "1" : "0");
+    window.localStorage.setItem(CONSENT_STORAGE_KEY, value ?"1" :"0");
   } catch {
     // localStorage unavailable, best effort
   }
 }
 
 interface Props {
-  kind: "forecast" | "anomaly" | "factors";
+  kind:"forecast" |"anomaly" |"factors";
   payload: unknown;
 }
 
@@ -38,8 +38,8 @@ export function NarrativeCard({ kind, payload }: Props) {
     setError(null);
     try {
       const fn =
-        kind === "forecast" ? api.narrateForecast :
-        kind === "anomaly" ? api.narrateAnomaly :
+        kind ==="forecast" ? api.narrateForecast :
+        kind ==="anomaly" ? api.narrateAnomaly :
         api.narrateFactors;
       const res = await fn(payload);
       setMarkdown(res.markdown);
@@ -74,7 +74,7 @@ export function NarrativeCard({ kind, payload }: Props) {
         <button
           type="button"
           onClick={grantConsent}
-          className="border border-accent bg-accent px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-on-accent hover:opacity-90"
+          className="btn-terminal-primary"
         >
           Allow narratives
         </button>
@@ -98,13 +98,13 @@ export function NarrativeCard({ kind, payload }: Props) {
         <button
           onClick={run}
           disabled={loading}
-          className="rounded-md border border-accent/30 bg-accent-dim px-3 py-1.5 font-mono text-xs text-accent hover:opacity-80 disabled:opacity-40"
+          className="border border-accent/30 bg-accent-dim px-3 py-1.5 font-mono text-xs text-accent hover:opacity-80 disabled:opacity-40"
         >
-          {loading ? "Generating…" : "Generate narrative"}
+          {loading ?"Generating…" :"Generate narrative"}
         </button>
       )}
       {error && (
-        <p className="rounded-md border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-xs text-anomaly">{error}</p>
+        <p className="border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-xs text-anomaly">{error}</p>
       )}
       {markdown && (
         <div className="prose prose-invert max-w-none text-sm leading-relaxed text-text-secondary whitespace-pre-wrap">

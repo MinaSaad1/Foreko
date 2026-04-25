@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { api } from "@/api/endpoints";
-import { friendlyError } from "@/utils/toast";
+import { useState } from"react";
+import { api } from"@/api/endpoints";
+import { friendlyError } from"@/utils/toast";
 import {
   DIALECT_DEFAULT_PORT,
   DIALECT_LABEL,
@@ -8,23 +8,23 @@ import {
   type ConnectionCreate,
   type ConnectionTestResult,
   type Dialect,
-} from "@/types/connection";
+} from"@/types/connection";
 
 interface ConnectionFormProps {
   onSaved: (connection: Connection) => void;
 }
 
-const DIALECTS: Dialect[] = ["postgresql", "mysql", "sqlite", "mssql"];
+const DIALECTS: Dialect[] = ["postgresql","mysql","sqlite","mssql"];
 
-function emptyForm(dialect: Dialect = "postgresql"): ConnectionCreate {
+function emptyForm(dialect: Dialect ="postgresql"): ConnectionCreate {
   return {
-    name: "",
+    name:"",
     dialect,
-    host: "localhost",
+    host:"localhost",
     port: DIALECT_DEFAULT_PORT[dialect],
-    database: "",
-    username: "",
-    password: "",
+    database:"",
+    username:"",
+    password:"",
   };
 }
 
@@ -35,7 +35,7 @@ export function ConnectionForm({ onSaved }: ConnectionFormProps) {
   const [result, setResult] = useState<ConnectionTestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const isSqlite = form.dialect === "sqlite";
+  const isSqlite = form.dialect ==="sqlite";
 
   const update = (patch: Partial<ConnectionCreate>) => {
     setForm((prev) => ({ ...prev, ...patch }));
@@ -76,7 +76,7 @@ export function ConnectionForm({ onSaved }: ConnectionFormProps) {
   const canSubmit =
     form.name.trim().length > 0 &&
     form.database.trim().length > 0 &&
-    (isSqlite || (form.host ?? "").trim().length > 0);
+    (isSqlite || (form.host ??"").trim().length > 0);
 
   return (
     <div className="space-y-4">
@@ -84,7 +84,7 @@ export function ConnectionForm({ onSaved }: ConnectionFormProps) {
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-text-muted">Connection name</span>
           <input
-            className="rounded-md border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
+            className="border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
             value={form.name}
             onChange={(e) => update({ name: e.target.value })}
             placeholder="Production warehouse"
@@ -93,7 +93,7 @@ export function ConnectionForm({ onSaved }: ConnectionFormProps) {
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-text-muted">Database type</span>
           <select
-            className="rounded-md border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
+            className="border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
             value={form.dialect}
             onChange={(e) => onDialectChange(e.target.value as Dialect)}
           >
@@ -111,8 +111,8 @@ export function ConnectionForm({ onSaved }: ConnectionFormProps) {
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Host</span>
             <input
-              className="rounded-md border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
-              value={form.host ?? ""}
+              className="border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
+              value={form.host ??""}
               onChange={(e) => update({ host: e.target.value })}
             />
           </label>
@@ -120,11 +120,11 @@ export function ConnectionForm({ onSaved }: ConnectionFormProps) {
             <span className="text-text-muted">Port</span>
             <input
               type="number"
-              className="rounded-md border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
-              value={form.port ?? ""}
+              className="border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
+              value={form.port ??""}
               onChange={(e) =>
                 update({
-                  port: e.target.value === "" ? null : Number(e.target.value),
+                  port: e.target.value ==="" ? null : Number(e.target.value),
                 })
               }
             />
@@ -134,13 +134,13 @@ export function ConnectionForm({ onSaved }: ConnectionFormProps) {
 
       <label className="flex flex-col gap-1 text-sm">
         <span className="text-text-muted">
-          {isSqlite ? "Database file path" : "Database name"}
+          {isSqlite ?"Database file path" :"Database name"}
         </span>
         <input
-          className="rounded-md border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
+          className="border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
           value={form.database}
           onChange={(e) => update({ database: e.target.value })}
-          placeholder={isSqlite ? "/path/to/local.db" : "warehouse"}
+          placeholder={isSqlite ?"/path/to/local.db" :"warehouse"}
         />
       </label>
 
@@ -149,8 +149,8 @@ export function ConnectionForm({ onSaved }: ConnectionFormProps) {
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Username</span>
             <input
-              className="rounded-md border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
-              value={form.username ?? ""}
+              className="border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
+              value={form.username ??""}
               onChange={(e) => update({ username: e.target.value })}
               autoComplete="username"
             />
@@ -159,8 +159,8 @@ export function ConnectionForm({ onSaved }: ConnectionFormProps) {
             <span className="text-text-muted">Password</span>
             <input
               type="password"
-              className="rounded-md border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
-              value={form.password ?? ""}
+              className="border border-border bg-bg-surface/60 px-3 py-2 text-text-primary"
+              value={form.password ??""}
               onChange={(e) => update({ password: e.target.value })}
               autoComplete="new-password"
             />
@@ -173,18 +173,18 @@ export function ConnectionForm({ onSaved }: ConnectionFormProps) {
       </p>
 
       {result && result.ok && (
-        <div className="rounded-md border border-accent/30 bg-accent/10 px-3 py-2 text-sm text-accent">
-          Connected to {result.server_version ?? "the database"} in{" "}
+        <div className="border border-accent/30 bg-accent/10 px-3 py-2 text-sm text-accent">
+          Connected to {result.server_version ??"the database"} in{""}
           {result.latency_ms} ms.
         </div>
       )}
       {result && !result.ok && (
-        <div className="rounded-md border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-sm text-anomaly">
-          {result.error ?? "Could not connect."}
+        <div className="border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-sm text-anomaly">
+          {result.error ??"Could not connect."}
         </div>
       )}
       {error && (
-        <div className="rounded-md border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-sm text-anomaly">
+        <div className="border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-sm text-anomaly">
           {error}
         </div>
       )}
@@ -194,17 +194,17 @@ export function ConnectionForm({ onSaved }: ConnectionFormProps) {
           type="button"
           onClick={runTest}
           disabled={!canSubmit || testing}
-          className="rounded-md border border-border px-4 py-2 text-sm text-text-primary disabled:opacity-50"
+          className="border border-border px-4 py-2 text-sm text-text-primary disabled:opacity-50"
         >
-          {testing ? "Testing..." : "Test connection"}
+          {testing ?"Testing..." :"Test connection"}
         </button>
         <button
           type="button"
           onClick={save}
           disabled={!canSubmit || saving}
-          className="rounded-md border border-accent/60 bg-accent/20 px-4 py-2 text-sm text-accent disabled:opacity-50"
+          className="border border-accent/60 bg-accent/20 px-4 py-2 text-sm text-accent disabled:opacity-50"
         >
-          {saving ? "Saving..." : "Save and continue"}
+          {saving ?"Saving..." :"Save and continue"}
         </button>
       </div>
     </div>

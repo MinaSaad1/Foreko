@@ -1,23 +1,23 @@
-import { useCallback, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/api/endpoints";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { ColumnMapper } from "@/components/ColumnMapper";
-import ReactECharts from "echarts-for-react";
-import { useChartTheme } from "@/charts/theme";
-import { PageIntro } from "@/components/common/PageIntro";
-import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
-import { Term } from "@/components/common/Term";
-import { useSyncedDataset } from "@/hooks/useSyncedDataset";
-import { useHealth } from "@/hooks/useHealth";
-import type { ColumnInfo, ColumnMapping } from "@/types/dataset";
-import type { ScenarioRunResult, ScenarioCompareResult } from "@/types/phases";
+import { useCallback, useMemo, useState } from"react";
+import { useParams } from"react-router-dom";
+import { useMutation, useQuery, useQueryClient } from"@tanstack/react-query";
+import { api } from"@/api/endpoints";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { ColumnMapper } from"@/components/ColumnMapper";
+import ReactECharts from"echarts-for-react";
+import { useChartTheme } from"@/charts/theme";
+import { PageIntro } from"@/components/common/PageIntro";
+import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
+import { Term } from"@/components/common/Term";
+import { useSyncedDataset } from"@/hooks/useSyncedDataset";
+import { useHealth } from"@/hooks/useHealth";
+import type { ColumnInfo, ColumnMapping } from"@/types/dataset";
+import type { ScenarioRunResult, ScenarioCompareResult } from"@/types/phases";
 
 interface FactorOverride {
   value: number;
   rampTo?: number;
-  mode: "flat" | "ramp";
+  mode:"flat" |"ramp";
 }
 
 export function ScenariosPage() {
@@ -36,7 +36,7 @@ export function ScenariosPage() {
 
   const { activeId, preview } = useSyncedDataset(datasetId);
   const { data: health } = useHealth();
-  const modelReady = health?.model_status === "ready";
+  const modelReady = health?.model_status ==="ready";
   const { data: scenarios } = useQuery({
     queryKey: ["scenarios", activeId],
     queryFn: () => api.listScenarios(activeId!),
@@ -52,7 +52,7 @@ export function ScenariosPage() {
   );
 
   const numericCols: ColumnInfo[] =
-    preview?.columns.filter((c) => c.dtype === "numeric" && c.name !== mapping?.value_col) ?? [];
+    preview?.columns.filter((c) => c.dtype ==="numeric" && c.name !== mapping?.value_col) ?? [];
 
   const runMutation = useMutation<ScenarioRunResult, Error>({
     mutationFn: () => {
@@ -60,7 +60,7 @@ export function ScenariosPage() {
       for (const f of numericFactors) {
         const o = overrides[f];
         if (!o) continue;
-        if (o.mode === "flat") {
+        if (o.mode ==="flat") {
           future_numeric[f] = new Array(horizon).fill(o.value);
         } else {
           const ramp = o.rampTo ?? o.value;
@@ -78,14 +78,14 @@ export function ScenariosPage() {
         future_numeric,
         future_categorical: {},
         counterfactuals,
-        xreg_mode: "additive",
+        xreg_mode:"additive",
       });
     },
   });
 
   const saveMutation = useMutation({
     mutationFn: () =>
-      api.saveScenario(label || "Unnamed scenario", {
+      api.saveScenario(label ||"Unnamed scenario", {
         dataset_id: activeId!,
         mapping: mapping!,
         horizon,
@@ -93,7 +93,7 @@ export function ScenariosPage() {
         categorical_factors: [],
         future_numeric: Object.fromEntries(
           Object.entries(overrides).map(([k, o]) => {
-            if (o.mode === "flat") return [k, new Array(horizon).fill(o.value)];
+            if (o.mode ==="flat") return [k, new Array(horizon).fill(o.value)];
             const ramp = o.rampTo ?? o.value;
             return [
               k,
@@ -104,7 +104,7 @@ export function ScenariosPage() {
           }),
         ),
         counterfactuals,
-        xreg_mode: "additive",
+        xreg_mode:"additive",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scenarios", activeId] });
@@ -131,7 +131,7 @@ export function ScenariosPage() {
       <div>
         <h1 className="font-display text-2xl font-semibold text-text-primary">What-If Scenarios</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Set future <Term k="factor">factor</Term> values, save named{" "}
+          Set future <Term k="factor">factor</Term> values, save named{""}
           <Term k="scenarios">scenarios</Term>, and compare them side-by-side.
         </p>
       </div>
@@ -151,7 +151,7 @@ export function ScenariosPage() {
             max={256}
             value={horizon}
             onChange={(e) => setHorizon(Math.max(1, Number(e.target.value)))}
-            className="w-24 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
+            className="w-24 border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
           />
         </div>
 
@@ -164,11 +164,11 @@ export function ScenariosPage() {
               {numericCols.map((c) => {
                 const active = numericFactors.includes(c.name);
                 const cfActive = counterfactuals.includes(c.name);
-                const override = overrides[c.name] ?? { value: 0, mode: "flat" as const };
+                const override = overrides[c.name] ?? { value: 0, mode:"flat" as const };
                 return (
                   <div
                     key={c.name}
-                    className={`rounded-md border p-3 ${active ? "border-accent/40 bg-accent-dim/30" : "border-border"}`}
+                    className={`border p-3 ${active ?"border-accent/40 bg-accent-dim/30" :"border-border"}`}
                   >
                     <div className="flex items-center justify-between">
                       <label className="flex items-center gap-2 font-mono text-sm text-text-primary">
@@ -203,10 +203,10 @@ export function ScenariosPage() {
                           onChange={(e) =>
                             setOverrides((prev) => ({
                               ...prev,
-                              [c.name]: { ...(prev[c.name] ?? { value: 0, mode: "flat" }), mode: e.target.value as "flat" | "ramp" },
+                              [c.name]: { ...(prev[c.name] ?? { value: 0, mode:"flat" }), mode: e.target.value as"flat" |"ramp" },
                             }))
                           }
-                          className="rounded-md border border-border bg-bg-elevated px-2 py-1 text-xs text-text-primary"
+                          className="border border-border bg-bg-elevated px-2 py-1 text-xs text-text-primary"
                         >
                           <option value="flat">Flat value</option>
                           <option value="ramp">Ramp to value</option>
@@ -217,23 +217,23 @@ export function ScenariosPage() {
                           onChange={(e) =>
                             setOverrides((prev) => ({
                               ...prev,
-                              [c.name]: { ...(prev[c.name] ?? { value: 0, mode: "flat" }), value: Number(e.target.value) },
+                              [c.name]: { ...(prev[c.name] ?? { value: 0, mode:"flat" }), value: Number(e.target.value) },
                             }))
                           }
-                          className="w-28 rounded-md border border-border bg-bg-elevated px-2 py-1 text-xs text-text-primary"
+                          className="w-28 border border-border bg-bg-elevated px-2 py-1 text-xs text-text-primary"
                           placeholder="start"
                         />
-                        {override.mode === "ramp" && (
+                        {override.mode ==="ramp" && (
                           <input
                             type="number"
                             value={override.rampTo ?? override.value}
                             onChange={(e) =>
                               setOverrides((prev) => ({
                                 ...prev,
-                                [c.name]: { ...(prev[c.name] ?? { value: 0, mode: "flat" }), rampTo: Number(e.target.value) },
+                                [c.name]: { ...(prev[c.name] ?? { value: 0, mode:"flat" }), rampTo: Number(e.target.value) },
                               }))
                             }
-                            className="w-28 rounded-md border border-border bg-bg-elevated px-2 py-1 text-xs text-text-primary"
+                            className="w-28 border border-border bg-bg-elevated px-2 py-1 text-xs text-text-primary"
                             placeholder="end"
                           />
                         )}
@@ -250,21 +250,21 @@ export function ScenariosPage() {
           <button
             onClick={() => runMutation.mutate()}
             disabled={!mapping || runMutation.isPending || !modelReady}
-            className="rounded-md bg-accent px-3 py-2 text-sm text-on-accent hover:opacity-90 disabled:opacity-40"
+            className="btn-terminal-primary"
           >
-            {runMutation.isPending ? "Running..." : "Run scenario"}
+            {runMutation.isPending ?"Running..." :"Run scenario"}
           </button>
           <input
             type="text"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder="Scenario label"
-            className="flex-1 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
+            className="flex-1 border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
           />
           <button
             onClick={() => saveMutation.mutate()}
             disabled={!label || !mapping || saveMutation.isPending}
-            className="rounded-md border border-accent/30 bg-accent-dim px-3 py-2 text-sm text-accent hover:opacity-80 disabled:opacity-40"
+            className="btn-terminal"
           >
             Save
           </button>
@@ -285,7 +285,7 @@ export function ScenariosPage() {
             <button
               onClick={() => compareMutation.mutate()}
               disabled={selectedForCompare.length < 2 || compareMutation.isPending}
-              className="rounded-md border border-accent/30 bg-accent-dim px-3 py-1 font-mono text-xs text-accent hover:opacity-80 disabled:opacity-40"
+              className="btn-terminal py-1.5 px-3 text-[10px]"
             >
               Compare selected ({selectedForCompare.length})
             </button>
@@ -294,7 +294,7 @@ export function ScenariosPage() {
             {scenarios.map((s) => (
               <label
                 key={s.id}
-                className="flex items-center justify-between rounded-md border border-border bg-bg-elevated px-3 py-2 hover:border-border-strong"
+                className="flex items-center justify-between border border-border bg-bg-elevated px-3 py-2 hover:border-border-strong"
               >
                 <div className="flex items-center gap-2">
                   <input
@@ -336,28 +336,28 @@ function ScenarioResultChart({ data }: { data: ScenarioRunResult }) {
   const fcSeries = data.forecast.map((v, i) => [data.forecast_dates[i], v]);
   const option = useMemo(
     () => ({
-      backgroundColor: "transparent",
+      backgroundColor:"transparent",
       grid: { left: 56, right: 24, top: 24, bottom: 48, containLabel: false },
       xAxis: {
-        type: "category",
+        type:"category",
         data: allDates,
         axisLine: { lineStyle: { color: t.grid } },
-        axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10, rotate: 30, formatter: (v: string) => v.slice(0, 7) },
+        axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10, rotate: 30, formatter: (v: string) => v.slice(0, 7) },
       },
       yAxis: {
-        type: "value",
+        type:"value",
         axisLine: { show: false },
-        axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+        axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
         splitLine: { lineStyle: { color: t.grid } },
       },
-      tooltip: { trigger: "axis" },
+      tooltip: { trigger:"axis" },
       dataZoom: [
-        { type: "inside", xAxisIndex: 0 },
-        { type: "slider", xAxisIndex: 0, height: 16, bottom: 8, handleStyle: { color: t.accent } },
+        { type:"inside", xAxisIndex: 0 },
+        { type:"slider", xAxisIndex: 0, height: 16, bottom: 8, handleStyle: { color: t.accent } },
       ],
       series: [
-        { name: "Historical", type: "line", data: histSeries, lineStyle: { color: t.historical, width: 2 }, symbol: "none" },
-        { name: "Scenario", type: "line", data: fcSeries, lineStyle: { color: t.accent, width: 2 }, symbol: "none" },
+        { name:"Historical", type:"line", data: histSeries, lineStyle: { color: t.historical, width: 2 }, symbol:"none" },
+        { name:"Scenario", type:"line", data: fcSeries, lineStyle: { color: t.accent, width: 2 }, symbol:"none" },
       ],
     }),
     [allDates, histSeries, fcSeries, t],
@@ -370,7 +370,7 @@ function ScenarioResultChart({ data }: { data: ScenarioRunResult }) {
         </h3>
         <p className="font-mono text-xs text-accent">Total: {data.total.toFixed(0)}</p>
       </div>
-      <ReactECharts option={option} style={{ height: 300, width: "100%" }} notMerge />
+      <ReactECharts option={option} style={{ height: 300, width:"100%" }} notMerge />
     </div>
   );
 }
@@ -385,19 +385,19 @@ function ScenarioCompareChart({ data }: { data: ScenarioCompareResult }) {
   ];
   const series = [
     {
-      name: "Historical",
-      type: "line",
+      name:"Historical",
+      type:"line",
       data: histSeries,
       lineStyle: { color: t.historical, width: 2 },
-      symbol: "none",
+      symbol:"none",
     },
     ...data.scenarios.map((s, i) => ({
       name: s.label,
-      type: "line",
+      type:"line",
       data: s.forecast.map((v, idx) => [s.forecast_dates[idx], v]),
       lineStyle: { color: colors[i % colors.length], width: 2 },
       itemStyle: { color: colors[i % colors.length] },
-      symbol: "none",
+      symbol:"none",
     })),
   ];
 
@@ -410,7 +410,7 @@ function ScenarioCompareChart({ data }: { data: ScenarioCompareResult }) {
         {data.scenarios.map((s, i) => (
           <div
             key={s.id}
-            className="rounded-md border border-border bg-bg-elevated px-3 py-2"
+            className="border border-border bg-bg-elevated px-3 py-2"
             style={{ borderLeftColor: colors[i % colors.length], borderLeftWidth: 3 }}
           >
             <p className="font-mono text-xs text-text-primary">{s.label}</p>
@@ -422,34 +422,34 @@ function ScenarioCompareChart({ data }: { data: ScenarioCompareResult }) {
       </div>
       <ReactECharts
         option={{
-          backgroundColor: "transparent",
+          backgroundColor:"transparent",
           grid: { left: 56, right: 24, top: 24, bottom: 48, containLabel: false },
           xAxis: {
-            type: "category",
+            type:"category",
             data: allDates,
             axisLine: { lineStyle: { color: t.grid } },
-            axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10, rotate: 30, formatter: (v: string) => v.slice(0, 7) },
+            axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10, rotate: 30, formatter: (v: string) => v.slice(0, 7) },
           },
           yAxis: {
-            type: "value",
+            type:"value",
             axisLine: { show: false },
-            axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+            axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
             splitLine: { lineStyle: { color: t.grid } },
           },
-          tooltip: { trigger: "axis" },
+          tooltip: { trigger:"axis" },
           legend: {
             data: ["Historical", ...data.scenarios.map((s) => s.label)],
-            textStyle: { color: t.textSecondary, fontFamily: "JetBrains Mono", fontSize: 10 },
+            textStyle: { color: t.textSecondary, fontFamily:"JetBrains Mono", fontSize: 10 },
             top: 0,
             right: 16,
           },
           dataZoom: [
-            { type: "inside", xAxisIndex: 0 },
-            { type: "slider", xAxisIndex: 0, height: 16, bottom: 8 },
+            { type:"inside", xAxisIndex: 0 },
+            { type:"slider", xAxisIndex: 0, height: 16, bottom: 8 },
           ],
           series,
         }}
-        style={{ height: 360, width: "100%" }}
+        style={{ height: 360, width:"100%" }}
         notMerge
       />
     </div>

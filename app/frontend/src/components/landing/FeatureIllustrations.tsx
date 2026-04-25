@@ -8,7 +8,7 @@
  * re-skin when the user toggles dark/light.
  */
 
-import { useChartTheme } from "@/charts/theme";
+import { useChartTheme } from"@/charts/theme";
 
 interface Palette {
   ACCENT: string;
@@ -35,7 +35,7 @@ function usePalette(): Palette {
   };
 }
 
-const VIEWBOX = "0 0 96 72";
+const VIEWBOX ="0 0 96 72";
 
 function Frame({ children, palette }: { children: React.ReactNode; palette: Palette }) {
   return (
@@ -110,9 +110,9 @@ export function DataQualityIllustration() {
 
 export function ForecastIllustration() {
   const P = usePalette();
-  const histPath = "M 6 50 L 18 42 L 30 46 L 42 36 L 50 38";
-  const fcPath = "M 50 38 L 62 30 L 74 26 L 86 20";
-  const bandTop = "M 50 30 L 62 20 L 74 14 L 86 8 L 86 32 L 74 38 L 62 40 L 50 46 Z";
+  const histPath ="M 6 50 L 18 42 L 30 46 L 42 36 L 50 38";
+  const fcPath ="M 50 38 L 62 30 L 74 26 L 86 20";
+  const bandTop ="M 50 30 L 62 20 L 74 14 L 86 8 L 86 32 L 74 38 L 62 40 L 50 46 Z";
   return (
     <Frame palette={P}>
       <Grid palette={P} />
@@ -177,7 +177,7 @@ export function BacktestIllustration() {
 
 export function DiagnosticsIllustration() {
   const P = usePalette();
-  const path = "M 6 36 L 22 36 L 28 28 L 34 44 L 40 20 L 46 44 L 52 36 L 90 36";
+  const path ="M 6 36 L 22 36 L 28 28 L 34 44 L 40 20 L 46 44 L 52 36 L 90 36";
   return (
     <Frame palette={P}>
       <Grid palette={P} />
@@ -277,10 +277,10 @@ export function ExplainIllustration() {
 export function FactorsIllustration() {
   const P = usePalette();
   const bars = [
-    { x: 8, label: "base", color: P.ACCENT, h: 34 },
-    { x: 26, label: "price", color: P.NEUTRAL, h: 14 },
-    { x: 44, label: "promo", color: P.POSITIVE, h: 10 },
-    { x: 62, label: "wx", color: P.WARNING, h: 6 },
+    { x: 8, label:"base", color: P.ACCENT, h: 34 },
+    { x: 26, label:"price", color: P.NEUTRAL, h: 14 },
+    { x: 44, label:"promo", color: P.POSITIVE, h: 10 },
+    { x: 62, label:"wx", color: P.WARNING, h: 6 },
   ];
   return (
     <Frame palette={P}>
@@ -351,7 +351,7 @@ export function ScenariosIllustration() {
         strokeLinecap="round"
         strokeDasharray="200"
         className="animate-draw-line"
-        style={{ animationDelay: "180ms" }}
+        style={{ animationDelay:"180ms" }}
       />
       <path
         d="M 48 42 L 62 50 L 76 56 L 90 62"
@@ -361,7 +361,7 @@ export function ScenariosIllustration() {
         strokeLinecap="round"
         strokeDasharray="200"
         className="animate-draw-line"
-        style={{ animationDelay: "360ms" }}
+        style={{ animationDelay:"360ms" }}
       />
       <circle cx="48" cy="42" r="3" fill={P.ACCENT} />
       <circle cx="48" cy="42" r="6" fill="none" stroke={P.ACCENT} strokeWidth="0.8" opacity={0.4} className="animate-ping-slow" />
@@ -378,9 +378,9 @@ export function SegmentsIllustration() {
     <Frame palette={P}>
       <Grid palette={P} />
       {[
-        { x: 10, heights: [12, 20, 16], color: P.NEUTRAL, label: "A" },
-        { x: 38, heights: [22, 30, 26], color: P.ACCENT, label: "B", winner: true },
-        { x: 66, heights: [10, 14, 12], color: P.TEXT_MUTED, label: "C" },
+        { x: 10, heights: [12, 20, 16], color: P.NEUTRAL, label:"A" },
+        { x: 38, heights: [22, 30, 26], color: P.ACCENT, label:"B", winner: true },
+        { x: 66, heights: [10, 14, 12], color: P.TEXT_MUTED, label:"C" },
       ].map((group) => (
         <g key={group.label}>
           {group.heights.map((h, i) => (

@@ -1,27 +1,27 @@
-import { useRef, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { api } from "@/api/endpoints";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { ColumnMapper } from "@/components/ColumnMapper";
-import { AnomalyChart, type AnomalyChartHandle } from "@/components/AnomalyChart";
-import { AnomalyInsights } from "@/components/AnomalyInsights";
-import { AnomalyTable } from "@/components/AnomalyTable";
-import { PageIntro } from "@/components/common/PageIntro";
-import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
-import { Term } from "@/components/common/Term";
-import { HelpHint } from "@/components/common/HelpHint";
-import { DownloadPdfButton, type PdfSection } from "@/components/common/DownloadPdfButton";
-import { useDocumentTitle } from "@/utils/useDocumentTitle";
-import { useSyncedDataset } from "@/hooks/useSyncedDataset";
-import { useHealth } from "@/hooks/useHealth";
-import type { ColumnMapping } from "@/types/dataset";
+import { useRef, useState, useCallback } from"react";
+import { useParams } from"react-router-dom";
+import { useMutation } from"@tanstack/react-query";
+import { api } from"@/api/endpoints";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { ColumnMapper } from"@/components/ColumnMapper";
+import { AnomalyChart, type AnomalyChartHandle } from"@/components/AnomalyChart";
+import { AnomalyInsights } from"@/components/AnomalyInsights";
+import { AnomalyTable } from"@/components/AnomalyTable";
+import { PageIntro } from"@/components/common/PageIntro";
+import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
+import { Term } from"@/components/common/Term";
+import { HelpHint } from"@/components/common/HelpHint";
+import { DownloadPdfButton, type PdfSection } from"@/components/common/DownloadPdfButton";
+import { useDocumentTitle } from"@/utils/useDocumentTitle";
+import { useSyncedDataset } from"@/hooks/useSyncedDataset";
+import { useHealth } from"@/hooks/useHealth";
+import type { ColumnMapping } from"@/types/dataset";
 import type {
   AnomalyResponse,
   AnomalySummary,
   ContextAnomalyRecord,
   SeriesAnomalyResult,
-} from "@/types/anomaly";
+} from"@/types/anomaly";
 
 function SummaryPill({
   count,
@@ -33,7 +33,7 @@ function SummaryPill({
   color: string;
 }) {
   return (
-    <div className={`rounded-md border px-4 py-2 text-center ${color}`}>
+    <div className={`border px-4 py-2 text-center ${color}`}>
       <div className="font-mono text-xl font-medium">{count}</div>
       <div className="text-xs text-text-muted uppercase tracking-widest">{label}</div>
     </div>
@@ -53,7 +53,7 @@ function buildSummary(data: AnomalyResponse): AnomalySummary {
 }
 
 function formatValue(v: number): string {
-  if (!Number.isFinite(v)) return "-";
+  if (!Number.isFinite(v)) return"-";
   if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(2)}M`;
   if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(2)}K`;
   return v.toFixed(2);
@@ -69,8 +69,8 @@ function buildAnomalyReport(
   ctx: { horizon: number; datasetName?: string; rowCount?: number; chartPng: string | null },
 ): PdfSection[] {
   const records = series.context_records;
-  const anomalies = records.filter((r) => r.severity === "CRITICAL");
-  const warnings = records.filter((r) => r.severity === "WARNING");
+  const anomalies = records.filter((r) => r.severity ==="CRITICAL");
+  const warnings = records.filter((r) => r.severity ==="WARNING");
   const flagged: ContextAnomalyRecord[] = [...anomalies, ...warnings];
 
   const anomalyRate = summary.total > 0 ? (summary.critical / summary.total) * 100 : 0;
@@ -104,12 +104,12 @@ function buildAnomalyReport(
   const sections: PdfSection[] = [];
 
   sections.push({
-    heading: "Executive summary",
+    heading:"Executive summary",
     body: summary.critical > 0
-      ? `Detected ${summary.critical} critical ${summary.critical === 1 ? "anomaly" : "anomalies"} and ${summary.warning} warnings across ${summary.total} observations (${anomalyRate.toFixed(1)}% critical rate).`
+      ? `Detected ${summary.critical} critical ${summary.critical === 1 ?"anomaly" :"anomalies"} and ${summary.warning} warnings across ${summary.total} observations (${anomalyRate.toFixed(1)}% critical rate).`
       : summary.warning > 0
         ? `No critical anomalies, but ${summary.warning} warning-level points (${warningRate.toFixed(1)}%) deviate more than 2 sigma from expected.`
-        : "All observations fell within normal bounds, no anomalies or warnings detected.",
+        :"All observations fell within normal bounds, no anomalies or warnings detected.",
     kv: [
       ["Anomalies (critical)", summary.critical.toString()],
       ["Warnings", summary.warning.toString()],
@@ -117,29 +117,29 @@ function buildAnomalyReport(
       ["Critical rate", `${anomalyRate.toFixed(1)}%`],
       ["Warning rate", `${warningRate.toFixed(1)}%`],
       ["Residual std (σ)", series.res_std.toFixed(4)],
-      ["Anomaly mean vs baseline", baselineAvg > 0 ? `${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%` : "-"],
+      ["Anomaly mean vs baseline", baselineAvg > 0 ? `${deltaPct >= 0 ?"+" :""}${deltaPct.toFixed(1)}%` :"-"],
       ["Look-ahead horizon", `${ctx.horizon} periods`],
-      ["Worst z-score", worst ? worst.z_score.toFixed(2) : "-"],
-      ["Worst date", worst ? worst.date : "-"],
-      ["Most recent flag", latest ? `${latest.date} (${latest.severity.toLowerCase()})` : "-"],
-      ["Observation range", records.length ? `${records[0].date} → ${records[records.length - 1].date}` : "-"],
-      ["Dataset", ctx.datasetName ?? "-"],
+      ["Worst z-score", worst ? worst.z_score.toFixed(2) :"-"],
+      ["Worst date", worst ? worst.date :"-"],
+      ["Most recent flag", latest ? `${latest.date} (${latest.severity.toLowerCase()})` :"-"],
+      ["Observation range", records.length ? `${records[0].date} → ${records[records.length - 1].date}` :"-"],
+      ["Dataset", ctx.datasetName ??"-"],
       ["Historical rows", ctx.rowCount ? ctx.rowCount.toLocaleString() : `${records.length}`],
     ],
   });
 
   if (ctx.chartPng) {
     sections.push({
-      heading: "Time-series with flagged points",
+      heading:"Time-series with flagged points",
       image_base64: ctx.chartPng,
-      caption: "Red = critical anomaly (|z| ≥ 3). Orange = warning (|z| ≥ 2). Dashed line = underlying trend.",
+      caption:"Red = critical anomaly (|z| ≥ 3). Orange = warning (|z| ≥ 2). Dashed line = underlying trend.",
     });
   }
 
   // Ranked anomaly table, sort by severity then |z|.
   if (flagged.length > 0) {
     const ranked = [...flagged].sort((a, b) => {
-      const sev = (r: ContextAnomalyRecord) => (r.severity === "CRITICAL" ? 1 : 0);
+      const sev = (r: ContextAnomalyRecord) => (r.severity ==="CRITICAL" ? 1 : 0);
       if (sev(b) !== sev(a)) return sev(b) - sev(a);
       return Math.abs(b.z_score) - Math.abs(a.z_score);
     });
@@ -154,13 +154,13 @@ function buildAnomalyReport(
         r.severity,
         formatValue(r.value),
         r.z_score.toFixed(2),
-        `${vsBaseline >= 0 ? "+" : ""}${vsBaseline.toFixed(1)}%`,
+        `${vsBaseline >= 0 ?"+" :""}${vsBaseline.toFixed(1)}%`,
       ]);
     }
     sections.push({
-      heading: `Flagged observations${ranked.length > rowLimit ? ` (top ${rowLimit} of ${ranked.length})` : ""}`,
+      heading: `Flagged observations${ranked.length > rowLimit ? ` (top ${rowLimit} of ${ranked.length})` :""}`,
       table: {
-        headers: ["Rank", "Date", "Severity", "Value", "Z-score", "vs baseline"],
+        headers: ["Rank","Date","Severity","Value","Z-score","vs baseline"],
         rows,
       },
     });
@@ -168,10 +168,10 @@ function buildAnomalyReport(
 
   if (topMonths.length > 0) {
     sections.push({
-      heading: "Flag concentration by month",
-      body: "Months with the most flagged observations, useful for spotting recurring patterns.",
+      heading:"Flag concentration by month",
+      body:"Months with the most flagged observations, useful for spotting recurring patterns.",
       table: {
-        headers: ["Month", "Flagged count"],
+        headers: ["Month","Flagged count"],
         rows: topMonths.map(([m, n]) => [m, n]),
       },
     });
@@ -183,11 +183,11 @@ function buildAnomalyReport(
   } else {
     if (summary.critical > 0) {
       takeaways.push(
-        `Investigate the ${summary.critical} critical ${summary.critical === 1 ? "point" : "points"} first (|z| ≥ 3 means a <0.3% chance under the residual distribution).`,
+        `Investigate the ${summary.critical} critical ${summary.critical === 1 ?"point" :"points"} first (|z| ≥ 3 means a <0.3% chance under the residual distribution).`,
       );
     }
     if (worst) {
-      const direction = worst.value > worst.trend ? "above" : "below";
+      const direction = worst.value > worst.trend ?"above" :"below";
       takeaways.push(
         `The sharpest outlier is ${worst.date} (value ${formatValue(worst.value)}, z=${worst.z_score.toFixed(2)}, ${direction} the trend of ${formatValue(worst.trend)}).`,
       );
@@ -203,7 +203,7 @@ function buildAnomalyReport(
   }
 
   sections.push({
-    heading: "Takeaways",
+    heading:"Takeaways",
     body: takeaways.map((t, i) => `${i + 1}. ${t}`).join("\n"),
   });
 
@@ -222,7 +222,7 @@ export function AnomalyPage() {
 
   const { activeId, preview } = useSyncedDataset(datasetId);
   const { data: health } = useHealth();
-  const modelReady = health?.model_status === "ready";
+  const modelReady = health?.model_status ==="ready";
 
   const handleMappingChange = useCallback(
     (m: ColumnMapping) => {
@@ -287,7 +287,7 @@ export function AnomalyPage() {
               horizon,
               datasetName: preview?.filename,
               rowCount: preview?.row_count,
-              chartPng: chartHandleRef.current?.getPng({ backgroundColor: "#ffffff", pixelRatio: 3 }) ?? null,
+              chartPng: chartHandleRef.current?.getPng({ backgroundColor:"#ffffff", pixelRatio: 3 }) ?? null,
             })}
           />
         </div>
@@ -305,7 +305,7 @@ export function AnomalyPage() {
           <AnomalyChart ref={chartHandleRef} records={seriesResult.context_records} />
           <p className="mt-3 text-xs text-text-muted">
             Red pulsing dots = <Term k="severity">anomalies</Term> (outside 3-sigma).
-            Orange dots = warnings (2-sigma). The dashed line is the underlying{" "}
+            Orange dots = warnings (2-sigma). The dashed line is the underlying{""}
             <Term k="trend">trend</Term>.
           </p>
         </div>
@@ -335,12 +335,12 @@ export function AnomalyPage() {
               max={256}
               value={horizon}
               onChange={(e) => setHorizon(Math.max(1, Number(e.target.value)))}
-              className="w-32 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
+              className="w-32 border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
             />
           </div>
 
           {detectMutation.isError && (
-            <p className="rounded-md border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
+            <p className="border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
               {detectMutation.error.message}
             </p>
           )}
@@ -348,9 +348,9 @@ export function AnomalyPage() {
           <button
             onClick={() => detectMutation.mutate()}
             disabled={!mapping || detectMutation.isPending || !modelReady}
-            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="w-full btn-terminal-primary"
           >
-            {detectMutation.isPending ? "Detecting..." : "Detect Anomalies"}
+            {detectMutation.isPending ?"Detecting..." :"Detect Anomalies"}
           </button>
           {!modelReady && (
             <p className="text-xs text-text-muted text-center">Model still loading, the Run button will enable when it's ready.</p>

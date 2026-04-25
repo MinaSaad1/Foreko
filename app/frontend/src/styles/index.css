@@ -169,3 +169,60 @@ svg .animate-wobble {
 ::-webkit-scrollbar-corner {
   background: rgb(var(--color-bg-base));
 }
+
+@layer components {
+  /* Terminal Button Aesthetics */
+  .btn-terminal {
+    @apply relative inline-flex items-center justify-center gap-2 border border-accent/40 bg-transparent px-5 py-2.5 font-mono text-xs font-medium uppercase tracking-widest text-text-primary transition-all duration-300;
+  }
+  
+  .btn-terminal:hover:not(:disabled) {
+    @apply border-accent text-accent shadow-[0_0_16px_rgb(var(--color-accent)/0.35)];
+    background: linear-gradient(90deg, rgb(var(--color-accent)/0.1) 0%, transparent 100%);
+  }
+  
+  .btn-terminal:active:not(:disabled) {
+    @apply shadow-[0_0_8px_rgb(var(--color-accent)/0.5)] scale-[0.98];
+  }
+
+  .btn-terminal:disabled {
+    @apply opacity-40 cursor-not-allowed border-text-muted/30 text-text-muted;
+  }
+
+  /* Blinking cursor micro-animation on hover */
+  .btn-terminal::after {
+    content: "_";
+    @apply absolute right-3 opacity-0 text-accent font-mono animate-cursor-blink transition-opacity duration-300;
+  }
+
+  .btn-terminal:hover:not(:disabled)::after {
+    @apply opacity-100;
+  }
+
+  /* Variant for primary solid actions, if needed */
+  .btn-terminal-primary {
+    @apply btn-terminal border-accent bg-accent/10 text-accent;
+  }
+  
+  .btn-terminal-primary:hover:not(:disabled) {
+    @apply bg-accent text-on-accent shadow-[0_0_24px_rgb(var(--color-accent)/0.5)];
+  }
+  
+  .btn-terminal-primary:hover:not(:disabled)::after {
+    @apply text-on-accent;
+  }
+
+  /* Terminal data grids */
+  .terminal-table {
+    @apply w-full border-collapse border border-border/40 text-sm font-mono;
+  }
+  .terminal-table th {
+    @apply border-b border-border/60 bg-bg-elevated/50 px-3 py-2 text-left font-semibold text-text-primary uppercase tracking-wider text-xs;
+  }
+  .terminal-table td {
+    @apply border-b border-border/20 px-3 py-1.5 text-text-secondary transition-colors;
+  }
+  .terminal-table tr:hover td {
+    @apply bg-accent/5 text-text-primary;
+  }
+}

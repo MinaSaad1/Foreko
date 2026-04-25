@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { Popover } from "../Popover";
+import { describe, it, expect } from"vitest";
+import { render, screen } from"@testing-library/react";
+import userEvent from"@testing-library/user-event";
+import { Popover } from"../Popover";
 
 describe("Popover", () => {
   it("is closed by default and opens on trigger click", async () => {
@@ -32,12 +32,12 @@ describe("Popover", () => {
       </Popover>,
     );
     const trigger = screen.getByRole("button", { name: /toggle/i });
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
-    expect(trigger).toHaveAttribute("aria-haspopup", "dialog");
+    expect(trigger).toHaveAttribute("aria-expanded","false");
+    expect(trigger).toHaveAttribute("aria-haspopup","dialog");
     expect(trigger).toHaveAttribute("aria-controls");
 
     await user.click(trigger);
-    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(trigger).toHaveAttribute("aria-expanded","true");
   });
 
   it("closes on ESC and returns focus to the trigger", async () => {

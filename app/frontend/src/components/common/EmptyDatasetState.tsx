@@ -1,10 +1,10 @@
-import { useNavigate } from "react-router-dom";
-import { CSVUpload } from "@/components/CSVUpload";
-import { SamplesPicker } from "@/components/SamplesPicker";
-import { PageIntro } from "@/components/common/PageIntro";
-import type { PageIntroKey } from "@/data/pageIntros";
-import { useDatasetStore } from "@/stores/datasetStore";
-import type { DatasetPreview } from "@/types/dataset";
+import { useNavigate } from"react-router-dom";
+import { CSVUpload } from"@/components/CSVUpload";
+import { SamplesPicker } from"@/components/SamplesPicker";
+import { PageIntro } from"@/components/common/PageIntro";
+import type { PageIntroKey } from"@/data/pageIntros";
+import { useDatasetStore } from"@/stores/datasetStore";
+import type { DatasetPreview } from"@/types/dataset";
 
 interface EmptyDatasetStateProps {
   title: string;
@@ -32,7 +32,7 @@ export function EmptyDatasetState({
       <div>
         <h1 className="font-display text-3xl font-semibold text-text-primary">{title}</h1>
         <p className="mt-2 text-text-secondary">
-          {message ?? "Upload a CSV first, or pick a sample to explore this analysis."}
+          {message ??"Upload a CSV first, or pick a sample to explore this analysis."}
         </p>
       </div>
 

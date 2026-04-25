@@ -1,13 +1,13 @@
-import { lazy, Suspense, useEffect, useState } from "react";
-import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
-import { Toaster } from "sonner";
-import { ModelStatusBar } from "@/components/ModelStatusBar";
-import { LoadingSplash } from "@/components/LoadingSplash";
-import { Tour } from "@/components/Tour";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { ErrorBoundary } from "@/components/common/ErrorBoundary";
-import { useDocumentTitle } from "@/utils/useDocumentTitle";
-import { useThemeStore } from "@/stores/themeStore";
+import { lazy, Suspense, useEffect, useState } from"react";
+import { Link, NavLink, Route, Routes, useLocation } from"react-router-dom";
+import { Toaster } from"sonner";
+import { ModelStatusBar } from"@/components/ModelStatusBar";
+import { LoadingSplash } from"@/components/LoadingSplash";
+import { Tour } from"@/components/Tour";
+import { ThemeToggle } from"@/components/ThemeToggle";
+import { ErrorBoundary } from"@/components/common/ErrorBoundary";
+import { useDocumentTitle } from"@/utils/useDocumentTitle";
+import { useThemeStore } from"@/stores/themeStore";
 
 const LandingPage = lazy(() => import("@/pages/LandingPage").then((m) => ({ default: m.LandingPage })));
 const DataPage = lazy(() => import("@/pages/DataPage").then((m) => ({ default: m.DataPage })));
@@ -47,15 +47,15 @@ function SideNavItem({ to, label, icon, isOpen, alsoActiveOn }: SideNavItemProps
       className={({ isActive }) =>
         `group flex items-center px-3 py-2.5 text-sm transition-all duration-300 border-l-2 overflow-hidden whitespace-nowrap ${
           isActive || aliasMatch
-            ? "border-accent bg-accent/15 text-accent font-medium shadow-[inset_2px_0_10px_rgb(var(--color-accent)/0.15)]"
-            : "border-transparent text-text-secondary hover:border-text-muted/30 hover:bg-bg-elevated/50 hover:text-text-primary hover:shadow-sm"
+            ?"border-accent bg-accent/15 text-accent font-medium shadow-[inset_2px_0_10px_rgb(var(--color-accent)/0.15)]"
+            :"border-transparent text-text-secondary hover:border-text-muted/30 hover:bg-bg-elevated/50 hover:text-text-primary hover:shadow-sm"
         }`
       }
     >
-      <span className={`flex justify-center transition-all duration-300 ${isOpen ? "w-6 min-w-[24px] mr-3 text-base" : "w-10 min-w-[40px] text-lg group-hover:text-accent group-hover:scale-110"}`} aria-hidden>
+      <span className={`flex justify-center transition-all duration-300 ${isOpen ?"w-6 min-w-[24px] mr-3 text-base" :"w-10 min-w-[40px] text-lg group-hover:text-accent group-hover:scale-110"}`} aria-hidden>
         {icon}
       </span>
-      <span className={`transition-all duration-300 ${isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"}`}>
+      <span className={`transition-all duration-300 ${isOpen ?"opacity-100 translate-x-0" :"opacity-0 -translate-x-4"}`}>
         {label}
       </span>
     </NavLink>
@@ -73,26 +73,9 @@ function RouteFallback() {
 
 function DocumentTitleSync() {
   const location = useLocation();
-  const PAGE_TITLES: Record<string, string | undefined> = {
-    "/": undefined,
-    "/data": "Data",
-    "/upload": "Data",
-    "/datasets": "Data",
-    "/compare": "Forecast",
-    "/backtest": "Backtest",
-    "/diagnostics": "Diagnostics",
-    "/anomaly": "Anomalies",
-    "/explain": "Explain",
-    "/covariates": "Factors",
-    "/scenarios": "Scenarios",
-    "/segments": "Segments",
-    "/preflight": "Data Quality",
-    "/ops": "Operations",
-    "/glossary": "Glossary",
-    "/privacy": "Privacy",
-    "/about": "About",
+  const PAGE_TITLES: Record<string, string | undefined> = {"/": undefined,"/data":"Data","/upload":"Data","/datasets":"Data","/compare":"Forecast","/backtest":"Backtest","/diagnostics":"Diagnostics","/anomaly":"Anomalies","/explain":"Explain","/covariates":"Factors","/scenarios":"Scenarios","/segments":"Segments","/preflight":"Data Quality","/ops":"Operations","/glossary":"Glossary","/privacy":"Privacy","/about":"About",
   };
-  const base = "/" + (location.pathname.split("/")[1] ?? "");
+  const base ="/" + (location.pathname.split("/")[1] ??"");
   const title = PAGE_TITLES[base];
   useDocumentTitle(title);
   return null;
@@ -101,13 +84,13 @@ function DocumentTitleSync() {
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
-  const isLanding = location.pathname === "/";
+  const isLanding = location.pathname ==="/";
   const theme = useThemeStore((s) => s.theme);
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
-    root.classList.toggle("light", theme === "light");
+    root.classList.toggle("dark", theme ==="dark");
+    root.classList.toggle("light", theme ==="light");
   }, [theme]);
 
   // Reset scroll on route change, keeps long analysis pages from leaving users in the middle.
@@ -135,7 +118,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+              aria-label={isSidebarOpen ?"Collapse sidebar" :"Expand sidebar"}
               aria-pressed={isSidebarOpen}
               className="flex h-8 w-8 items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
               title="Toggle sidebar"
@@ -167,13 +150,13 @@ export default function App() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar, hidden on landing */}
         {!isLanding && (
-          <aside className={`flex shrink-0 flex-col border-r border-border/50 bg-bg-surface/85 backdrop-blur-md relative z-40 transition-all duration-300 ease-in-out ${isSidebarOpen ? "w-56 px-2 py-6" : "w-[68px] px-1 py-6"}`}>
-            <nav className={`flex flex-col gap-1 transition-all duration-300 ${isSidebarOpen ? "pr-1" : ""}`} aria-label="Primary">
-              <SideNavItem to="/data" label="Data" icon="⊞" isOpen={isSidebarOpen} alsoActiveOn={["/upload", "/datasets"]} />
+          <aside className={`flex shrink-0 flex-col border-r border-border/50 bg-bg-surface/85 backdrop-blur-md relative z-40 transition-all duration-300 ease-in-out ${isSidebarOpen ?"w-56 px-2 py-6" :"w-[68px] px-1 py-6"}`}>
+            <nav className={`flex flex-col gap-1 transition-all duration-300 ${isSidebarOpen ?"pr-1" :""}`} aria-label="Primary">
+              <SideNavItem to="/data" label="Data" icon="⊞" isOpen={isSidebarOpen} alsoActiveOn={["/upload","/datasets"]} />
             </nav>
 
             <div className="mt-6 border-t border-border/30 pt-6">
-              <div className={`transition-all duration-300 overflow-hidden ${isSidebarOpen ? "h-6 opacity-100" : "h-0 opacity-0"}`}>
+              <div className={`transition-all duration-300 overflow-hidden ${isSidebarOpen ?"h-6 opacity-100" :"h-0 opacity-0"}`}>
                 <p className="px-3 font-mono text-xs text-text-muted uppercase tracking-widest whitespace-nowrap">
                   Analysis
                 </p>
@@ -192,7 +175,7 @@ export default function App() {
             </div>
 
             <div className="mt-6 border-t border-border/30 pt-6">
-              <div className={`transition-all duration-300 overflow-hidden ${isSidebarOpen ? "h-6 opacity-100" : "h-0 opacity-0"}`}>
+              <div className={`transition-all duration-300 overflow-hidden ${isSidebarOpen ?"h-6 opacity-100" :"h-0 opacity-0"}`}>
                 <p className="px-3 font-mono text-xs text-text-muted uppercase tracking-widest whitespace-nowrap">
                   Manage
                 </p>
@@ -204,7 +187,7 @@ export default function App() {
               </nav>
             </div>
 
-            <div className={`mt-auto pt-6 transition-all duration-300 ${isSidebarOpen ? "opacity-100" : "opacity-0"}`}>
+            <div className={`mt-auto pt-6 transition-all duration-300 ${isSidebarOpen ?"opacity-100" :"opacity-0"}`}>
               <div className="border-t border-border/30 px-3 py-3 space-y-1">
                 <p className="font-mono text-[9px] uppercase tracking-widest text-text-muted whitespace-nowrap">
                   <span className="inline-block w-1.5 h-1.5 bg-positive mr-1.5" aria-hidden />
@@ -221,7 +204,7 @@ export default function App() {
         {/* Main content */}
         <main
           id="main-content"
-          className={`flex-1 overflow-auto relative z-10 ${isLanding ? "" : "px-8 py-8"}`}
+          className={`flex-1 overflow-auto relative z-10 ${isLanding ?"" :"px-8 py-8"}`}
           tabIndex={-1}
         >
           <ErrorBoundary>
@@ -257,12 +240,12 @@ export default function App() {
         position="top-right"
         toastOptions={{
           style: {
-            borderRadius: "0",
-            fontFamily: "Outfit, sans-serif",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
+            borderRadius:"0",
+            fontFamily:"Outfit, sans-serif",
+            textTransform:"uppercase",
+            letterSpacing:"0.05em",
           },
-          className: "shadow-[var(--shadow-elev-2)] backdrop-blur-xl",
+          className:"shadow-[var(--shadow-elev-2)] backdrop-blur-xl",
         }}
       />
     </div>

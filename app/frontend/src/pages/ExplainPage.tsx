@@ -1,25 +1,25 @@
-import { useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { api } from "@/api/endpoints";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { ColumnMapper } from "@/components/ColumnMapper";
-import { MethodAgreementMatrix } from "@/components/anomaly/MethodAgreementMatrix";
-import { RootCauseHints } from "@/components/anomaly/RootCauseHints";
-import { PageIntro } from "@/components/common/PageIntro";
-import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
-import { Term } from "@/components/common/Term";
-import { useSyncedDataset } from "@/hooks/useSyncedDataset";
-import type { ColumnInfo, ColumnMapping } from "@/types/dataset";
+import { useCallback, useState } from"react";
+import { useParams } from"react-router-dom";
+import { useMutation } from"@tanstack/react-query";
+import { api } from"@/api/endpoints";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { ColumnMapper } from"@/components/ColumnMapper";
+import { MethodAgreementMatrix } from"@/components/anomaly/MethodAgreementMatrix";
+import { RootCauseHints } from"@/components/anomaly/RootCauseHints";
+import { PageIntro } from"@/components/common/PageIntro";
+import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
+import { Term } from"@/components/common/Term";
+import { useSyncedDataset } from"@/hooks/useSyncedDataset";
+import type { ColumnInfo, ColumnMapping } from"@/types/dataset";
 import type {
   AnomalyMethodsResult,
   ChangepointsResult,
   LagResult,
   RootCauseResult,
   GrangerRow,
-} from "@/types/phases";
-import ReactECharts from "echarts-for-react";
-import { useChartTheme } from "@/charts/theme";
+} from"@/types/phases";
+import ReactECharts from"echarts-for-react";
+import { useChartTheme } from"@/charts/theme";
 
 export function ExplainPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
@@ -86,12 +86,12 @@ export function ExplainPage() {
   }
 
   const numericCols: ColumnInfo[] =
-    preview?.columns.filter((c) => c.dtype === "numeric" && c.name !== mapping?.value_col) ?? [];
+    preview?.columns.filter((c) => c.dtype ==="numeric" && c.name !== mapping?.value_col) ?? [];
   const categoricalCols: ColumnInfo[] =
-    preview?.columns.filter((c) => c.dtype === "categorical" || c.dtype === "string") ?? [];
+    preview?.columns.filter((c) => c.dtype ==="categorical" || c.dtype ==="string") ?? [];
 
-  const toggle = (col: string, kind: "num" | "cat") => {
-    if (kind === "num") {
+  const toggle = (col: string, kind:"num" |"cat") => {
+    if (kind ==="num") {
       setNumericFactors((prev) => (prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]));
     } else {
       setCategoricalFactors((prev) => (prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]));
@@ -103,8 +103,8 @@ export function ExplainPage() {
       <div>
         <h1 className="font-display text-2xl font-semibold text-text-primary">Explain Your Data</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Multi-method <Term k="severity">anomaly detection</Term>,{" "}
-          <Term k="changepoint">changepoints</Term>, <Term k="lag">lag analysis</Term>, and{" "}
+          Multi-method <Term k="severity">anomaly detection</Term>,{""}
+          <Term k="changepoint">changepoints</Term>, <Term k="lag">lag analysis</Term>, and{""}
           <Term k="granger">Granger causality</Term>, all in one place.
         </p>
       </div>
@@ -123,11 +123,11 @@ export function ExplainPage() {
               {numericCols.map((c) => (
                 <button
                   key={c.name}
-                  onClick={() => toggle(c.name, "num")}
-                  className={`rounded-md border px-3 py-1 font-mono text-xs transition-colors ${
+                  onClick={() => toggle(c.name,"num")}
+                  className={`border px-3 py-1 font-mono text-xs transition-colors ${
                     numericFactors.includes(c.name)
-                      ? "border-accent bg-accent-dim text-accent"
-                      : "border-border text-text-secondary hover:border-border-strong"
+                      ?"border-accent bg-accent-dim text-accent"
+                      :"border-border text-text-secondary hover:border-border-strong"
                   }`}
                 >
                   {c.name}
@@ -145,11 +145,11 @@ export function ExplainPage() {
               {categoricalCols.map((c) => (
                 <button
                   key={c.name}
-                  onClick={() => toggle(c.name, "cat")}
-                  className={`rounded-md border px-3 py-1 font-mono text-xs transition-colors ${
+                  onClick={() => toggle(c.name,"cat")}
+                  className={`border px-3 py-1 font-mono text-xs transition-colors ${
                     categoricalFactors.includes(c.name)
-                      ? "border-accent bg-accent-dim text-accent"
-                      : "border-border text-text-secondary hover:border-border-strong"
+                      ?"border-accent bg-accent-dim text-accent"
+                      :"border-border text-text-secondary hover:border-border-strong"
                   }`}
                 >
                   {c.name}
@@ -163,30 +163,30 @@ export function ExplainPage() {
           <button
             onClick={() => anomalyMethods.mutate()}
             disabled={!mapping || anomalyMethods.isPending}
-            className="rounded-md bg-accent px-3 py-2 text-sm text-on-accent hover:opacity-90 disabled:opacity-40"
+            className="btn-terminal-primary"
           >
-            {anomalyMethods.isPending ? "Running…" : "Detect anomalies (5 methods)"}
+            {anomalyMethods.isPending ?"Running…" :"Detect anomalies (5 methods)"}
           </button>
           <button
             onClick={() => changepoints.mutate()}
             disabled={!mapping || changepoints.isPending}
-            className="rounded-md border border-accent/30 bg-accent-dim px-3 py-2 text-sm text-accent hover:opacity-80 disabled:opacity-40"
+            className="btn-terminal"
           >
-            {changepoints.isPending ? "Running…" : "Detect changepoints"}
+            {changepoints.isPending ?"Running…" :"Detect changepoints"}
           </button>
           <button
             onClick={() => lagMutation.mutate()}
             disabled={!mapping || !numericFactors.length || lagMutation.isPending}
-            className="rounded-md border border-accent/30 bg-accent-dim px-3 py-2 text-sm text-accent hover:opacity-80 disabled:opacity-40"
+            className="btn-terminal"
           >
-            {lagMutation.isPending ? "Running…" : "Lag analysis"}
+            {lagMutation.isPending ?"Running…" :"Lag analysis"}
           </button>
           <button
             onClick={() => grangerMutation.mutate()}
             disabled={!mapping || !numericFactors.length || grangerMutation.isPending}
-            className="rounded-md border border-accent/30 bg-accent-dim px-3 py-2 text-sm text-accent hover:opacity-80 disabled:opacity-40"
+            className="btn-terminal"
           >
-            {grangerMutation.isPending ? "Running…" : "Granger causality"}
+            {grangerMutation.isPending ?"Running…" :"Granger causality"}
           </button>
           <button
             onClick={() => rootCause.mutate()}
@@ -196,9 +196,9 @@ export function ExplainPage() {
               rootCause.isPending ||
               (!numericFactors.length && !categoricalFactors.length)
             }
-            className="rounded-md border border-accent/30 bg-accent-dim px-3 py-2 text-sm text-accent hover:opacity-80 disabled:opacity-40"
+            className="btn-terminal"
           >
-            {rootCause.isPending ? "Running…" : "Find root cause"}
+            {rootCause.isPending ?"Running…" :"Find root cause"}
           </button>
         </div>
       </div>
@@ -215,13 +215,13 @@ export function ExplainPage() {
               Top anomalies (by vote)
             </p>
             <div className="max-h-64 overflow-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-border">
+              <table className="terminal-table">
+                <thead className="border-border">
                   <tr>
-                    <th className="px-3 py-1 text-left font-mono text-xs uppercase tracking-widest text-text-muted">Date</th>
-                    <th className="px-3 py-1 text-right font-mono text-xs uppercase tracking-widest text-text-muted">Value</th>
-                    <th className="px-3 py-1 text-center font-mono text-xs uppercase tracking-widest text-text-muted">Votes</th>
-                    <th className="px-3 py-1 text-left font-mono text-xs uppercase tracking-widest text-text-muted">Reason</th>
+                    <th className="px-3 py-1 text-left font-mono text-xs uppercase tracking-widest">Date</th>
+                    <th className="px-3 py-1 text-right font-mono text-xs uppercase tracking-widest">Value</th>
+                    <th className="px-3 py-1 text-center font-mono text-xs uppercase tracking-widest">Votes</th>
+                    <th className="px-3 py-1 text-left font-mono text-xs uppercase tracking-widest">Reason</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -230,12 +230,12 @@ export function ExplainPage() {
                     .slice(0, 30)
                     .map((r) => (
                       <tr key={r.index} className="border-b border-border/40 hover:bg-bg-elevated">
-                        <td className="px-3 py-1 font-mono text-text-primary">{r.date}</td>
-                        <td className="px-3 py-1 text-right font-mono text-text-secondary">
+                        <td className="px-3 py-1 font-mono">{r.date}</td>
+                        <td className="px-3 py-1 text-right text-text-secondary">
                           {r.value.toFixed(1)}
                         </td>
-                        <td className="px-3 py-1 text-center font-mono text-accent">{r.votes}/5</td>
-                        <td className="px-3 py-1 text-xs text-text-muted">{r.reason}</td>
+                        <td className="px-3 py-1 text-center text-accent">{r.votes}/5</td>
+                        <td className="px-3 py-1 text-xs">{r.reason}</td>
                       </tr>
                     ))}
                 </tbody>
@@ -256,13 +256,13 @@ export function ExplainPage() {
             {changepoints.data.changepoints.map((c) => (
               <div
                 key={c.index}
-                className={`rounded-md border px-3 py-2 font-mono text-xs ${
-                  c.direction === "up"
-                    ? "border-positive/40 bg-positive/5 text-positive"
-                    : "border-anomaly/40 bg-anomaly/5 text-anomaly"
+                className={`border px-3 py-2 font-mono text-xs ${
+                  c.direction ==="up"
+                    ?"border-positive/40 bg-positive/5 text-positive"
+                    :"border-anomaly/40 bg-anomaly/5 text-anomaly"
                 }`}
               >
-                {c.date} · {c.direction === "up" ? "▲" : "▼"}{" "}
+                {c.date} · {c.direction ==="up" ?"▲" :"▼"}{""}
                 {(c.shift_percent * 100).toFixed(0)}%
               </div>
             ))}
@@ -277,19 +277,19 @@ export function ExplainPage() {
           <h3 className="font-display text-sm font-medium uppercase tracking-widest text-text-secondary">
             Granger causality (factor → target)
           </h3>
-          <table className="w-full text-sm">
-            <thead className="border-b border-border">
+          <table className="terminal-table">
+            <thead className="border-border">
               <tr>
-                <th className="px-3 py-1 text-left font-mono text-xs uppercase tracking-widest text-text-muted">
+                <th className="px-3 py-1 text-left font-mono text-xs uppercase tracking-widest">
                   Factor
                 </th>
-                <th className="px-3 py-1 text-right font-mono text-xs uppercase tracking-widest text-text-muted">
+                <th className="px-3 py-1 text-right font-mono text-xs uppercase tracking-widest">
                   Best lag
                 </th>
-                <th className="px-3 py-1 text-right font-mono text-xs uppercase tracking-widest text-text-muted">
+                <th className="px-3 py-1 text-right font-mono text-xs uppercase tracking-widest">
                   p-value
                 </th>
-                <th className="px-3 py-1 text-center font-mono text-xs uppercase tracking-widest text-text-muted">
+                <th className="px-3 py-1 text-center font-mono text-xs uppercase tracking-widest">
                   Causal?
                 </th>
               </tr>
@@ -297,14 +297,14 @@ export function ExplainPage() {
             <tbody>
               {grangerMutation.data.results.map((r) => (
                 <tr key={r.factor} className="border-b border-border/40">
-                  <td className="px-3 py-1 font-mono text-text-primary">{r.factor}</td>
-                  <td className="px-3 py-1 text-right font-mono text-text-secondary">{r.best_lag}</td>
-                  <td className="px-3 py-1 text-right font-mono text-text-secondary">
+                  <td className="px-3 py-1 font-mono">{r.factor}</td>
+                  <td className="px-3 py-1 text-right text-text-secondary">{r.best_lag}</td>
+                  <td className="px-3 py-1 text-right text-text-secondary">
                     {r.p_value.toFixed(4)}
                   </td>
-                  <td className="px-3 py-1 text-center font-mono">
+                  <td className="px-3 py-1 text-center">
                     {r.causal ? (
-                      <span className="rounded-md border border-positive/30 bg-positive/10 px-2 py-0.5 text-xs text-positive">
+                      <span className="border border-positive/30 bg-positive/10 px-2 py-0.5 text-xs text-positive">
                         yes
                       </span>
                     ) : (
@@ -335,32 +335,32 @@ function LagCharts({ data }: { data: LagResult[] }) {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {data.map((r) => {
           const option = {
-            backgroundColor: "transparent",
+            backgroundColor:"transparent",
             grid: { left: 40, right: 16, top: 24, bottom: 24, containLabel: false },
             title: {
               text: `${r.factor} · peak lag=${r.peak_lag} (${r.peak_corr.toFixed(2)})`,
-              textStyle: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 11 },
+              textStyle: { color: t.textPrimary, fontFamily:"JetBrains Mono", fontSize: 11 },
               top: 0,
               left: 0,
             },
             xAxis: {
-              type: "category",
+              type:"category",
               data: r.lags.map((l) => l.lag),
               axisLine: { lineStyle: { color: t.grid } },
-              axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+              axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
             },
             yAxis: {
-              type: "value",
+              type:"value",
               min: -1,
               max: 1,
               axisLine: { show: false },
-              axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+              axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
               splitLine: { lineStyle: { color: t.grid } },
             },
-            tooltip: { trigger: "axis" },
+            tooltip: { trigger:"axis" },
             series: [
               {
-                type: "bar",
+                type:"bar",
                 data: r.lags.map((l) => l.corr),
                 barMaxWidth: 8,
                 itemStyle: {
@@ -369,7 +369,7 @@ function LagCharts({ data }: { data: LagResult[] }) {
               },
             ],
           };
-          return <ReactECharts key={r.factor} option={option} style={{ height: 180, width: "100%" }} notMerge />;
+          return <ReactECharts key={r.factor} option={option} style={{ height: 180, width:"100%" }} notMerge />;
         })}
       </div>
     </div>

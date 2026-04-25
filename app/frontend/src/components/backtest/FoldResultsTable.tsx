@@ -1,4 +1,4 @@
-import type { BacktestResult } from "@/types/phases";
+import type { BacktestResult } from"@/types/phases";
 
 interface FoldResultsTableProps {
   result: BacktestResult;
@@ -9,7 +9,7 @@ function fmtPct(n: number): string {
 }
 
 function fmtNum(n: number, digits: number = 2): string {
-  if (!isFinite(n)) return "-";
+  if (!isFinite(n)) return"-";
   const abs = Math.abs(n);
   if (abs >= 10_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toFixed(digits);
@@ -17,14 +17,14 @@ function fmtNum(n: number, digits: number = 2): string {
 
 export function FoldResultsTable({ result }: FoldResultsTableProps) {
   const models = result.models;
-  const metrics = ["mape", "smape", "rmse", "mae", "mase", "pinball_50"] as const;
+  const metrics = ["mape","smape","rmse","mae","mase","pinball_50"] as const;
   const metricLabels: Record<string, string> = {
-    mape: "MAPE",
-    smape: "sMAPE",
-    rmse: "RMSE",
-    mae: "MAE",
-    mase: "MASE",
-    pinball_50: "Pinball p50",
+    mape:"MAPE",
+    smape:"sMAPE",
+    rmse:"RMSE",
+    mae:"MAE",
+    mase:"MASE",
+    pinball_50:"Pinball p50",
   };
 
   return (
@@ -37,7 +37,7 @@ export function FoldResultsTable({ result }: FoldResultsTableProps) {
           <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
             {result.folds} folds · horizon {result.horizon}
             {result.winner && (
-              <span className="ml-2 rounded-md border border-accent/40 bg-accent-dim px-2 py-0.5 text-accent">
+              <span className="ml-2 border border-accent/40 bg-accent-dim px-2 py-0.5 text-accent">
                 winner: {result.winner}
               </span>
             )}
@@ -45,16 +45,16 @@ export function FoldResultsTable({ result }: FoldResultsTableProps) {
         </div>
       </div>
       <div className="overflow-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border">
+        <table className="terminal-table">
+          <thead className="border-border">
             <tr>
-              <th className="px-4 py-2 text-left font-mono text-xs uppercase tracking-widest text-text-muted">
+              <th className="px-4 py-2 text-left font-mono text-xs uppercase tracking-widest">
                 Model
               </th>
               {metrics.map((m) => (
                 <th
                   key={m}
-                  className="px-4 py-2 text-right font-mono text-xs uppercase tracking-widest text-text-muted"
+                  className="px-4 py-2 text-right font-mono text-xs uppercase tracking-widest"
                 >
                   {metricLabels[m]}
                 </th>
@@ -70,21 +70,21 @@ export function FoldResultsTable({ result }: FoldResultsTableProps) {
                 <tr
                   key={m}
                   className={`border-b border-border last:border-0 transition-colors ${
-                    isWinner ? "bg-accent-dim/30" : "hover:bg-bg-elevated"
+                    isWinner ?"bg-accent-dim/30" :"hover:bg-bg-elevated"
                   }`}
                 >
-                  <td className={`px-4 py-2 font-mono ${isWinner ? "text-accent" : "text-text-primary"}`}>
+                  <td className={`px-4 py-2 font-mono ${isWinner ?"text-accent" :"text-text-primary"}`}>
                     {isWinner && <span className="mr-1">★</span>}
                     {m}
                   </td>
-                  <td className="px-4 py-2 text-right font-mono text-text-secondary">{fmtPct(agg.mape_mean)}</td>
-                  <td className="px-4 py-2 text-right font-mono text-text-secondary">{fmtPct(agg.smape_mean)}</td>
-                  <td className="px-4 py-2 text-right font-mono text-text-secondary">{fmtNum(agg.rmse_mean)}</td>
-                  <td className="px-4 py-2 text-right font-mono text-text-secondary">{fmtNum(agg.mae_mean)}</td>
-                  <td className="px-4 py-2 text-right font-mono text-text-secondary">
-                    {isFinite(agg.mase_mean) ? fmtNum(agg.mase_mean, 3) : "-"}
+                  <td className="px-4 py-2 text-right text-text-secondary">{fmtPct(agg.mape_mean)}</td>
+                  <td className="px-4 py-2 text-right text-text-secondary">{fmtPct(agg.smape_mean)}</td>
+                  <td className="px-4 py-2 text-right text-text-secondary">{fmtNum(agg.rmse_mean)}</td>
+                  <td className="px-4 py-2 text-right text-text-secondary">{fmtNum(agg.mae_mean)}</td>
+                  <td className="px-4 py-2 text-right text-text-secondary">
+                    {isFinite(agg.mase_mean) ? fmtNum(agg.mase_mean, 3) :"-"}
                   </td>
-                  <td className="px-4 py-2 text-right font-mono text-text-secondary">{fmtNum(agg.pinball_50_mean)}</td>
+                  <td className="px-4 py-2 text-right text-text-secondary">{fmtNum(agg.pinball_50_mean)}</td>
                 </tr>
               );
             })}

@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { ExportChartButton } from "../ExportChartButton";
+import { describe, it, expect, vi } from"vitest";
+import { render, screen } from"@testing-library/react";
+import userEvent from"@testing-library/user-event";
+import { ExportChartButton } from"../ExportChartButton";
 
 describe("ExportChartButton", () => {
   it("renders default label uppercase", () => {

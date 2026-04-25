@@ -1,9 +1,9 @@
-import { useMemo, useRef } from "react";
-import ReactECharts from "echarts-for-react";
-import { useChartExport } from "@/hooks/useChartExport";
-import { ExportChartButton } from "@/components/common/ExportChartButton";
-import { useChartTheme } from "@/charts/theme";
-import type { ContextAnomalyRecord } from "@/types/anomaly";
+import { useMemo, useRef } from"react";
+import ReactECharts from"echarts-for-react";
+import { useChartExport } from"@/hooks/useChartExport";
+import { ExportChartButton } from"@/components/common/ExportChartButton";
+import { useChartTheme } from"@/charts/theme";
+import type { ContextAnomalyRecord } from"@/types/anomaly";
 
 interface AnomalyInsightsProps {
   records: ContextAnomalyRecord[];
@@ -14,8 +14,8 @@ interface Highlight {
   date: string;
   value: number;
   deviation: number;
-  direction: "up" | "down" | "neutral";
-  tone: "critical" | "warning" | "muted";
+  direction:"up" |"down" |"neutral";
+  tone:"critical" |"warning" |"muted";
 }
 
 function formatNumber(n: number): string {
@@ -31,8 +31,8 @@ function daysAgo(iso: string, today: Date): number {
 }
 
 function relativeDays(n: number): string {
-  if (n === 0) return "today";
-  if (n === 1) return "yesterday";
+  if (n === 0) return"today";
+  if (n === 1) return"yesterday";
   if (n < 30) return `${n} days ago`;
   if (n < 365) return `${Math.round(n / 30)} months ago`;
   return `${Math.round(n / 365)} years ago`;
@@ -42,8 +42,8 @@ export function AnomalyInsights({ records }: AnomalyInsightsProps) {
   const highlights = useMemo<Highlight[]>(() => {
     if (records.length === 0) return [];
 
-    const criticals = records.filter((r) => r.severity === "CRITICAL");
-    const warnings = records.filter((r) => r.severity === "WARNING");
+    const criticals = records.filter((r) => r.severity ==="CRITICAL");
+    const warnings = records.filter((r) => r.severity ==="WARNING");
     const anomalies = [...criticals, ...warnings];
 
     if (anomalies.length === 0) return [];
@@ -70,23 +70,23 @@ export function AnomalyInsights({ records }: AnomalyInsightsProps) {
 
     if (biggestSpike && biggestSpike.deviation > 0) {
       out.push({
-        label: "Largest spike",
+        label:"Largest spike",
         date: biggestSpike.date,
         value: biggestSpike.value,
         deviation: biggestSpike.deviation,
-        direction: "up",
-        tone: biggestSpike.severity === "CRITICAL" ? "critical" : "warning",
+        direction:"up",
+        tone: biggestSpike.severity ==="CRITICAL" ?"critical" :"warning",
       });
     }
 
     if (biggestDrop && biggestDrop !== biggestSpike && biggestDrop.deviation < 0) {
       out.push({
-        label: "Largest drop",
+        label:"Largest drop",
         date: biggestDrop.date,
         value: biggestDrop.value,
         deviation: biggestDrop.deviation,
-        direction: "down",
-        tone: biggestDrop.severity === "CRITICAL" ? "critical" : "warning",
+        direction:"down",
+        tone: biggestDrop.severity ==="CRITICAL" ?"critical" :"warning",
       });
     }
 
@@ -97,8 +97,8 @@ export function AnomalyInsights({ records }: AnomalyInsightsProps) {
         date: mostRecent.date,
         value: mostRecent.value,
         deviation: mostRecent.deviation,
-        direction: mostRecent.deviation > 0 ? "up" : mostRecent.deviation < 0 ? "down" : "neutral",
-        tone: mostRecent.severity === "CRITICAL" ? "critical" : "warning",
+        direction: mostRecent.deviation > 0 ?"up" : mostRecent.deviation < 0 ?"down" :"neutral",
+        tone: mostRecent.severity ==="CRITICAL" ?"critical" :"warning",
       });
     }
 
@@ -109,7 +109,7 @@ export function AnomalyInsights({ records }: AnomalyInsightsProps) {
   const monthlyDist = useMemo(() => {
     const buckets = new Map<string, number>();
     records.forEach((r) => {
-      if (r.severity === "NORMAL") return;
+      if (r.severity ==="NORMAL") return;
       const ym = r.date.slice(0, 7); // YYYY-MM
       buckets.set(ym, (buckets.get(ym) ?? 0) + 1);
     });
@@ -149,21 +149,21 @@ export function AnomalyInsights({ records }: AnomalyInsightsProps) {
 
 function HighlightTile({ h }: { h: Highlight }) {
   const toneClass =
-    h.tone === "critical"
-      ? "border-anomaly/30 bg-anomaly/5"
-      : h.tone === "warning"
-        ? "border-warning/30 bg-warning/5"
-        : "border-border bg-bg-surface";
+    h.tone ==="critical"
+      ?"border-anomaly/30 bg-anomaly/5"
+      : h.tone ==="warning"
+        ?"border-warning/30 bg-warning/5"
+        :"border-border bg-bg-surface";
 
-  const arrow = h.direction === "up" ? "▲" : h.direction === "down" ? "▼" : "·";
+  const arrow = h.direction ==="up" ?"▲" : h.direction ==="down" ?"▼" :"·";
   const devText =
-    h.direction === "up"
+    h.direction ==="up"
       ? `+${h.deviation.toFixed(0)}% vs expected`
-      : h.direction === "down"
+      : h.direction ==="down"
         ? `${h.deviation.toFixed(0)}% vs expected`
         : `${h.deviation.toFixed(0)}% vs expected`;
   const arrowColor =
-    h.direction === "up" ? "text-anomaly" : h.direction === "down" ? "text-neutral" : "text-text-muted";
+    h.direction ==="up" ?"text-anomaly" : h.direction ==="down" ?"text-neutral" :"text-text-muted";
 
   return (
     <div className={`rounded-panel border border-l-2 border-l-accent-2 px-4 py-3 ${toneClass}`}>
@@ -186,46 +186,46 @@ function MonthlyDistributionChart({ data }: { data: [string, number][] }) {
   const t = useChartTheme();
   const chartRef = useRef<ReactECharts>(null);
   const { export: exportChart } = useChartExport(chartRef, {
-    filename: "anomaly-distribution",
+    filename:"anomaly-distribution",
   });
 
   const option = {
-    backgroundColor: "transparent",
+    backgroundColor:"transparent",
     grid: { left: 36, right: 8, top: 8, bottom: 32, containLabel: false },
     xAxis: {
-      type: "category",
+      type:"category",
       data: data.map((d) => d[0]),
       axisLine: { lineStyle: { color: t.grid } },
       axisTick: { show: false },
       axisLabel: {
         color: t.axisLabel,
-        fontFamily: "JetBrains Mono",
+        fontFamily:"JetBrains Mono",
         fontSize: 10,
         rotate: 30,
       },
       splitLine: { show: false },
     },
     yAxis: {
-      type: "value",
+      type:"value",
       minInterval: 1,
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+      axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
       splitLine: { lineStyle: { color: t.grid } },
     },
     tooltip: {
-      trigger: "axis",
+      trigger:"axis",
       backgroundColor: t.bgElevated,
       borderColor: t.grid,
-      textStyle: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 11 },
+      textStyle: { color: t.textPrimary, fontFamily:"JetBrains Mono", fontSize: 11 },
       formatter: (params: { name: string; value: number }[]) => {
         const p = params[0];
-        return `${p.name}<br/>${p.value} anomal${p.value === 1 ? "y" : "ies"}`;
+        return `${p.name}<br/>${p.value} anomal${p.value === 1 ?"y" :"ies"}`;
       },
     },
     series: [
       {
-        type: "bar",
+        type:"bar",
         data: data.map((d) => d[1]),
         itemStyle: { color: t.anomaly, opacity: 0.55, borderRadius: [2, 2, 0, 0] },
         barMaxWidth: 18,
@@ -238,7 +238,7 @@ function MonthlyDistributionChart({ data }: { data: [string, number][] }) {
       <div className="flex justify-end">
         <ExportChartButton onExport={exportChart} className="-mt-8" />
       </div>
-      <ReactECharts ref={chartRef} option={option} style={{ height: 120, width: "100%" }} notMerge />
+      <ReactECharts ref={chartRef} option={option} style={{ height: 120, width:"100%" }} notMerge />
     </div>
   );
 }

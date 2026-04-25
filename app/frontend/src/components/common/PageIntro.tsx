@@ -1,19 +1,19 @@
-import { useCallback, useEffect, useState } from "react";
-import { PAGE_INTROS, type PageIntroKey } from "@/data/pageIntros";
+import { useCallback, useEffect, useState } from"react";
+import { PAGE_INTROS, type PageIntroKey } from"@/data/pageIntros";
 
 interface PageIntroProps {
   pageKey: PageIntroKey;
   defaultOpen?: boolean;
 }
 
-const STORAGE_PREFIX = "foresee:pageIntro:";
+const STORAGE_PREFIX ="foresee:pageIntro:";
 
 function readPersisted(pageKey: PageIntroKey, fallback: boolean): boolean {
-  if (typeof window === "undefined") return fallback;
+  if (typeof window ==="undefined") return fallback;
   try {
     const raw = window.localStorage.getItem(`${STORAGE_PREFIX}${pageKey}:open`);
     if (raw === null) return fallback;
-    return raw === "1";
+    return raw ==="1";
   } catch {
     return fallback;
   }
@@ -27,7 +27,7 @@ export function PageIntro({ pageKey, defaultOpen = true }: PageIntroProps) {
     try {
       window.localStorage.setItem(
         `${STORAGE_PREFIX}${pageKey}:open`,
-        open ? "1" : "0",
+        open ?"1" :"0",
       );
     } catch {
       // localStorage unavailable, best-effort only
@@ -57,10 +57,10 @@ export function PageIntro({ pageKey, defaultOpen = true }: PageIntroProps) {
           onClick={toggle}
           aria-expanded={open}
           aria-controls={`pageintro-body-${pageKey}`}
-          aria-label={open ? "Hide this intro" : "Show this intro"}
+          aria-label={open ?"Hide this intro" :"Show this intro"}
           className="inline-flex h-6 w-6 items-center justify-center border border-border/60 font-mono text-[10px] text-text-muted hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
         >
-          {open ? "–" : "+"}
+          {open ?"–" :"+"}
         </button>
       </header>
       {open && (

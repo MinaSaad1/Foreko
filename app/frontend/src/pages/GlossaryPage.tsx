@@ -1,13 +1,13 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useMemo, useState } from"react";
+import { Link } from"react-router-dom";
 import {
   TERMS,
   TERM_CATEGORIES,
   termsByCategory,
   type TermCategory,
   type TermDefinition,
-} from "@/data/termDictionary";
-import { PageIntro } from "@/components/common/PageIntro";
+} from"@/data/termDictionary";
+import { PageIntro } from"@/components/common/PageIntro";
 
 function matches(term: TermDefinition, q: string): boolean {
   if (!q) return true;

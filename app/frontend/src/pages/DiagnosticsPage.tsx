@@ -1,20 +1,20 @@
-import { useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { api } from "@/api/endpoints";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { ColumnMapper } from "@/components/ColumnMapper";
-import { ResidualHistogram } from "@/components/diagnostics/ResidualHistogram";
-import { QQPlot } from "@/components/diagnostics/QQPlot";
-import { ACFChart } from "@/components/diagnostics/ACFChart";
-import { STLPanel } from "@/components/diagnostics/STLPanel";
-import { PageIntro } from "@/components/common/PageIntro";
-import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
-import { Term } from "@/components/common/Term";
-import { useSyncedDataset } from "@/hooks/useSyncedDataset";
-import { useHealth } from "@/hooks/useHealth";
-import type { ColumnMapping } from "@/types/dataset";
-import type { DiagnosticsResult } from "@/types/phases";
+import { useCallback, useState } from"react";
+import { useParams } from"react-router-dom";
+import { useMutation } from"@tanstack/react-query";
+import { api } from"@/api/endpoints";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { ColumnMapper } from"@/components/ColumnMapper";
+import { ResidualHistogram } from"@/components/diagnostics/ResidualHistogram";
+import { QQPlot } from"@/components/diagnostics/QQPlot";
+import { ACFChart } from"@/components/diagnostics/ACFChart";
+import { STLPanel } from"@/components/diagnostics/STLPanel";
+import { PageIntro } from"@/components/common/PageIntro";
+import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
+import { Term } from"@/components/common/Term";
+import { useSyncedDataset } from"@/hooks/useSyncedDataset";
+import { useHealth } from"@/hooks/useHealth";
+import type { ColumnMapping } from"@/types/dataset";
+import type { DiagnosticsResult } from"@/types/phases";
 
 export function DiagnosticsPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
@@ -27,7 +27,7 @@ export function DiagnosticsPage() {
 
   const { activeId, preview } = useSyncedDataset(datasetId);
   const { data: health } = useHealth();
-  const modelReady = health?.model_status === "ready";
+  const modelReady = health?.model_status ==="ready";
 
   const handleMappingChange = useCallback(
     (m: ColumnMapping) => {
@@ -64,8 +64,8 @@ export function DiagnosticsPage() {
       <div>
         <h1 className="font-display text-2xl font-semibold text-text-primary">Forecast Diagnostics</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          <Term k="residual">Residual</Term> analysis, <Term k="qq-plot">Q-Q plot</Term>,{" "}
-          <Term k="autocorrelation">autocorrelation</Term>,{" "}
+          <Term k="residual">Residual</Term> analysis, <Term k="qq-plot">Q-Q plot</Term>,{""}
+          <Term k="autocorrelation">autocorrelation</Term>,{""}
           <Term k="stl">STL decomposition</Term>, and <Term k="ljung-box">Ljung-Box test</Term>.
         </p>
         {preview && (
@@ -92,7 +92,7 @@ export function DiagnosticsPage() {
                 max={256}
                 value={horizon}
                 onChange={(e) => setHorizon(Math.max(1, Number(e.target.value)))}
-                className="w-24 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
+                className="w-24 border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
               />
             </div>
             <div>
@@ -102,7 +102,7 @@ export function DiagnosticsPage() {
               <select
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
-                className="rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
+                className="border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
               >
                 <option value="timesfm">TimesFM</option>
                 <option value="ets">ETS</option>
@@ -112,7 +112,7 @@ export function DiagnosticsPage() {
           </div>
 
           {runMutation.isError && (
-            <p className="rounded-md border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
+            <p className="border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
               {runMutation.error.message}
             </p>
           )}
@@ -120,9 +120,9 @@ export function DiagnosticsPage() {
           <button
             onClick={() => runMutation.mutate()}
             disabled={!mapping || runMutation.isPending || !modelReady}
-            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="w-full btn-terminal-primary"
           >
-            {runMutation.isPending ? "Running..." : "Run diagnostics"}
+            {runMutation.isPending ?"Running..." :"Run diagnostics"}
           </button>
           {!modelReady && (
             <p className="text-xs text-text-muted text-center">Model still loading, the Run button will enable when it's ready.</p>
@@ -155,7 +155,7 @@ export function DiagnosticsPage() {
                 {result.ljung_box.p_value.toFixed(3)}
               </p>
               <p className="mt-1 font-mono text-xs text-text-muted">
-                {result.ljung_box.p_value < 0.05 ? "autocorrelated residuals" : "white-noise residuals"}
+                {result.ljung_box.p_value < 0.05 ?"autocorrelated residuals" :"white-noise residuals"}
               </p>
             </div>
             <div className="rounded-panel border border-border bg-bg-surface p-4">

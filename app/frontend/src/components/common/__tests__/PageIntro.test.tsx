@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
-import { PageIntro } from "../PageIntro";
+import { describe, it, expect, beforeEach } from"vitest";
+import { render, screen } from"@testing-library/react";
+import userEvent from"@testing-library/user-event";
+import { MemoryRouter } from"react-router-dom";
+import { PageIntro } from"../PageIntro";
 
 function renderWithRouter(ui: React.ReactNode) {
   return render(<MemoryRouter>{ui}</MemoryRouter>);

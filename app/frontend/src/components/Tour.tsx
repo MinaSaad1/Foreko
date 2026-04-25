@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useCallback, useEffect, useState } from"react";
+import { useLocation } from"react-router-dom";
 
-const STORAGE_KEY = "foresee:tour:completed";
+const STORAGE_KEY ="foresee:tour:completed";
 
 interface TourStep {
   eyebrow: string;
@@ -11,41 +11,36 @@ interface TourStep {
 
 const STEPS: TourStep[] = [
   {
-    eyebrow: "Welcome",
-    title: "Local forecasting, from CSV to insight",
-    body:
-      "Foresee turns any time-series CSV into a calibrated forecast, explains what moved, and compares scenarios. This 60-second tour covers the main flow.",
+    eyebrow:"Welcome",
+    title:"Local forecasting, from CSV to insight",
+    body:"Foresee turns any time-series CSV into a calibrated forecast, explains what moved, and compares scenarios. This 60-second tour covers the main flow.",
   },
   {
-    eyebrow: "Step 1",
-    title: "Bring in your data",
-    body:
-      "Head to the Upload page. Drop a CSV with a date column and a numeric value column, or pick one of the built-in samples to explore without your own data.",
+    eyebrow:"Step 1",
+    title:"Bring in your data",
+    body:"Head to the Upload page. Drop a CSV with a date column and a numeric value column, or pick one of the built-in samples to explore without your own data.",
   },
   {
-    eyebrow: "Step 2",
-    title: "See the recommended forecast",
-    body:
-      "The Forecast page runs two models on your data and picks the winner on a holdout. You get the recommended forecast, uncertainty ranges, and a plain-English reason for the choice.",
+    eyebrow:"Step 2",
+    title:"See the recommended forecast",
+    body:"The Forecast page runs two models on your data and picks the winner on a holdout. You get the recommended forecast, uncertainty ranges, and a plain-English reason for the choice.",
   },
   {
-    eyebrow: "Step 3",
-    title: "Dig deeper when a forecast matters",
-    body:
-      "Backtest proves the winner on your real history. Anomalies flag the weird points. Explain finds changepoints and drivers. Factors, Scenarios, and Segments let you play with what-if questions.",
+    eyebrow:"Step 3",
+    title:"Dig deeper when a forecast matters",
+    body:"Backtest proves the winner on your real history. Anomalies flag the weird points. Explain finds changepoints and drivers. Factors, Scenarios, and Segments let you play with what-if questions.",
   },
   {
-    eyebrow: "Final",
-    title: "Your data stays on your machine",
-    body:
-      "Foresee never sends telemetry or uploads your CSVs. Everything lives under ~/.timesfm_studio/. You can clear it anytime from the Privacy page.",
+    eyebrow:"Final",
+    title:"Your data stays on your machine",
+    body:"Foresee never sends telemetry or uploads your CSVs. Everything lives under ~/.timesfm_studio/. You can clear it anytime from the Privacy page.",
   },
 ];
 
 function hasDismissed(): boolean {
-  if (typeof window === "undefined") return true;
+  if (typeof window ==="undefined") return true;
   try {
-    return window.localStorage.getItem(STORAGE_KEY) === "1";
+    return window.localStorage.getItem(STORAGE_KEY) ==="1";
   } catch {
     return true;
   }
@@ -53,7 +48,7 @@ function hasDismissed(): boolean {
 
 function markDismissed(): void {
   try {
-    window.localStorage.setItem(STORAGE_KEY, "1");
+    window.localStorage.setItem(STORAGE_KEY,"1");
   } catch {
     // localStorage unavailable, best-effort only
   }
@@ -86,7 +81,7 @@ export function Tour({ force = false, onClose }: TourProps) {
       return;
     }
     // Auto-show on the first non-landing route the user visits.
-    if (location.pathname === "/") return;
+    if (location.pathname ==="/") return;
     if (hasDismissed()) return;
     setOpen(true);
   }, [force, location.pathname]);
@@ -100,9 +95,9 @@ export function Tour({ force = false, onClose }: TourProps) {
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowRight") setStep((s) => Math.min(s + 1, STEPS.length - 1));
-      if (e.key === "ArrowLeft") setStep((s) => Math.max(s - 1, 0));
+      if (e.key ==="Escape") close();
+      if (e.key ==="ArrowRight") setStep((s) => Math.min(s + 1, STEPS.length - 1));
+      if (e.key ==="ArrowLeft") setStep((s) => Math.max(s - 1, 0));
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -146,7 +141,7 @@ export function Tour({ force = false, onClose }: TourProps) {
           {STEPS.map((_, i) => (
             <span
               key={i}
-              className={`h-1 flex-1 transition-all ${i <= step ? "bg-accent" : "bg-border/60"}`}
+              className={`h-1 flex-1 transition-all ${i <= step ?"bg-accent" :"bg-border/60"}`}
             />
           ))}
         </div>
@@ -167,7 +162,7 @@ export function Tour({ force = false, onClose }: TourProps) {
             <button
               type="button"
               onClick={close}
-              className="border border-accent bg-accent px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-on-accent transition-colors hover:bg-accent/90"
+              className="btn-terminal-primary"
             >
               Got it
             </button>
@@ -175,7 +170,7 @@ export function Tour({ force = false, onClose }: TourProps) {
             <button
               type="button"
               onClick={() => setStep((s) => Math.min(s + 1, STEPS.length - 1))}
-              className="border border-accent bg-accent px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-on-accent transition-colors hover:bg-accent/90"
+              className="btn-terminal-primary"
             >
               Next →
             </button>

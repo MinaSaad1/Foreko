@@ -1,4 +1,4 @@
-import type { FactorImpact } from "@/types/factors";
+import type { FactorImpact } from"@/types/factors";
 
 interface FactorImpactCardsProps {
   impact: FactorImpact;
@@ -14,23 +14,23 @@ function formatNumber(n: number, digits: number = 0): string {
 
 export function FactorImpactCards({ impact, horizon }: FactorImpactCardsProps) {
   const pct = (impact.delta_percent * 100).toFixed(1);
-  const arrow = impact.direction === "up" ? "▲" : impact.direction === "down" ? "▼" : "·";
+  const arrow = impact.direction ==="up" ?"▲" : impact.direction ==="down" ?"▼" :"·";
 
   const deltaValueColor =
-    impact.direction === "up"
-      ? "text-positive"
-      : impact.direction === "down"
-        ? "text-anomaly"
-        : "text-text-primary";
+    impact.direction ==="up"
+      ?"text-positive"
+      : impact.direction ==="down"
+        ?"text-anomaly"
+        :"text-text-primary";
   const deltaStripe =
-    impact.direction === "up"
-      ? "bg-positive"
-      : impact.direction === "down"
-        ? "bg-anomaly"
-        : "bg-border-strong";
+    impact.direction ==="up"
+      ?"bg-positive"
+      : impact.direction ==="down"
+        ?"bg-anomaly"
+        :"bg-border-strong";
 
-  const deltaSign = impact.delta_absolute >= 0 ? "+" : "";
-  const pctSign = impact.delta_percent >= 0 ? "+" : "";
+  const deltaSign = impact.delta_absolute >= 0 ?"+" :"";
+  const pctSign = impact.delta_percent >= 0 ?"+" :"";
 
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -87,8 +87,7 @@ export function FactorImpactCards({ impact, horizon }: FactorImpactCardsProps) {
             <>
               <span className="text-text-muted">top driver:</span> {impact.top_driver}
             </>
-          ) : (
-            "forecast adjusted by factors"
+          ) : ("forecast adjusted by factors"
           )}
         </p>
       </div>

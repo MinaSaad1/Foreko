@@ -6,8 +6,8 @@ interface ExportChartButtonProps {
 
 export function ExportChartButton({
   onExport,
-  className = "",
-  label = "SAVE IMAGE",
+  className ="",
+  label ="SAVE IMAGE",
 }: ExportChartButtonProps) {
   return (
     <button

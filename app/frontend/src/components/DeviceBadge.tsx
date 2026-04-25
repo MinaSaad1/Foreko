@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useHealth } from "@/hooks/useHealth";
-import { api } from "@/api/endpoints";
+import { useEffect, useRef, useState } from"react";
+import { useQuery } from"@tanstack/react-query";
+import { useHealth } from"@/hooks/useHealth";
+import { api } from"@/api/endpoints";
 
 export function DeviceBadge() {
   const { data, isError } = useHealth();
@@ -35,19 +35,19 @@ export function DeviceBadge() {
 
   const { device, model_status } = data;
   const kindLabel =
-    device.kind === "cuda"
+    device.kind ==="cuda"
       ? `GPU: ${device.name}`
-      : "CPU (no GPU detected)";
+      :"CPU (no GPU detected)";
   const tone =
-    device.kind === "cuda"
-      ? "border-positive/40 bg-positive/10 text-positive"
-      : "border-warning/40 bg-warning/10 text-warning";
+    device.kind ==="cuda"
+      ?"border-positive/40 bg-positive/10 text-positive"
+      :"border-warning/40 bg-warning/10 text-warning";
   const statusDot =
-    model_status === "ready"
-      ? "bg-positive"
-      : model_status === "loading"
-        ? "bg-warning animate-pulse"
-        : "bg-anomaly";
+    model_status ==="ready"
+      ?"bg-positive"
+      : model_status ==="loading"
+        ?"bg-warning animate-pulse"
+        :"bg-anomaly";
 
   return (
     <div className="relative" ref={containerRef}>
@@ -63,7 +63,7 @@ export function DeviceBadge() {
         <div className="absolute right-0 top-full mt-2 z-40 w-64 border border-border bg-bg-elevated p-3 text-sm text-text-primary shadow-[var(--shadow-elev-2)]">
           <div className="flex justify-between py-0.5">
             <span className="text-text-muted">Device</span>
-            <span className="font-medium">{modelInfo?.device.name ?? "-"}</span>
+            <span className="font-medium">{modelInfo?.device.name ??"-"}</span>
           </div>
           {modelInfo?.device.memory_total_mb && (
             <div className="flex justify-between py-0.5">
@@ -75,7 +75,7 @@ export function DeviceBadge() {
           )}
           <div className="flex justify-between py-0.5">
             <span className="text-text-muted">Model status</span>
-            <span className="font-medium">{modelInfo?.model_status ?? "-"}</span>
+            <span className="font-medium">{modelInfo?.model_status ??"-"}</span>
           </div>
           <div className="flex justify-between py-0.5">
             <span className="text-text-muted">Compile count</span>
@@ -89,7 +89,7 @@ export function DeviceBadge() {
             <div className="flex justify-between py-0.5">
               <span className="text-text-muted">Config hash</span>
               <span className="font-mono text-xs">
-                {String(modelInfo.current_config).slice(0, 8) || "-"}
+                {String(modelInfo.current_config).slice(0, 8) ||"-"}
               </span>
             </div>
           )}

@@ -1,4 +1,4 @@
-import type { ModelResult } from "@/types/comparison";
+import type { ModelResult } from"@/types/comparison";
 
 interface AlternativeCardProps {
   model: ModelResult;
@@ -15,7 +15,7 @@ export function AlternativeCard({ model, winnerAccuracy }: AlternativeCardProps)
         : n.toFixed(0);
 
   const diff = Math.abs(model.accuracy - winnerAccuracy);
-  const diffLabel = `${Math.round(diff * 100)} pp ${model.accuracy > winnerAccuracy ? "better" : "worse"}`;
+  const diffLabel = `${Math.round(diff * 100)} pp ${model.accuracy > winnerAccuracy ?"better" :"worse"}`;
 
   return (
     <div className="rounded-panel border border-border bg-bg-surface p-5 space-y-4">
@@ -45,7 +45,7 @@ export function AlternativeCard({ model, winnerAccuracy }: AlternativeCardProps)
           <span className="block font-mono text-xs text-text-muted uppercase tracking-widest">
             vs winner
           </span>
-          <span className={`font-mono text-lg ${model.accuracy > winnerAccuracy ? "text-positive" : "text-text-muted"}`}>
+          <span className={`font-mono text-lg ${model.accuracy > winnerAccuracy ?"text-positive" :"text-text-muted"}`}>
             {diffLabel}
           </span>
         </div>

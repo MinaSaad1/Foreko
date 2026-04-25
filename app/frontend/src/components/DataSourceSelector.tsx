@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
-import { api } from "@/api/endpoints";
-import { CSVUpload } from "@/components/CSVUpload";
-import { ConnectionForm } from "@/components/connections/ConnectionForm";
-import { ConnectionList } from "@/components/connections/ConnectionList";
-import { TablePicker } from "@/components/connections/TablePicker";
-import { friendlyError } from "@/utils/toast";
-import type { Connection, SecretsBackendInfo } from "@/types/connection";
-import type { DatasetPreview } from "@/types/dataset";
+import { useEffect, useState } from"react";
+import { api } from"@/api/endpoints";
+import { CSVUpload } from"@/components/CSVUpload";
+import { ConnectionForm } from"@/components/connections/ConnectionForm";
+import { ConnectionList } from"@/components/connections/ConnectionList";
+import { TablePicker } from"@/components/connections/TablePicker";
+import { friendlyError } from"@/utils/toast";
+import type { Connection, SecretsBackendInfo } from"@/types/connection";
+import type { DatasetPreview } from"@/types/dataset";
 
-type Tab = "upload" | "connect" | "saved";
+type Tab ="upload" |"connect" |"saved";
 
 interface DataSourceSelectorProps {
   onDatasetReady: (preview: DatasetPreview) => void;
@@ -42,14 +42,14 @@ export function DataSourceSelector({ onDatasetReady }: DataSourceSelectorProps) 
   };
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "upload", label: "Upload file" },
-    { id: "connect", label: "Connect database" },
-    { id: "saved", label: "Saved connections" },
+    { id:"upload", label:"Upload file" },
+    { id:"connect", label:"Connect database" },
+    { id:"saved", label:"Saved connections" },
   ];
 
   const keyringWarning =
     secretsInfo && !secretsInfo.available ? (
-      <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
+      <p className="border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
         Your operating system's keychain is not available. Saved database
         connections are disabled until it is. On Linux, install gnome-keyring
         or libsecret and restart Foresee.
@@ -70,7 +70,7 @@ export function DataSourceSelector({ onDatasetReady }: DataSourceSelectorProps) 
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-1 rounded-md border border-border/60 bg-bg-surface/30 p-1">
+      <div className="flex gap-1 border border-border/60 bg-bg-surface/30 p-1">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -78,8 +78,8 @@ export function DataSourceSelector({ onDatasetReady }: DataSourceSelectorProps) 
             onClick={() => setTab(t.id)}
             className={`flex-1 rounded px-3 py-2 text-sm transition ${
               tab === t.id
-                ? "bg-accent/20 text-accent"
-                : "text-text-muted hover:text-text-primary"
+                ?"bg-accent/20 text-accent"
+                :"text-text-muted hover:text-text-primary"
             }`}
           >
             {t.label}
@@ -88,21 +88,21 @@ export function DataSourceSelector({ onDatasetReady }: DataSourceSelectorProps) 
       </div>
 
       {secretsError && (
-        <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
+        <p className="border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
           {secretsError}
         </p>
       )}
 
-      {tab === "upload" && <CSVUpload onUploaded={onDatasetReady} />}
+      {tab ==="upload" && <CSVUpload onUploaded={onDatasetReady} />}
 
-      {tab === "connect" && (
+      {tab ==="connect" && (
         <div className="space-y-3">
           {keyringWarning}
           <ConnectionForm onSaved={onConnectionSaved} />
         </div>
       )}
 
-      {tab === "saved" && (
+      {tab ==="saved" && (
         <div className="space-y-3">
           {keyringWarning}
           <ConnectionList

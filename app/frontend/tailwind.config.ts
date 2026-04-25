@@ -68,6 +68,7 @@ export default {
         'ping-slow': 'ping-slow 2.4s cubic-bezier(0, 0, 0.2, 1) infinite',
         'wobble': 'wobble 3s ease-in-out infinite',
         'dash-shift': 'dash-shift 1.6s linear infinite',
+        'cursor-blink': 'cursor-blink 1.2s step-end infinite',
       },
       keyframes: {
         'border-flow': {
@@ -102,6 +103,10 @@ export default {
         'dash-shift': {
           '0%': { strokeDashoffset: '0' },
           '100%': { strokeDashoffset: '-12' },
+        },
+        'cursor-blink': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0' },
         },
       }
     },

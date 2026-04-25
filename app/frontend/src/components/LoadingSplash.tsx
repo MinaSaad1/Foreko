@@ -1,33 +1,33 @@
-import { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useHealth } from "@/hooks/useHealth";
-import { api } from "@/api/endpoints";
-import { toast } from "@/utils/toast";
+import { useEffect, useRef, useState } from"react";
+import { useMutation, useQuery, useQueryClient } from"@tanstack/react-query";
+import { useHealth } from"@/hooks/useHealth";
+import { api } from"@/api/endpoints";
+import { toast } from"@/utils/toast";
 
 const STALL_SECONDS = 45;
 
 function formatBytes(bytes: number): string {
-  if (bytes <= 0) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
+  if (bytes <= 0) return"0 B";
+  const units = ["B","KB","MB","GB"];
   const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
   const value = bytes / 1024 ** i;
   return `${value.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }
 
 function formatRate(bytesPerSecond: number): string {
-  if (bytesPerSecond <= 0) return "-";
+  if (bytesPerSecond <= 0) return"-";
   return `${formatBytes(bytesPerSecond)}/s`;
 }
 
 function formatEta(seconds: number): string {
-  if (seconds <= 0) return "-";
+  if (seconds <= 0) return"-";
   if (seconds < 60) return `${seconds}s`;
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${mins}m ${secs.toString().padStart(2, "0")}s`;
+  return `${mins}m ${secs.toString().padStart(2,"0")}s`;
 }
 
-// Session-level flag: true once the model has reported "ready" at any point.
+// Session-level flag: true once the model has reported"ready" at any point.
 // Used to distinguish cold-start (show blocking splash) from mid-session retries
 // (let the header ModelStatusBar show the state, don't block the whole app).
 let _hasEverBeenReady = false;
@@ -42,7 +42,7 @@ export function LoadingSplash() {
     retry: 1,
   });
 
-  if (health?.model_status === "ready") {
+  if (health?.model_status ==="ready") {
     _hasEverBeenReady = true;
   }
 
@@ -52,7 +52,7 @@ export function LoadingSplash() {
   const [stalled, setStalled] = useState(false);
 
   useEffect(() => {
-    if (!progress || progress.state !== "downloading") {
+    if (!progress || progress.state !=="downloading") {
       lastBytesRef.current = -1;
       lastAdvanceAtRef.current = Date.now();
       setStalled(false);
@@ -83,18 +83,18 @@ export function LoadingSplash() {
     onError: (err) => toast.error(err),
   });
 
-  const isModelLoading = isLoading || !health || health.model_status === "loading";
-  const isError = health?.model_status === "error" || progress?.state === "error";
+  const isModelLoading = isLoading || !health || health.model_status ==="loading";
+  const isError = health?.model_status ==="error" || progress?.state ==="error";
 
   if (!isModelLoading && !isError) return null;
 
   // If the model was ready earlier in this session (and is now merely reloading
   // after a user-triggered retry), suppress the full-screen splash. The header
-  // ModelStatusBar keeps showing "Loading model" in that case. Errors always
+  // ModelStatusBar keeps showing"Loading model" in that case. Errors always
   // show the splash so the user sees the Try again button.
   if (_hasEverBeenReady && !isError) return null;
 
-  const downloading = progress?.state === "downloading";
+  const downloading = progress?.state ==="downloading";
   const pct =
     progress && progress.total_bytes > 0
       ? Math.min(100, Math.round((progress.downloaded_bytes / progress.total_bytes) * 100))
@@ -120,15 +120,15 @@ export function LoadingSplash() {
               Initialization failed
             </span>
             <p className="text-xs text-text-secondary font-mono text-center max-w-xs">
-              {progress?.error ?? "The model couldn't load. Check your network and try again."}
+              {progress?.error ??"The model couldn't load. Check your network and try again."}
             </p>
             <button
               type="button"
               onClick={() => retryMutation.mutate()}
               disabled={retryMutation.isPending}
-              className="border border-accent bg-transparent px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-accent transition-all hover:bg-accent/10 disabled:opacity-40"
+              className="btn-terminal"
             >
-              {retryMutation.isPending ? "Retrying..." : "Try again"}
+              {retryMutation.isPending ?"Retrying..." :"Try again"}
             </button>
             <div className="rounded-panel border border-border/40 bg-bg-surface/40 px-4 py-3 max-w-sm text-left space-y-1">
               <p className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
@@ -161,7 +161,7 @@ export function LoadingSplash() {
             )}
 
             <p className="text-text-primary font-medium tracking-wide">
-              {downloading ? "Downloading TimesFM model" : "Loading the model..."}
+              {downloading ?"Downloading TimesFM model" :"Loading the model..."}
             </p>
 
             {!downloading && (
@@ -175,15 +175,15 @@ export function LoadingSplash() {
                 <div className="h-2 w-full border border-border/60 bg-bg-surface/60 overflow-hidden">
                   <div
                     className="h-full bg-accent transition-all duration-500"
-                    style={{ width: pct !== null ? `${pct}%` : "20%" }}
+                    style={{ width: pct !== null ? `${pct}%` :"20%" }}
                   />
                 </div>
                 <div className="flex items-center justify-between font-mono text-[11px] text-text-muted">
                   <span>
                     {formatBytes(progress.downloaded_bytes)}
-                    {progress.total_bytes > 0 ? ` / ${formatBytes(progress.total_bytes)}` : ""}
+                    {progress.total_bytes > 0 ? ` / ${formatBytes(progress.total_bytes)}` :""}
                   </span>
-                  <span>{pct !== null ? `${pct}%` : "..."}</span>
+                  <span>{pct !== null ? `${pct}%` :"..."}</span>
                 </div>
                 <div className="flex items-center justify-between font-mono text-[10px] text-text-muted">
                   <span>{formatRate(progress.speed_bps)}</span>
@@ -201,9 +201,9 @@ export function LoadingSplash() {
                   type="button"
                   onClick={() => retryMutation.mutate()}
                   disabled={retryMutation.isPending}
-                  className="w-full border border-accent bg-transparent px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-accent transition-all hover:bg-accent/10 disabled:opacity-40"
+                  className="w-full btn-terminal"
                 >
-                  {retryMutation.isPending ? "Retrying..." : "Resume download"}
+                  {retryMutation.isPending ?"Retrying..." :"Resume download"}
                 </button>
               </div>
             )}

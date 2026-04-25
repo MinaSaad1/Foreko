@@ -1,4 +1,4 @@
-import type { FeatureImportanceItem } from "@/types/comparison";
+import type { FeatureImportanceItem } from"@/types/comparison";
 
 interface FeatureImportanceProps {
   items: FeatureImportanceItem[];

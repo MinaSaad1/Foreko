@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { api } from "@/api/endpoints";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { useDocumentTitle } from "@/utils/useDocumentTitle";
-import { toast } from "@/utils/toast";
-import { Tour, clearTourDismissal } from "@/components/Tour";
+import { useState } from"react";
+import { api } from"@/api/endpoints";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { useDocumentTitle } from"@/utils/useDocumentTitle";
+import { toast } from"@/utils/toast";
+import { Tour, clearTourDismissal } from"@/components/Tour";
 
 interface StorageRow {
   path: string;
@@ -11,13 +11,13 @@ interface StorageRow {
 }
 
 const STORAGE_INVENTORY: StorageRow[] = [
-  { path: "~/.timesfm_studio/datasets/", what: "Your uploaded CSVs. Kept for 30 days, then auto-purged." },
-  { path: "~/.timesfm_studio/models/", what: "The TimesFM model weights (around 1.2 GB), downloaded on first run. If HuggingFace is unreachable, you can pre-populate this folder from another machine." },
-  { path: "~/.timesfm_studio/data/foresee.db", what: "Cached forecasts, backtests, anomaly results, saved scenarios." },
-  { path: "~/.timesfm_studio/adapters/", what: "Any fine-tuned adapters you create." },
-  { path: "~/.timesfm_studio/jobs/", what: "Background job state for long-running operations." },
-  { path: "~/.timesfm_studio/exports/", what: "PDFs and CSVs you export from reports." },
-  { path: "~/.timesfm_studio/logs/", what: "App logs you can inspect if something goes wrong." },
+  { path:"~/.timesfm_studio/datasets/", what:"Your uploaded CSVs. Kept for 30 days, then auto-purged." },
+  { path:"~/.timesfm_studio/models/", what:"The TimesFM model weights (around 1.2 GB), downloaded on first run. If HuggingFace is unreachable, you can pre-populate this folder from another machine." },
+  { path:"~/.timesfm_studio/data/foresee.db", what:"Cached forecasts, backtests, anomaly results, saved scenarios." },
+  { path:"~/.timesfm_studio/adapters/", what:"Any fine-tuned adapters you create." },
+  { path:"~/.timesfm_studio/jobs/", what:"Background job state for long-running operations." },
+  { path:"~/.timesfm_studio/exports/", what:"PDFs and CSVs you export from reports." },
+  { path:"~/.timesfm_studio/logs/", what:"App logs you can inspect if something goes wrong." },
 ];
 
 export function PrivacyPage() {
@@ -42,8 +42,8 @@ export function PrivacyPage() {
       const result = await api.wipeStorage();
       resetStore();
       toast.success(
-        `Removed ${result.removed.length} folder${result.removed.length === 1 ? "" : "s"}`,
-        { description: "Model weights were kept to avoid a redownload." },
+        `Removed ${result.removed.length} folder${result.removed.length === 1 ?"" :"s"}`,
+        { description:"Model weights were kept to avoid a redownload." },
       );
       setConfirming(false);
     } catch (err) {
@@ -89,8 +89,7 @@ export function PrivacyPage() {
         </h2>
         <ul className="space-y-2 text-sm text-text-secondary">
           <li>
-            <span className="text-text-primary">LLM-generated narratives.</span> If you click a
-            "Narrate" button, a summary of your forecast is sent to the LLM you have configured
+            <span className="text-text-primary">LLM-generated narratives.</span> If you click a"Narrate" button, a summary of your forecast is sent to the LLM you have configured
             (OpenAI, Anthropic, or local). Foresee asks for your consent the first time, and the
             setting is stored locally. No LLM is called otherwise.
           </li>
@@ -156,7 +155,7 @@ export function PrivacyPage() {
                 disabled={wiping}
                 className="inline-flex items-center gap-2 border border-anomaly bg-anomaly/20 px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-anomaly transition-all hover:bg-anomaly/30 disabled:opacity-40"
               >
-                {wiping ? "Deleting..." : "Yes, delete it"}
+                {wiping ?"Deleting..." :"Yes, delete it"}
               </button>
               <button
                 type="button"

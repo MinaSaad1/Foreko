@@ -1,7 +1,7 @@
-import { forwardRef, useImperativeHandle, useRef } from "react";
-import ReactECharts from "echarts-for-react";
-import { getChartPng, type ChartHandle } from "@/hooks/useChartExport";
-import { useChartTheme } from "@/charts/theme";
+import { forwardRef, useImperativeHandle, useRef } from"react";
+import ReactECharts from"echarts-for-react";
+import { getChartPng, type ChartHandle } from"@/hooks/useChartExport";
+import { useChartTheme } from"@/charts/theme";
 
 interface PerHorizonMAPEProps {
   perHorizon: Record<string, number[]>;
@@ -24,51 +24,51 @@ export const PerHorizonMAPE = forwardRef<PerHorizonMAPEHandle, PerHorizonMAPEPro
 
   const series = models.map((m, i) => ({
     name: m,
-    type: "line",
+    type:"line",
     data: (perHorizon[m] ?? []).map((v) => (v * 100).toFixed(2)),
     lineStyle: { color: COLORS[i % COLORS.length], width: 2 },
     itemStyle: { color: COLORS[i % COLORS.length] },
-    symbol: "circle",
+    symbol:"circle",
     symbolSize: 6,
   }));
 
   const option = {
-    backgroundColor: "transparent",
+    backgroundColor:"transparent",
     grid: { left: 48, right: 24, top: 32, bottom: 44, containLabel: false },
     legend: {
       data: models,
-      textStyle: { color: t.textSecondary, fontFamily: "JetBrains Mono", fontSize: 11 },
+      textStyle: { color: t.textSecondary, fontFamily:"JetBrains Mono", fontSize: 11 },
       top: 0,
       right: 16,
     },
     xAxis: {
-      type: "category",
+      type:"category",
       data: xs,
       axisLine: { lineStyle: { color: t.grid } },
       axisTick: { show: false },
-      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+      axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
     },
     yAxis: {
-      type: "value",
+      type:"value",
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {
         color: t.axisLabel,
-        fontFamily: "JetBrains Mono",
+        fontFamily:"JetBrains Mono",
         fontSize: 10,
-        formatter: "{value}%",
+        formatter:"{value}%",
       },
       splitLine: { lineStyle: { color: t.grid } },
     },
     tooltip: {
-      trigger: "axis",
+      trigger:"axis",
       backgroundColor: t.bgElevated,
       borderColor: t.grid,
-      textStyle: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 11 },
+      textStyle: { color: t.textPrimary, fontFamily:"JetBrains Mono", fontSize: 11 },
     },
     series,
   };
 
-  return <ReactECharts ref={chartRef} option={option} style={{ height: 220, width: "100%" }} notMerge />;
+  return <ReactECharts ref={chartRef} option={option} style={{ height: 220, width:"100%" }} notMerge />;
   },
 );

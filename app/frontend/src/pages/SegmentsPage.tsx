@@ -1,18 +1,18 @@
-import { useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { api } from "@/api/endpoints";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { ColumnMapper } from "@/components/ColumnMapper";
-import ReactECharts from "echarts-for-react";
-import { useChartTheme } from "@/charts/theme";
-import { PageIntro } from "@/components/common/PageIntro";
-import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
-import { Term } from "@/components/common/Term";
-import { useSyncedDataset } from "@/hooks/useSyncedDataset";
-import { useHealth } from "@/hooks/useHealth";
-import type { ColumnMapping } from "@/types/dataset";
-import type { SegmentsResult } from "@/types/phases";
+import { useCallback, useState } from"react";
+import { useParams } from"react-router-dom";
+import { useMutation } from"@tanstack/react-query";
+import { api } from"@/api/endpoints";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { ColumnMapper } from"@/components/ColumnMapper";
+import ReactECharts from"echarts-for-react";
+import { useChartTheme } from"@/charts/theme";
+import { PageIntro } from"@/components/common/PageIntro";
+import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
+import { Term } from"@/components/common/Term";
+import { useSyncedDataset } from"@/hooks/useSyncedDataset";
+import { useHealth } from"@/hooks/useHealth";
+import type { ColumnMapping } from"@/types/dataset";
+import type { SegmentsResult } from"@/types/phases";
 
 export function SegmentsPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
@@ -21,11 +21,11 @@ export function SegmentsPage() {
 
   const [mapping, setMapping] = useState<ColumnMapping | null>(storeMapping);
   const [topN, setTopN] = useState(10);
-  const [sortBy, setSortBy] = useState<"total" | "growth" | "volatility">("total");
+  const [sortBy, setSortBy] = useState<"total" |"growth" |"volatility">("total");
 
   const { activeId, preview } = useSyncedDataset(datasetId);
   const { data: health } = useHealth();
-  const modelReady = health?.model_status === "ready";
+  const modelReady = health?.model_status ==="ready";
   const handleMappingChange = useCallback(
     (m: ColumnMapping) => {
       setMapping(m);
@@ -80,18 +80,18 @@ export function SegmentsPage() {
               max={200}
               value={topN}
               onChange={(e) => setTopN(Math.max(1, Number(e.target.value)))}
-              className="w-24 rounded-md border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
+              className="w-24 border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
             />
           </div>
           <button
             onClick={() => runMutation.mutate()}
             disabled={!mapping?.series_id_col || runMutation.isPending || !modelReady}
-            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm text-on-accent hover:opacity-90 disabled:opacity-40"
+            className="w-full btn-terminal-primary"
           >
-            {runMutation.isPending ? "Running..." : "Compare segments"}
+            {runMutation.isPending ?"Running..." :"Compare segments"}
           </button>
           {!mapping?.series_id_col && (
-            <p className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
+            <p className="border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
               Select a series ID column in the mapping above.
             </p>
           )}
@@ -99,7 +99,7 @@ export function SegmentsPage() {
             <p className="text-xs text-text-muted">Model still loading, the Run button will enable when it's ready.</p>
           )}
           {runMutation.isError && (
-            <p className="rounded-md border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-xs text-anomaly">
+            <p className="border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-xs text-anomaly">
               {runMutation.error.message}
             </p>
           )}
@@ -114,14 +114,14 @@ export function SegmentsPage() {
                 {data.n_segments} segments
               </h3>
               <div className="flex gap-2">
-                {(["total", "growth", "volatility"] as const).map((s) => (
+                {(["total","growth","volatility"] as const).map((s) => (
                   <button
                     key={s}
                     onClick={() => setSortBy(s)}
-                    className={`rounded-md border px-3 py-1 font-mono text-xs transition-colors ${
+                    className={`border px-3 py-1 font-mono text-xs transition-colors ${
                       sortBy === s
-                        ? "border-accent bg-accent-dim text-accent"
-                        : "border-border text-text-secondary hover:border-border-strong"
+                        ?"border-accent bg-accent-dim text-accent"
+                        :"border-border text-text-secondary hover:border-border-strong"
                     }`}
                   >
                     by {s}
@@ -153,13 +153,13 @@ export function SegmentsPage() {
 
 function SegmentRanking({ ranking, sortBy }: { ranking: { id: string; value: number }[]; sortBy: string }) {
   const fmt = (v: number) =>
-    sortBy === "growth" || sortBy === "volatility" ? `${(v * 100).toFixed(1)}%` : v.toLocaleString();
+    sortBy ==="growth" || sortBy ==="volatility" ? `${(v * 100).toFixed(1)}%` : v.toLocaleString();
   return (
     <div className="space-y-1">
       {ranking.slice(0, 10).map((r, i) => (
         <div
           key={r.id}
-          className="flex items-center justify-between rounded-md border border-border bg-bg-elevated px-3 py-2"
+          className="flex items-center justify-between border border-border bg-bg-elevated px-3 py-2"
         >
           <p className="font-mono text-xs text-text-secondary">
             <span className="text-text-muted mr-2">#{i + 1}</span>
@@ -177,37 +177,37 @@ function MultiLineSegments({ segments }: { segments: SegmentsResult["segments"] 
   const colors = [t.accent, t.neutral, t.positive, t.warning, t.anomaly, t.textMuted, t.alternative, t.historical];
   const series = segments.map((s, i) => ({
     name: s.id,
-    type: "line",
+    type:"line",
     data: s.values.map((v, idx) => [s.dates[idx], v]),
     lineStyle: { color: colors[i % colors.length], width: 1.5 },
     itemStyle: { color: colors[i % colors.length] },
-    symbol: "none",
+    symbol:"none",
   }));
   const option = {
-    backgroundColor: "transparent",
+    backgroundColor:"transparent",
     grid: { left: 56, right: 24, top: 24, bottom: 40, containLabel: false },
     legend: {
       data: segments.map((s) => s.id),
-      textStyle: { color: t.textSecondary, fontFamily: "JetBrains Mono", fontSize: 10 },
+      textStyle: { color: t.textSecondary, fontFamily:"JetBrains Mono", fontSize: 10 },
       top: 0,
     },
     xAxis: {
-      type: "time",
+      type:"time",
       axisLine: { lineStyle: { color: t.grid } },
-      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+      axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
     },
     yAxis: {
-      type: "value",
+      type:"value",
       axisLine: { show: false },
-      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
+      axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
       splitLine: { lineStyle: { color: t.grid } },
     },
-    tooltip: { trigger: "axis" },
+    tooltip: { trigger:"axis" },
     dataZoom: [
-      { type: "inside", xAxisIndex: 0 },
-      { type: "slider", xAxisIndex: 0, height: 16, bottom: 0 },
+      { type:"inside", xAxisIndex: 0 },
+      { type:"slider", xAxisIndex: 0, height: 16, bottom: 0 },
     ],
     series,
   };
-  return <ReactECharts option={option} style={{ height: 320, width: "100%" }} notMerge />;
+  return <ReactECharts option={option} style={{ height: 320, width:"100%" }} notMerge />;
 }

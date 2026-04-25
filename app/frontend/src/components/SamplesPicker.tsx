@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { SAMPLES, type SampleDescriptor } from "@/data/samples";
-import { loadSampleDataset } from "@/utils/loadDemoDataset";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { toast } from "@/utils/toast";
+import { useState } from"react";
+import { useNavigate } from"react-router-dom";
+import { SAMPLES, type SampleDescriptor } from"@/data/samples";
+import { loadSampleDataset } from"@/utils/loadDemoDataset";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { toast } from"@/utils/toast";
 
 interface SamplesPickerProps {
   redirectTo?: (datasetId: string) => string;
@@ -39,7 +39,7 @@ export function SamplesPicker({ redirectTo, compact = false }: SamplesPickerProp
           Or try a sample
         </h2>
       </div>
-      <div className={`grid gap-3 ${compact ? "sm:grid-cols-2" : "md:grid-cols-2"}`}>
+      <div className={`grid gap-3 ${compact ?"sm:grid-cols-2" :"md:grid-cols-2"}`}>
         {SAMPLES.map((sample) => {
           const isLoading = loadingId === sample.id;
           const disabled = loadingId !== null;
@@ -56,7 +56,7 @@ export function SamplesPicker({ redirectTo, compact = false }: SamplesPickerProp
                   {sample.domain}
                 </span>
                 <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted group-hover:text-accent">
-                  {isLoading ? "Loading..." : "Use this sample →"}
+                  {isLoading ?"Loading..." :"Use this sample →"}
                 </span>
               </div>
               <p className="mt-2 text-sm text-text-primary">{sample.description}</p>

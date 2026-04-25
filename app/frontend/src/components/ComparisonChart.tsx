@@ -1,21 +1,21 @@
-import { forwardRef, useImperativeHandle, useRef } from "react";
-import ReactECharts from "echarts-for-react";
-import { useChartExport, getChartPng, type ChartHandle } from "@/hooks/useChartExport";
-import { ExportChartButton } from "@/components/common/ExportChartButton";
-import { useChartTheme } from "@/charts/theme";
-import type { ComparisonResponse } from "@/types/comparison";
+import { forwardRef, useImperativeHandle, useRef } from"react";
+import ReactECharts from"echarts-for-react";
+import { useChartExport, getChartPng, type ChartHandle } from"@/hooks/useChartExport";
+import { ExportChartButton } from"@/components/common/ExportChartButton";
+import { useChartTheme } from"@/charts/theme";
+import type { ComparisonResponse } from"@/types/comparison";
 
 interface ComparisonChartProps {
   data: ComparisonResponse;
   showBothModels?: boolean;
-  activeModel?: "winner" | "alternative";
+  activeModel?:"winner" |"alternative";
 }
 
 export type ComparisonChartHandle = ChartHandle;
 
 export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChartProps>(
   function ComparisonChart(
-    { data, showBothModels = false, activeModel = "winner" },
+    { data, showBothModels = false, activeModel ="winner" },
     ref,
   ) {
   const theme = useChartTheme();
@@ -30,7 +30,7 @@ export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChart
   };
   const chartRef = useRef<ReactECharts>(null);
   const { export: exportChart } = useChartExport(chartRef, {
-    filename: "comparison-chart",
+    filename:"comparison-chart",
   });
 
   useImperativeHandle(ref, () => ({
@@ -39,8 +39,8 @@ export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChart
 
   const { winner, alternative, dates, historical_dates, historical_values } = data;
 
-  const primary = activeModel === "winner" ? winner : alternative;
-  const overlay = activeModel === "winner" ? alternative : winner;
+  const primary = activeModel ==="winner" ? winner : alternative;
+  const overlay = activeModel ==="winner" ? alternative : winner;
 
   const allDates = [...historical_dates, ...dates];
 
@@ -58,41 +58,41 @@ export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChart
 
   const series: object[] = [
     {
-      name: "Historical",
-      type: "line",
+      name:"Historical",
+      type:"line",
       data: historicalSeries,
       lineStyle: { color: CHART_COLORS.historical, width: 2 },
       itemStyle: { color: CHART_COLORS.historical },
-      symbol: "none",
+      symbol:"none",
       z: 2,
     },
     {
       name: primary.display_name,
-      type: "line",
+      type:"line",
       data: primarySeries,
       lineStyle: { color: CHART_COLORS.winner, width: 2 },
       itemStyle: { color: CHART_COLORS.winner },
-      symbol: "none",
+      symbol:"none",
       z: 3,
     },
     {
-      name: "P90",
-      type: "line",
+      name:"P90",
+      type:"line",
       data: p90Series,
-      lineStyle: { color: "transparent" },
-      areaStyle: { color: CHART_COLORS.band, origin: "auto" },
-      stack: "confidence",
-      symbol: "none",
+      lineStyle: { color:"transparent" },
+      areaStyle: { color: CHART_COLORS.band, origin:"auto" },
+      stack:"confidence",
+      symbol:"none",
       z: 1,
     },
     {
-      name: "P10",
-      type: "line",
+      name:"P10",
+      type:"line",
       data: p10Series,
-      lineStyle: { color: "transparent" },
-      areaStyle: { color: "transparent", origin: "auto" },
-      stack: "confidence",
-      symbol: "none",
+      lineStyle: { color:"transparent" },
+      areaStyle: { color:"transparent", origin:"auto" },
+      stack:"confidence",
+      symbol:"none",
       z: 1,
     },
   ];
@@ -100,11 +100,11 @@ export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChart
   if (showBothModels) {
     series.push({
       name: overlay.display_name,
-      type: "line",
+      type:"line",
       data: overlaySeries,
-      lineStyle: { color: CHART_COLORS.alternative, width: 1.5, type: "dashed" },
+      lineStyle: { color: CHART_COLORS.alternative, width: 1.5, type:"dashed" },
       itemStyle: { color: CHART_COLORS.alternative },
-      symbol: "none",
+      symbol:"none",
       z: 2,
     });
   }
@@ -114,16 +114,16 @@ export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChart
     : 0;
 
   const option = {
-    backgroundColor: "transparent",
+    backgroundColor:"transparent",
     grid: { left: 56, right: 24, top: 24, bottom: 68, containLabel: false },
     xAxis: {
-      type: "category",
+      type:"category",
       data: allDates,
       axisLine: { lineStyle: { color: CHART_COLORS.grid } },
       axisTick: { show: false },
       axisLabel: {
         color: CHART_COLORS.axisLabel,
-        fontFamily: "JetBrains Mono",
+        fontFamily:"JetBrains Mono",
         fontSize: 11,
         rotate: 30,
         formatter: (v: string) => v.slice(0, 7),
@@ -131,19 +131,19 @@ export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChart
       splitLine: { show: false },
     },
     yAxis: {
-      type: "value",
+      type:"value",
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {
         color: CHART_COLORS.axisLabel,
-        fontFamily: "JetBrains Mono",
+        fontFamily:"JetBrains Mono",
         fontSize: 11,
       },
       splitLine: { lineStyle: { color: CHART_COLORS.grid } },
     },
     dataZoom: [
       {
-        type: "inside",
+        type:"inside",
         xAxisIndex: 0,
         start: forecastStartPct,
         end: 100,
@@ -152,14 +152,14 @@ export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChart
         moveOnMouseWheel: false,
       },
       {
-        type: "slider",
+        type:"slider",
         xAxisIndex: 0,
         start: forecastStartPct,
         end: 100,
         height: 18,
         bottom: 8,
         borderColor: CHART_COLORS.grid,
-        backgroundColor: "transparent",
+        backgroundColor:"transparent",
         fillerColor: theme.band,
         handleStyle: { color: theme.accent, borderColor: theme.accent },
         moveHandleStyle: { color: theme.grid },
@@ -171,33 +171,33 @@ export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChart
           lineStyle: { color: theme.accent, width: 1 },
           areaStyle: { color: theme.accentDim },
         },
-        textStyle: { color: CHART_COLORS.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
-        labelFormatter: (_v: number, s: string) => (s ? s.slice(0, 7) : ""),
+        textStyle: { color: CHART_COLORS.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
+        labelFormatter: (_v: number, s: string) => (s ? s.slice(0, 7) :""),
       },
       {
-        type: "inside",
+        type:"inside",
         yAxisIndex: 0,
-        zoomOnMouseWheel: "shift",
+        zoomOnMouseWheel:"shift",
         moveOnMouseMove: false,
         moveOnMouseWheel: false,
       },
     ],
     tooltip: {
-      trigger: "axis",
+      trigger:"axis",
       backgroundColor: theme.bgElevated,
       borderColor: theme.grid,
-      textStyle: { color: theme.textPrimary, fontFamily: "JetBrains Mono", fontSize: 12 },
+      textStyle: { color: theme.textPrimary, fontFamily:"JetBrains Mono", fontSize: 12 },
       formatter: (params: { seriesName: string; data: [string, number] }[]) => {
         return params
-          .filter((p) => !["P90", "P10"].includes(p.seriesName))
+          .filter((p) => !["P90","P10"].includes(p.seriesName))
           .map((p) => `${p.seriesName}: ${p.data[1].toLocaleString()}`)
           .join("<br/>");
       },
     },
     legend: showBothModels
       ? {
-          data: [primary.display_name, overlay.display_name, "Historical"],
-          textStyle: { color: theme.textSecondary, fontFamily: "JetBrains Mono", fontSize: 11 },
+          data: [primary.display_name, overlay.display_name,"Historical"],
+          textStyle: { color: theme.textSecondary, fontFamily:"JetBrains Mono", fontSize: 11 },
           itemWidth: 16,
           itemHeight: 2,
         }
@@ -212,8 +212,8 @@ export const ComparisonChart = forwardRef<ComparisonChartHandle, ComparisonChart
       <ReactECharts
         ref={chartRef}
         option={{ ...option, series }}
-        style={{ height: 320, width: "100%" }}
-        opts={{ renderer: "canvas" }}
+        style={{ height: 320, width:"100%" }}
+        opts={{ renderer:"canvas" }}
         notMerge
         lazyUpdate={false}
       />

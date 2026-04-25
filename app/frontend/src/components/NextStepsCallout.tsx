@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from"react-router-dom";
 
 interface NextStepsCalloutProps {
   datasetId: string;
@@ -15,21 +15,21 @@ export function NextStepsCallout({ datasetId }: NextStepsCalloutProps) {
   const steps: Step[] = [
     {
       to: `/backtest/${datasetId}`,
-      eyebrow: "Validate",
-      title: "Backtest this forecast",
-      body: "See how it would have done on your real history.",
+      eyebrow:"Validate",
+      title:"Backtest this forecast",
+      body:"See how it would have done on your real history.",
     },
     {
       to: `/anomaly/${datasetId}`,
-      eyebrow: "Investigate",
-      title: "Find anomalies",
-      body: "Flag the points that don't fit the pattern.",
+      eyebrow:"Investigate",
+      title:"Find anomalies",
+      body:"Flag the points that don't fit the pattern.",
     },
     {
       to: `/explain/${datasetId}`,
-      eyebrow: "Understand",
-      title: "Explain the movement",
-      body: "Changepoints and drivers behind the numbers.",
+      eyebrow:"Understand",
+      title:"Explain the movement",
+      body:"Changepoints and drivers behind the numbers.",
     },
   ];
 
@@ -61,7 +61,7 @@ export function NextStepsCallout({ datasetId }: NextStepsCalloutProps) {
             </h3>
             <p className="mt-1 text-xs text-text-secondary">{step.body}</p>
             <span className="mt-3 inline-flex font-mono text-[10px] uppercase tracking-widest text-text-muted group-hover:text-accent">
-              Open {" "}
+              Open {""}
               <span className="inline-block transition-transform group-hover:translate-x-0.5">
                 →
               </span>

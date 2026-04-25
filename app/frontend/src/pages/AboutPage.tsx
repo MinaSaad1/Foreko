@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
-import { useDocumentTitle } from "@/utils/useDocumentTitle";
-import { APP_VERSION } from "@/utils/version";
+import { Link } from"react-router-dom";
+import { useDocumentTitle } from"@/utils/useDocumentTitle";
+import { APP_VERSION } from"@/utils/version";
 
 export function AboutPage() {
   useDocumentTitle("About");

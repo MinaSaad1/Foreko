@@ -1,8 +1,8 @@
-import { useState, type ReactNode } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { loadDemoDataset } from "@/utils/loadDemoDataset";
-import { toast } from "@/utils/toast";
+import { useState, type ReactNode } from"react";
+import { Link, useNavigate } from"react-router-dom";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { loadDemoDataset } from"@/utils/loadDemoDataset";
+import { toast } from"@/utils/toast";
 import {
   AnomaliesIllustration,
   BacktestIllustration,
@@ -13,7 +13,7 @@ import {
   ForecastIllustration,
   ScenariosIllustration,
   SegmentsIllustration,
-} from "@/components/landing/FeatureIllustrations";
+} from"@/components/landing/FeatureIllustrations";
 
 interface FeatureTile {
   title: string;
@@ -25,82 +25,82 @@ interface FeatureTile {
 
 const FEATURES: FeatureTile[] = [
   {
-    title: "Data Quality",
-    benefit: "Catch 'garbage in' before it becomes 'garbage out' forecasts.",
-    to: "/preflight",
-    cta: "Run preflight",
+    title:"Data Quality",
+    benefit:"Catch 'garbage in' before it becomes 'garbage out' forecasts.",
+    to:"/preflight",
+    cta:"Run preflight",
     illustration: <DataQualityIllustration />,
   },
   {
-    title: "Forecast",
-    benefit: "Best-fit forecast with upper and lower ranges, and a recommended model.",
-    to: "/compare",
-    cta: "Open forecast",
+    title:"Forecast",
+    benefit:"Best-fit forecast with upper and lower ranges, and a recommended model.",
+    to:"/compare",
+    cta:"Open forecast",
     illustration: <ForecastIllustration />,
   },
   {
-    title: "Backtest",
-    benefit: "Prove the forecast would have worked on your real history.",
-    to: "/backtest",
-    cta: "Run backtest",
+    title:"Backtest",
+    benefit:"Prove the forecast would have worked on your real history.",
+    to:"/backtest",
+    cta:"Run backtest",
     illustration: <BacktestIllustration />,
   },
   {
-    title: "Diagnostics",
-    benefit: "Confirm the model isn't leaving useful signal behind.",
-    to: "/diagnostics",
-    cta: "See diagnostics",
+    title:"Diagnostics",
+    benefit:"Confirm the model isn't leaving useful signal behind.",
+    to:"/diagnostics",
+    cta:"See diagnostics",
     illustration: <DiagnosticsIllustration />,
   },
   {
-    title: "Anomalies",
-    benefit: "Flag unusual points, sort by severity, and act on the real outliers.",
-    to: "/anomaly",
-    cta: "Detect anomalies",
+    title:"Anomalies",
+    benefit:"Flag unusual points, sort by severity, and act on the real outliers.",
+    to:"/anomaly",
+    cta:"Detect anomalies",
     illustration: <AnomaliesIllustration />,
   },
   {
-    title: "Explain",
-    benefit: "Find changepoints and drivers behind the numbers that moved.",
-    to: "/explain",
-    cta: "Explain changes",
+    title:"Explain",
+    benefit:"Find changepoints and drivers behind the numbers that moved.",
+    to:"/explain",
+    cta:"Explain changes",
     illustration: <ExplainIllustration />,
   },
   {
-    title: "Factors",
-    benefit: "Bring in price, promo, weather, and measure their real impact.",
-    to: "/covariates",
-    cta: "Add factors",
+    title:"Factors",
+    benefit:"Bring in price, promo, weather, and measure their real impact.",
+    to:"/covariates",
+    cta:"Add factors",
     illustration: <FactorsIllustration />,
   },
   {
-    title: "Scenarios",
-    benefit: "Simulate price cuts, spend ramps, launches, before you commit.",
-    to: "/scenarios",
-    cta: "Build scenarios",
+    title:"Scenarios",
+    benefit:"Simulate price cuts, spend ramps, launches, before you commit.",
+    to:"/scenarios",
+    cta:"Build scenarios",
     illustration: <ScenariosIllustration />,
   },
   {
-    title: "Segments",
-    benefit: "Compare regions, products, or cohorts side-by-side.",
-    to: "/segments",
-    cta: "Compare segments",
+    title:"Segments",
+    benefit:"Compare regions, products, or cohorts side-by-side.",
+    to:"/segments",
+    cta:"Compare segments",
     illustration: <SegmentsIllustration />,
   },
 ];
 
 const TRUST_POINTS: { title: string; body: string }[] = [
   {
-    title: "Stays on your machine",
-    body: "Your CSVs are processed locally. Nothing is sent to the cloud.",
+    title:"Stays on your machine",
+    body:"Your CSVs are processed locally. Nothing is sent to the cloud.",
   },
   {
-    title: "Foundation-model ready",
-    body: "Uses a pretrained forecasting model, usable the moment you upload, no ML team required.",
+    title:"Foundation-model ready",
+    body:"Uses a pretrained forecasting model, usable the moment you upload, no ML team required.",
   },
   {
-    title: "Evidence over vibes",
-    body: "Every recommendation is backed by a backtest on your own history, not a generic benchmark.",
+    title:"Evidence over vibes",
+    body:"Every recommendation is backed by a backtest on your own history, not a generic benchmark.",
   },
 ];
 
@@ -147,7 +147,7 @@ export function LandingPage() {
             <div className="flex flex-wrap gap-3 pt-2">
               <Link
                 to="/data"
-                className="inline-flex items-center gap-2 border border-accent bg-accent px-5 py-3 font-mono text-xs font-medium uppercase tracking-widest text-on-accent transition-all hover:bg-accent/90 hover:shadow-[0_0_24px_rgb(var(--color-accent)/0.35)]"
+                className="btn-terminal-primary"
               >
                 <span>↑</span> Upload your CSV
               </Link>
@@ -155,9 +155,9 @@ export function LandingPage() {
                 type="button"
                 onClick={handleDemo}
                 disabled={loadingDemo}
-                className="inline-flex items-center gap-2 border border-text-muted/40 bg-transparent px-5 py-3 font-mono text-xs font-medium uppercase tracking-widest text-text-secondary transition-all hover:border-accent hover:text-accent disabled:opacity-40"
+                className="btn-terminal"
               >
-                {loadingDemo ? "Loading demo..." : "Try demo dataset"}
+                {loadingDemo ?"Loading demo..." :"Try demo dataset"}
               </button>
               <Link
                 to="/data"
@@ -237,19 +237,19 @@ export function LandingPage() {
         <ol className="mt-4 grid gap-4 md:grid-cols-3">
           {[
             {
-              n: "01",
-              title: "Upload a CSV",
-              body: "A date column and a numeric value column is all Foresee needs.",
+              n:"01",
+              title:"Upload a CSV",
+              body:"A date column and a numeric value column is all Foresee needs.",
             },
             {
-              n: "02",
-              title: "Map and run",
-              body: "Map your columns, pick a horizon, and let the model forecast.",
+              n:"02",
+              title:"Map and run",
+              body:"Map your columns, pick a horizon, and let the model forecast.",
             },
             {
-              n: "03",
-              title: "Act with confidence",
-              body: "Read the recommended model, the uncertainty range, and the business story.",
+              n:"03",
+              title:"Act with confidence",
+              body:"Read the recommended model, the uncertainty range, and the business story.",
             },
           ].map((step) => (
             <li key={step.n} className="border-l-2 border-accent/50 pl-4">

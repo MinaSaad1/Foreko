@@ -6,7 +6,7 @@
  *   4.8 to 6.0s: confidence band fades in, holds, then loop restarts
  *
  * All CSS is inlined so the component stays self-contained. The
- * prefers-reduced-motion media query falls back to a static "final frame"
+ * prefers-reduced-motion media query falls back to a static"final frame"
  * so users with that setting see the outcome without animation.
  */
 

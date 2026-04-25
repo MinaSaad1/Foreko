@@ -1,9 +1,9 @@
-import { useRef } from "react";
-import ReactECharts from "echarts-for-react";
-import { useChartExport } from "@/hooks/useChartExport";
-import { ExportChartButton } from "@/components/common/ExportChartButton";
-import { useChartTheme } from "@/charts/theme";
-import type { FactorAnalysisResponse } from "@/types/factors";
+import { useRef } from"react";
+import ReactECharts from"echarts-for-react";
+import { useChartExport } from"@/hooks/useChartExport";
+import { ExportChartButton } from"@/components/common/ExportChartButton";
+import { useChartTheme } from"@/charts/theme";
+import type { FactorAnalysisResponse } from"@/types/factors";
 
 interface FactorComparisonChartProps {
   data: FactorAnalysisResponse;
@@ -27,7 +27,7 @@ export function FactorComparisonChart({
   };
   const chartRef = useRef<ReactECharts>(null);
   const { export: exportChart } = useChartExport(chartRef, {
-    filename: "factor-comparison",
+    filename:"factor-comparison",
   });
 
   const {
@@ -56,21 +56,21 @@ export function FactorComparisonChart({
 
   const series: object[] = [
     {
-      name: "Historical",
-      type: "line",
+      name:"Historical",
+      type:"line",
       data: histSeries,
       lineStyle: { color: COLORS.history, width: 2 },
       itemStyle: { color: COLORS.history },
-      symbol: "none",
+      symbol:"none",
       z: 2,
     },
     {
-      name: "With factors",
-      type: "line",
+      name:"With factors",
+      type:"line",
       data: factorsSeries,
       lineStyle: { color: COLORS.factors, width: 2 },
       itemStyle: { color: COLORS.factors },
-      symbol: "none",
+      symbol:"none",
       z: 4,
     },
   ];
@@ -78,23 +78,23 @@ export function FactorComparisonChart({
   if (showBand) {
     series.push(
       {
-        name: "P90",
-        type: "line",
+        name:"P90",
+        type:"line",
         data: p90Series,
-        lineStyle: { color: "transparent" },
-        areaStyle: { color: COLORS.band, origin: "auto" },
-        stack: "confidence",
-        symbol: "none",
+        lineStyle: { color:"transparent" },
+        areaStyle: { color: COLORS.band, origin:"auto" },
+        stack:"confidence",
+        symbol:"none",
         z: 1,
       },
       {
-        name: "P10",
-        type: "line",
+        name:"P10",
+        type:"line",
         data: p10Series,
-        lineStyle: { color: "transparent" },
-        areaStyle: { color: "transparent", origin: "auto" },
-        stack: "confidence",
-        symbol: "none",
+        lineStyle: { color:"transparent" },
+        areaStyle: { color:"transparent", origin:"auto" },
+        stack:"confidence",
+        symbol:"none",
         z: 1,
       },
     );
@@ -102,12 +102,12 @@ export function FactorComparisonChart({
 
   if (showBaseline) {
     series.push({
-      name: "Baseline (no factors)",
-      type: "line",
+      name:"Baseline (no factors)",
+      type:"line",
       data: baselineSeries,
-      lineStyle: { color: COLORS.baseline, width: 1.5, type: "dashed" },
+      lineStyle: { color: COLORS.baseline, width: 1.5, type:"dashed" },
       itemStyle: { color: COLORS.baseline },
-      symbol: "none",
+      symbol:"none",
       z: 3,
     });
   }
@@ -124,16 +124,16 @@ export function FactorComparisonChart({
     : 0;
 
   const option = {
-    backgroundColor: "transparent",
+    backgroundColor:"transparent",
     grid: { left: 56, right: 24, top: 24, bottom: 68, containLabel: false },
     xAxis: {
-      type: "category",
+      type:"category",
       data: allDates,
       axisLine: { lineStyle: { color: COLORS.grid } },
       axisTick: { show: false },
       axisLabel: {
         color: COLORS.axisLabel,
-        fontFamily: "JetBrains Mono",
+        fontFamily:"JetBrains Mono",
         fontSize: 11,
         rotate: 30,
         formatter: (v: string) => v.slice(0, 7),
@@ -141,15 +141,15 @@ export function FactorComparisonChart({
       splitLine: { show: false },
     },
     yAxis: {
-      type: "value",
+      type:"value",
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: COLORS.axisLabel, fontFamily: "JetBrains Mono", fontSize: 11 },
+      axisLabel: { color: COLORS.axisLabel, fontFamily:"JetBrains Mono", fontSize: 11 },
       splitLine: { lineStyle: { color: COLORS.grid } },
     },
     dataZoom: [
       {
-        type: "inside",
+        type:"inside",
         xAxisIndex: 0,
         start: startPct,
         end: 100,
@@ -158,14 +158,14 @@ export function FactorComparisonChart({
         moveOnMouseWheel: false,
       },
       {
-        type: "slider",
+        type:"slider",
         xAxisIndex: 0,
         start: startPct,
         end: 100,
         height: 18,
         bottom: 8,
         borderColor: COLORS.grid,
-        backgroundColor: "transparent",
+        backgroundColor:"transparent",
         fillerColor: t.band,
         handleStyle: { color: t.accent, borderColor: t.accent },
         moveHandleStyle: { color: t.grid },
@@ -177,36 +177,34 @@ export function FactorComparisonChart({
           lineStyle: { color: t.accent, width: 1 },
           areaStyle: { color: t.accentDim },
         },
-        textStyle: { color: COLORS.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
-        labelFormatter: (_v: number, s: string) => (s ? s.slice(0, 7) : ""),
+        textStyle: { color: COLORS.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
+        labelFormatter: (_v: number, s: string) => (s ? s.slice(0, 7) :""),
       },
       {
-        type: "inside",
+        type:"inside",
         yAxisIndex: 0,
-        zoomOnMouseWheel: "shift",
+        zoomOnMouseWheel:"shift",
         moveOnMouseMove: false,
         moveOnMouseWheel: false,
       },
     ],
     tooltip: {
-      trigger: "axis",
+      trigger:"axis",
       backgroundColor: t.bgElevated,
       borderColor: t.grid,
-      textStyle: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 12 },
+      textStyle: { color: t.textPrimary, fontFamily:"JetBrains Mono", fontSize: 12 },
       formatter: (params: { seriesName: string; data: [string, number] }[]) => {
         return params
-          .filter((p) => !["P90", "P10"].includes(p.seriesName))
+          .filter((p) => !["P90","P10"].includes(p.seriesName))
           .map((p) => `${p.seriesName}: ${p.data[1].toLocaleString()}`)
           .join("<br/>");
       },
     },
     legend: {
-      data: [
-        "Historical",
-        "With factors",
+      data: ["Historical","With factors",
         ...(showBaseline ? ["Baseline (no factors)"] : []),
       ],
-      textStyle: { color: t.textSecondary, fontFamily: "JetBrains Mono", fontSize: 11 },
+      textStyle: { color: t.textSecondary, fontFamily:"JetBrains Mono", fontSize: 11 },
       itemWidth: 16,
       itemHeight: 2,
       right: 16,
@@ -222,8 +220,8 @@ export function FactorComparisonChart({
       <ReactECharts
         ref={chartRef}
         option={{ ...option, series }}
-        style={{ height: 400, width: "100%" }}
-        opts={{ renderer: "canvas" }}
+        style={{ height: 400, width:"100%" }}
+        opts={{ renderer:"canvas" }}
         notMerge
       />
       <p className="px-1 font-mono text-xs uppercase tracking-widest text-text-muted">

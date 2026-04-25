@@ -2,7 +2,7 @@ interface SkeletonProps {
   className?: string;
 }
 
-export function Skeleton({ className = "" }: SkeletonProps) {
+export function Skeleton({ className ="" }: SkeletonProps) {
   return (
     <div 
       className={`animate-pulse-slow rounded bg-gradient-to-r from-bg-elevated to-bg-surface bg-[length:200%_200%] animate-border-flow relative overflow-hidden ring-1 ring-border/50 ${className}`}

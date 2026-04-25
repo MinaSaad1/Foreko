@@ -1,22 +1,22 @@
-import { Fragment, useCallback, useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { api } from "@/api/endpoints";
-import { useDatasetStore } from "@/stores/datasetStore";
-import { DataSourceSelector } from "@/components/DataSourceSelector";
-import { SamplesPicker } from "@/components/SamplesPicker";
-import { PageIntro } from "@/components/common/PageIntro";
-import type { DatasetSummary, DatasetPreview } from "@/types/dataset";
+import { Fragment, useCallback, useEffect, useState } from"react";
+import { useMutation, useQuery, useQueryClient } from"@tanstack/react-query";
+import { useNavigate } from"react-router-dom";
+import { toast } from"sonner";
+import { api } from"@/api/endpoints";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { DataSourceSelector } from"@/components/DataSourceSelector";
+import { SamplesPicker } from"@/components/SamplesPicker";
+import { PageIntro } from"@/components/common/PageIntro";
+import type { DatasetSummary, DatasetPreview } from"@/types/dataset";
 
-const ADD_PANEL_STORAGE_KEY = "foresee:dataPanelOpen";
+const ADD_PANEL_STORAGE_KEY ="foresee:dataPanelOpen";
 
 function readAddPanelOpen(hasDatasets: boolean | null): boolean {
-  if (typeof window === "undefined") return !hasDatasets;
+  if (typeof window ==="undefined") return !hasDatasets;
   try {
     const raw = window.localStorage.getItem(ADD_PANEL_STORAGE_KEY);
-    if (raw === "1") return true;
-    if (raw === "0") return false;
+    if (raw ==="1") return true;
+    if (raw ==="0") return false;
   } catch {
     // ignore
   }
@@ -48,7 +48,7 @@ export function DataPage() {
     if (datasets === undefined) return;
     try {
       const raw = window.localStorage.getItem(ADD_PANEL_STORAGE_KEY);
-      if (raw !== "0" && raw !== "1") {
+      if (raw !=="0" && raw !=="1") {
         setAddOpen(!hasDatasets);
       }
     } catch {
@@ -60,7 +60,7 @@ export function DataPage() {
     setAddOpen((v) => {
       const next = !v;
       try {
-        window.localStorage.setItem(ADD_PANEL_STORAGE_KEY, next ? "1" : "0");
+        window.localStorage.setItem(ADD_PANEL_STORAGE_KEY, next ?"1" :"0");
       } catch {
         // ignore
       }
@@ -140,7 +140,7 @@ export function DataPage() {
             </p>
           </div>
           <div className="border border-border bg-bg-surface overflow-hidden">
-            <table className="w-full table-fixed text-sm">
+            <table className="terminal-table">
               <colgroup>
                 <col className="w-[28%]" />
                 <col className="w-[10%]" />
@@ -148,12 +148,12 @@ export function DataPage() {
                 <col className="w-[22%]" />
                 <col className="w-[30%]" />
               </colgroup>
-              <thead className="border-b border-border-strong bg-bg-elevated">
+              <thead className="border-border-strong bg-bg-elevated">
                 <tr>
-                  {["Filename", "Rows", "Size", "Uploaded", ""].map((h, i) => (
+                  {["Filename","Rows","Size","Uploaded",""].map((h, i) => (
                     <th
                       key={i}
-                      className="px-4 py-3 text-left font-mono text-xs uppercase tracking-widest text-text-muted"
+                      className="px-4 py-3 text-left font-mono text-xs uppercase tracking-widest"
                     >
                       {h}
                     </th>
@@ -165,34 +165,34 @@ export function DataPage() {
                   <Fragment key={d.id}>
                     <tr className="border-b border-border/40 last:border-0 hover:bg-accent/10 transition-colors group">
                       <td
-                        className="px-4 py-3 font-medium text-text-primary group-hover:text-accent transition-colors truncate"
+                        className="px-4 py-3 font-medium group-hover:text-accent transition-colors truncate"
                         title={d.filename}
                       >
                         {d.filename}
                       </td>
-                      <td className="px-4 py-3 text-text-secondary">
+                      <td className="px-4 text-text-secondary">
                         {d.row_count.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-text-secondary">
+                      <td className="px-4 text-text-secondary">
                         {(d.size_bytes / 1024).toFixed(1)} KB
                       </td>
                       <td
-                        className="px-4 py-3 text-text-muted text-xs uppercase whitespace-nowrap truncate"
+                        className="px-4 py-3 text-text-muted text-xs whitespace-nowrap truncate"
                         title={new Date(d.uploaded_at).toLocaleString()}
                       >
                         {new Date(d.uploaded_at).toLocaleString()}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4">
                         <div className="flex gap-3 justify-end opacity-60 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => handleExpand(d.id)}
                             className={`group/btn border bg-transparent px-3 py-1 font-mono text-xs uppercase tracking-widest transition-all flex items-center justify-center min-w-[70px] ${
                               expandedId === d.id
-                                ? "border-accent text-accent"
-                                : "border-text-muted/40 text-text-secondary hover:border-text-primary hover:text-text-primary"
+                                ?"border-accent text-accent"
+                                :"border-text-muted/40 text-text-secondary hover:border-text-primary hover:text-text-primary"
                             }`}
                           >
-                            VIEW{" "}
+                            VIEW{""}
                             <span className="opacity-0 group-hover/btn:opacity-100 absolute right-1">
                               ▌
                             </span>
@@ -201,7 +201,7 @@ export function DataPage() {
                             onClick={() => handleUse(d)}
                             className="group/btn border border-accent/40 bg-transparent px-3 py-1 font-mono text-xs uppercase tracking-widest text-accent transition-all hover:bg-accent hover:text-on-accent flex items-center justify-center min-w-[70px]"
                           >
-                            USE{" "}
+                            USE{""}
                             <span className="opacity-0 group-hover/btn:opacity-100 absolute right-1">
                               ▌
                             </span>
@@ -212,7 +212,7 @@ export function DataPage() {
                             }}
                             className="group/btn border border-anomaly/40 bg-transparent px-3 py-1 font-mono text-xs uppercase tracking-widest text-anomaly transition-all hover:bg-anomaly hover:text-on-accent flex items-center justify-center min-w-[70px]"
                           >
-                            DEL{" "}
+                            DEL{""}
                             <span className="opacity-0 group-hover/btn:opacity-100 absolute right-1">
                               ▌
                             </span>
@@ -229,13 +229,13 @@ export function DataPage() {
                             </div>
                           ) : previews[d.id] ? (
                             <div className="overflow-auto border border-border/50 bg-bg-surface/80 max-h-64 shadow-[inset_0_4px_16px_rgb(var(--color-text-primary)/0.08)]">
-                              <table className="min-w-full text-xs font-mono text-left whitespace-nowrap">
-                                <thead className="bg-bg-elevated border-b border-border/80 text-text-secondary sticky top-0 z-10 shadow-sm">
+                              <table className="terminal-table">
+                                <thead className="bg-bg-elevated border-border/80 text-text-secondary sticky top-0 z-10 shadow-sm">
                                   <tr>
                                     {previews[d.id].columns.map((c) => (
                                       <th
                                         key={c.name}
-                                        className="px-4 py-2 font-medium tracking-wide"
+                                        className="px-4 font-medium tracking-wide"
                                       >
                                         {c.name}
                                         <span className="ml-2 text-accent/50 text-xs uppercase tracking-widest">
@@ -254,10 +254,10 @@ export function DataPage() {
                                       {previews[d.id].columns.map((c) => (
                                         <td
                                           key={c.name}
-                                          className="px-4 py-1.5 text-text-primary"
+                                          className="px-4 py-1.5"
                                           title={String(row[c.name])}
                                         >
-                                          {String(row[c.name] ?? "null")}
+                                          {String(row[c.name] ??"null")}
                                         </td>
                                       ))}
                                     </tr>
@@ -289,17 +289,17 @@ export function DataPage() {
       >
         <header className="flex items-center justify-between gap-3 px-5 py-4">
           <h2 className="font-display text-sm font-medium text-text-primary uppercase tracking-widest">
-            {hasDatasets ? "Add new data" : "Add data to get started"}
+            {hasDatasets ?"Add new data" :"Add data to get started"}
           </h2>
           <button
             type="button"
             onClick={toggleAddOpen}
             aria-expanded={addOpen}
             aria-controls="data-add-panel"
-            aria-label={addOpen ? "Hide add-data panel" : "Show add-data panel"}
+            aria-label={addOpen ?"Hide add-data panel" :"Show add-data panel"}
             className="inline-flex h-6 w-6 items-center justify-center border border-border/60 font-mono text-[10px] text-text-muted hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
           >
-            {addOpen ? "–" : "+"}
+            {addOpen ?"–" :"+"}
           </button>
         </header>
         {addOpen && (
@@ -339,7 +339,7 @@ export function DataPage() {
               <li>• One row per time period (day, week, month).</li>
               <li>
                 • A column that parses as a date (
-                <code className="font-mono text-text-primary">2024-01-15</code>,{" "}
+                <code className="font-mono text-text-primary">2024-01-15</code>,{""}
                 <code className="font-mono text-text-primary">Jan 2024</code>, or Year + Month
                 columns).
               </li>

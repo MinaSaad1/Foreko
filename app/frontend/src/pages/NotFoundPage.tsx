@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { useDocumentTitle } from "@/utils/useDocumentTitle";
+import { Link } from"react-router-dom";
+import { useDocumentTitle } from"@/utils/useDocumentTitle";
 
 export function NotFoundPage() {
   useDocumentTitle("Page not found");
@@ -19,7 +19,7 @@ export function NotFoundPage() {
       <div className="flex flex-wrap gap-3 pt-2">
         <Link
           to="/"
-          className="border border-accent bg-accent px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-on-accent hover:opacity-90"
+          className="btn-terminal-primary"
         >
           Back to home
         </Link>

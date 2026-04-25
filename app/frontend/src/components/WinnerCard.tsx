@@ -1,10 +1,10 @@
-import { useState, type Ref } from "react";
-import type { ComparisonResponse, ModelName } from "@/types/comparison";
-import { MetricBadge, ConfidencePill } from "./MetricBadge";
-import { FeatureImportance } from "./FeatureImportance";
-import { ComparisonChart, type ComparisonChartHandle } from "./ComparisonChart";
+import { useState, type Ref } from"react";
+import type { ComparisonResponse, ModelName } from"@/types/comparison";
+import { MetricBadge, ConfidencePill } from"./MetricBadge";
+import { FeatureImportance } from"./FeatureImportance";
+import { ComparisonChart, type ComparisonChartHandle } from"./ComparisonChart";
 
-export type RecommendationSource = "holdout" | "backtest";
+export type RecommendationSource ="holdout" |"backtest";
 
 interface WinnerCardProps {
   data: ComparisonResponse;
@@ -18,7 +18,7 @@ export function WinnerCard({
   data,
   onSelectionChange,
   chartRef,
-  recommendationSource = "holdout",
+  recommendationSource ="holdout",
   recommendationNote,
 }: WinnerCardProps) {
   const [selected, setSelected] = useState<ModelName>(data.winner.name);
@@ -28,10 +28,10 @@ export function WinnerCard({
   const alternative = data.alternative;
 
   // Numbers, chart, and feature importance follow `active` (the viewed model);
-  // the "Recommended" header always points to the winner.
+  // the"Recommended" header always points to the winner.
   const viewingWinner = selected === winner.name;
   const active = viewingWinner ? winner : alternative;
-  const activeKey: "winner" | "alternative" = viewingWinner ? "winner" : "alternative";
+  const activeKey:"winner" |"alternative" = viewingWinner ?"winner" :"alternative";
 
   const handleSelect = (name: ModelName) => {
     setSelected(name);
@@ -57,10 +57,10 @@ export function WinnerCard({
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-accent-2 text-sm">
             <span>
-              ★{" "}
-              {recommendationSource === "backtest"
-                ? "Recommended (backtest winner):"
-                : "Best on most recent window:"}
+              ★{""}
+              {recommendationSource ==="backtest"
+                ?"Recommended (backtest winner):"
+                :"Best on most recent window:"}
             </span>
             <span className="font-semibold">{winner.display_name}</span>
           </div>
@@ -69,7 +69,7 @@ export function WinnerCard({
               Viewing: {active.display_name}
             </h2>
             {!viewingWinner && (
-              <span className="rounded-md border border-neutral/40 bg-neutral/10 px-2 py-0.5 font-mono text-xs uppercase tracking-widest text-neutral">
+              <span className="border border-neutral/40 bg-neutral/10 px-2 py-0.5 font-mono text-xs uppercase tracking-widest text-neutral">
                 Alternative
               </span>
             )}
@@ -104,7 +104,7 @@ export function WinnerCard({
       </button>
 
       {/* Winner explanation, constant */}
-      <p className="rounded-md border border-border bg-bg-elevated px-4 py-3 text-sm text-text-secondary">
+      <p className="border border-border bg-bg-elevated px-4 py-3 text-sm text-text-secondary">
         {recommendationNote ?? data.winner_explanation}
       </p>
 
@@ -123,19 +123,19 @@ export function WinnerCard({
             onClick={() => handleSelect(winner.name)}
             className={`flex-1 border px-4 py-2 font-mono text-xs tracking-widest uppercase transition-colors flex items-center justify-center gap-2 ${
               selected === winner.name
-                ? "border-accent bg-accent text-on-accent"
-                : "border-border text-text-secondary hover:border-accent/40 hover:text-accent"
+                ?"border-accent bg-accent text-on-accent"
+                :"border-border text-text-secondary hover:border-accent/40 hover:text-accent"
             }`}
           >
             {selected === winner.name ? `[✓] ${winner.display_name}` : `[ ] ${winner.display_name}`}
-            <span className={`${selected === winner.name ? "text-bg-elevated" : "text-accent/60"}`}>★</span>
+            <span className={`${selected === winner.name ?"text-bg-elevated" :"text-accent/60"}`}>★</span>
           </button>
           <button
             onClick={() => handleSelect(alternative.name)}
             className={`flex-1 border px-4 py-2 font-mono text-xs tracking-widest uppercase transition-colors flex items-center justify-center gap-2 ${
               selected === alternative.name
-                ? "border-neutral bg-neutral text-on-accent"
-                : "border-border text-text-secondary hover:border-neutral/40 hover:text-neutral"
+                ?"border-neutral bg-neutral text-on-accent"
+                :"border-border text-text-secondary hover:border-neutral/40 hover:text-neutral"
             }`}
           >
             {selected === alternative.name ? `[✓] ${alternative.display_name}` : `[ ] ${alternative.display_name}`}
@@ -146,7 +146,7 @@ export function WinnerCard({
       {/* Error rate detail, constant */}
       <p className="text-xs text-text-muted font-mono">
         {winner.display_name} error rate: {fmtPct(winner.mape)} on holdout period
-        {" · "}
+        {" ·"}
         {alternative.display_name}: {fmtPct(alternative.mape)}
       </p>
       </div>

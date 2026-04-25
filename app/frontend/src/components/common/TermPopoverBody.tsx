@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { TERMS, type TermDefinition } from "@/data/termDictionary";
+import { Link } from"react-router-dom";
+import { TERMS, type TermDefinition } from"@/data/termDictionary";
 
 interface TermPopoverBodyProps {
   term: TermDefinition;
@@ -15,7 +15,7 @@ export function TermPopoverBody({ term }: TermPopoverBodyProps) {
       <div className="flex items-baseline justify-between gap-2">
         <p className="font-display text-sm font-medium text-text-primary">{term.label}</p>
         <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
-          {term.category.replace("-", " ")}
+          {term.category.replace("-","")}
         </span>
       </div>
       <p className="text-xs leading-relaxed text-text-secondary">{term.shortDefinition}</p>
