@@ -1,15 +1,11 @@
 import { Link } from"react-router-dom";
-import { TERMS, type TermDefinition } from"@/data/termDictionary";
+import type { TermDefinition } from"@/data/termDictionary";
 
 interface TermPopoverBodyProps {
   term: TermDefinition;
 }
 
 export function TermPopoverBody({ term }: TermPopoverBodyProps) {
-  const related = (term.relatedTerms ?? [])
-    .map((k) => TERMS[k])
-    .filter((t): t is TermDefinition => !!t);
-
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-2">
@@ -27,19 +23,6 @@ export function TermPopoverBody({ term }: TermPopoverBodyProps) {
       </div>
       {term.example && (
         <p className="text-[11px] italic text-text-muted">{term.example}</p>
-      )}
-      {related.length > 0 && (
-        <div className="flex flex-wrap gap-1 pt-1">
-          {related.map((r) => (
-            <Link
-              key={r.key}
-              to={`/glossary#term-${r.key}`}
-              className="border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-text-secondary hover:border-accent hover:text-accent"
-            >
-              {r.label}
-            </Link>
-          ))}
-        </div>
       )}
       <Link
         to={`/glossary#term-${term.key}`}

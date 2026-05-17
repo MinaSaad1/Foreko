@@ -1,6 +1,6 @@
 """Live-Postgres integration tests for the SQL loader.
 
-Skipped unless ``FORESEE_TEST_POSTGRES_*`` env vars are set. See
+Skipped unless ``FOREKO_TEST_POSTGRES_*`` env vars are set. See
 ``tests/integration/conftest.py`` for the full env-var contract.
 
 Each test seeds and drops its own uuid-suffixed table so reruns and parallel
@@ -20,14 +20,14 @@ pytest.importorskip("psycopg")
 
 from sqlalchemy import text
 
-from timesfm_studio.services import dataset_store
-from timesfm_studio.services.loaders.sql import (
+from foreko.services import dataset_store
+from foreko.services.loaders.sql import (
     SqlLoader,
     build_engine,
     list_tables,
     materialize,
 )
-from timesfm_studio.services.loaders.sql import (
+from foreko.services.loaders.sql import (
     test_connection as run_connection_test,
 )
 

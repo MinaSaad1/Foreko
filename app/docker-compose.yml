@@ -1,5 +1,5 @@
 services:
-  timesfm-studio:
+  foreko:
     build:
       context: ..
       dockerfile: app/Dockerfile

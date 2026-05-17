@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from timesfm_studio.schemas.dataset import ColumnMapping, DateParts
-from timesfm_studio.services import csv_loader
+from foreko.schemas.dataset import ColumnMapping, DateParts
+from foreko.services import csv_loader
 
 
 @pytest.mark.unit

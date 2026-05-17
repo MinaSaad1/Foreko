@@ -192,7 +192,7 @@ svg .animate-wobble {
   /* Blinking cursor micro-animation on hover */
   .btn-terminal::after {
     content: "_";
-    @apply absolute right-3 opacity-0 text-accent font-mono animate-cursor-blink transition-opacity duration-300;
+    @apply opacity-0 text-accent font-mono animate-cursor-blink transition-opacity duration-300;
   }
 
   .btn-terminal:hover:not(:disabled)::after {

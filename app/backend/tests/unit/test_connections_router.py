@@ -35,7 +35,7 @@ def memory_keyring(monkeypatch):
             self._store.pop((service, username), None)
 
     monkeypatch.setattr(keyring, "get_keyring", lambda: MemoryKeyring())
-    from timesfm_studio.services import secrets as s
+    from foreko.services import secrets as s
     s._keyring_module.cache_clear()
 
 

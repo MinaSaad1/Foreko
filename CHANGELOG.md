@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Foresee are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to semantic versioning.
+All notable changes to Foreko are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to semantic versioning.
 
 ## [Unreleased]
 
@@ -26,11 +26,11 @@ All notable changes to Foresee are documented here. Format follows [Keep a Chang
 
 ### Changed
 - `LoadingSplash` no longer re-blocks the app after the model has once been ready in the session. Mid-session reloads (via `/model/retry`) surface through the header `ModelStatusBar` instead of a full-screen takeover. Cold-start and error states still block.
-- Default dataset retention raised from 24 hours to 30 days (`TIMESFM_STUDIO_DATASET_TTL_HOURS`, default 720). Surfaced on the Datasets and Privacy pages.
-- Privacy page rewritten with a complete inventory of what Foresee writes to `~/.timesfm_studio/`.
+- Default dataset retention raised from 24 hours to 30 days (`FOREKO_DATASET_TTL_HOURS`, default 720). Surfaced on the Datasets and Privacy pages.
+- Privacy page rewritten with a complete inventory of what Foreko writes to `~/.foreko/`.
 - Forecast actions on Forecast, Backtest, Anomaly, Scenarios, Covariates, Diagnostics, and Segments pages are disabled while the model is still loading, with inline copy explaining why.
 - Removed em dashes from all user-facing copy.
-- README and Privacy page corrected to point at `~/.timesfm_studio/models/` (not `~/.cache/huggingface/hub/`).
+- README and Privacy page corrected to point at `~/.foreko/models/` (not `~/.cache/huggingface/hub/`).
 
 ### Fixed
 - `LoadingSplash` is now rendered globally from `App.tsx`; previously it was imported nowhere, so first-run users saw no feedback while the 1.2 GB model downloaded.

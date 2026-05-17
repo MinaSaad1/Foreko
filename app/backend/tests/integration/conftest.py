@@ -1,24 +1,24 @@
 """Shared helpers for live-database integration tests.
 
-These tests are skipped unless the corresponding ``FORESEE_TEST_*`` env vars
+These tests are skipped unless the corresponding ``FOREKO_TEST_*`` env vars
 are set. Each dialect uses five vars so they map cleanly onto the Connection
 schema (no URL parsing required):
 
-    FORESEE_TEST_POSTGRES_HOST
-    FORESEE_TEST_POSTGRES_PORT
-    FORESEE_TEST_POSTGRES_DATABASE
-    FORESEE_TEST_POSTGRES_USERNAME
-    FORESEE_TEST_POSTGRES_PASSWORD
+    FOREKO_TEST_POSTGRES_HOST
+    FOREKO_TEST_POSTGRES_PORT
+    FOREKO_TEST_POSTGRES_DATABASE
+    FOREKO_TEST_POSTGRES_USERNAME
+    FOREKO_TEST_POSTGRES_PASSWORD
 
 Same prefix pattern for ``MYSQL`` and ``MSSQL``.
 
 A typical local invocation looks like::
 
-    FORESEE_TEST_POSTGRES_HOST=localhost \
-    FORESEE_TEST_POSTGRES_PORT=5432 \
-    FORESEE_TEST_POSTGRES_DATABASE=foresee_test \
-    FORESEE_TEST_POSTGRES_USERNAME=foresee \
-    FORESEE_TEST_POSTGRES_PASSWORD=secret \
+    FOREKO_TEST_POSTGRES_HOST=localhost \
+    FOREKO_TEST_POSTGRES_PORT=5432 \
+    FOREKO_TEST_POSTGRES_DATABASE=foreko_test \
+    FOREKO_TEST_POSTGRES_USERNAME=foreko \
+    FOREKO_TEST_POSTGRES_PASSWORD=secret \
     pytest app/backend/tests/integration -m integration
 
 Each test seeds and drops its own table (uuid-suffixed name) so concurrent
@@ -33,7 +33,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from timesfm_studio.schemas.connection import Connection, Dialect
+from foreko.schemas.connection import Connection, Dialect
 
 
 @dataclass(frozen=True)
@@ -66,15 +66,15 @@ def _env(name: str) -> str | None:
 
 
 def _resolve(prefix: str, dialect: Dialect, default_port: int) -> LiveDbConfig | None:
-    """Pull the five ``FORESEE_TEST_<PREFIX>_*`` vars or return None."""
+    """Pull the five ``FOREKO_TEST_<PREFIX>_*`` vars or return None."""
 
-    host = _env(f"FORESEE_TEST_{prefix}_HOST")
-    database = _env(f"FORESEE_TEST_{prefix}_DATABASE")
-    username = _env(f"FORESEE_TEST_{prefix}_USERNAME")
-    password = _env(f"FORESEE_TEST_{prefix}_PASSWORD")
+    host = _env(f"FOREKO_TEST_{prefix}_HOST")
+    database = _env(f"FOREKO_TEST_{prefix}_DATABASE")
+    username = _env(f"FOREKO_TEST_{prefix}_USERNAME")
+    password = _env(f"FOREKO_TEST_{prefix}_PASSWORD")
     if not (host and database and username and password is not None):
         return None
-    port_raw = _env(f"FORESEE_TEST_{prefix}_PORT")
+    port_raw = _env(f"FOREKO_TEST_{prefix}_PORT")
     port = int(port_raw) if port_raw else default_port
     return LiveDbConfig(
         dialect=dialect,
@@ -90,7 +90,7 @@ def _resolve(prefix: str, dialect: Dialect, default_port: int) -> LiveDbConfig |
 def postgres_config() -> LiveDbConfig:
     cfg = _resolve("POSTGRES", "postgresql", 5432)
     if cfg is None:
-        pytest.skip("FORESEE_TEST_POSTGRES_* env vars not set")
+        pytest.skip("FOREKO_TEST_POSTGRES_* env vars not set")
     return cfg
 
 
@@ -98,7 +98,7 @@ def postgres_config() -> LiveDbConfig:
 def mysql_config() -> LiveDbConfig:
     cfg = _resolve("MYSQL", "mysql", 3306)
     if cfg is None:
-        pytest.skip("FORESEE_TEST_MYSQL_* env vars not set")
+        pytest.skip("FOREKO_TEST_MYSQL_* env vars not set")
     return cfg
 
 
@@ -106,11 +106,11 @@ def mysql_config() -> LiveDbConfig:
 def mssql_config() -> LiveDbConfig:
     cfg = _resolve("MSSQL", "mssql", 1433)
     if cfg is None:
-        pytest.skip("FORESEE_TEST_MSSQL_* env vars not set")
+        pytest.skip("FOREKO_TEST_MSSQL_* env vars not set")
     return cfg
 
 
-def unique_table_name(prefix: str = "foresee_itest") -> str:
+def unique_table_name(prefix: str = "foreko_itest") -> str:
     """Per-test table name so parallel runs don't clobber each other."""
 
     return f"{prefix}_{uuid.uuid4().hex[:10]}"

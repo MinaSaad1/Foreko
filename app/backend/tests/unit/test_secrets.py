@@ -37,7 +37,7 @@ def memory_keyring(monkeypatch):
     monkeypatch.setattr(keyring, "get_keyring", lambda: backend)
 
     # Reset the module-level lru_cache on _keyring_module so it re-imports fresh.
-    from timesfm_studio.services import secrets as s
+    from foreko.services import secrets as s
     s._keyring_module.cache_clear()
     return backend
 
@@ -50,13 +50,13 @@ def fail_keyring(monkeypatch):
     from keyring.backends import fail as fail_backend  # type: ignore[import-not-found]
 
     monkeypatch.setattr(keyring, "get_keyring", lambda: fail_backend.Keyring())
-    from timesfm_studio.services import secrets as s
+    from foreko.services import secrets as s
     s._keyring_module.cache_clear()
 
 
 @pytest.mark.unit
 def test_store_and_get_roundtrip(memory_keyring) -> None:
-    from timesfm_studio.services import secrets
+    from foreko.services import secrets
 
     secrets.store_password("abc123", "alice", "hunter2")
     assert secrets.get_password("abc123", "alice") == "hunter2"
@@ -64,14 +64,14 @@ def test_store_and_get_roundtrip(memory_keyring) -> None:
 
 @pytest.mark.unit
 def test_service_name_prefix() -> None:
-    from timesfm_studio.services import secrets
+    from foreko.services import secrets
 
-    assert secrets.service_name("abc") == "foresee-connection-abc"
+    assert secrets.service_name("abc") == "foreko-connection-abc"
 
 
 @pytest.mark.unit
 def test_delete_is_idempotent(memory_keyring) -> None:
-    from timesfm_studio.services import secrets
+    from foreko.services import secrets
 
     # No entry yet -> must not raise.
     secrets.delete_password("nope", "nobody")
@@ -83,7 +83,7 @@ def test_delete_is_idempotent(memory_keyring) -> None:
 
 @pytest.mark.unit
 def test_is_available_true_for_memory_backend(memory_keyring) -> None:
-    from timesfm_studio.services import secrets
+    from foreko.services import secrets
 
     assert secrets.is_available() is True
     assert secrets.active_backend_name() is not None
@@ -91,7 +91,7 @@ def test_is_available_true_for_memory_backend(memory_keyring) -> None:
 
 @pytest.mark.unit
 def test_is_available_false_for_fail_backend(fail_keyring) -> None:
-    from timesfm_studio.services import secrets
+    from foreko.services import secrets
 
     assert secrets.is_available() is False
     assert secrets.active_backend_name() is None
@@ -99,7 +99,7 @@ def test_is_available_false_for_fail_backend(fail_keyring) -> None:
 
 @pytest.mark.unit
 def test_store_raises_when_backend_unavailable(fail_keyring) -> None:
-    from timesfm_studio.services import secrets
+    from foreko.services import secrets
 
     with pytest.raises(secrets.KeyringUnavailable):
         secrets.store_password("abc", "alice", "pw")
@@ -107,7 +107,7 @@ def test_store_raises_when_backend_unavailable(fail_keyring) -> None:
 
 @pytest.mark.unit
 def test_get_raises_when_backend_unavailable(fail_keyring) -> None:
-    from timesfm_studio.services import secrets
+    from foreko.services import secrets
 
     with pytest.raises(secrets.KeyringUnavailable):
         secrets.get_password("abc", "alice")
@@ -117,6 +117,6 @@ def test_get_raises_when_backend_unavailable(fail_keyring) -> None:
 def test_delete_is_noop_when_backend_unavailable(fail_keyring) -> None:
     """Delete on an unavailable backend shouldn't fail: it's cleanup work."""
 
-    from timesfm_studio.services import secrets
+    from foreko.services import secrets
 
     secrets.delete_password("abc", "alice")  # must not raise

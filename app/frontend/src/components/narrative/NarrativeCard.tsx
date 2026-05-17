@@ -2,7 +2,7 @@ import { useState } from"react";
 import { api } from"@/api/endpoints";
 import { friendlyError } from"@/utils/toast";
 
-const CONSENT_STORAGE_KEY ="foresee:llm-consent";
+const CONSENT_STORAGE_KEY ="foreko:llm-consent";
 
 function readConsent(): boolean {
   if (typeof window ==="undefined") return false;
@@ -66,7 +66,7 @@ export function NarrativeCard({ kind, payload }: Props) {
           Generate a plain-English narrative?
         </h3>
         <p className="text-xs leading-relaxed text-text-secondary">
-          This sends a JSON summary of your current forecast or analysis to the LLM configured by whoever runs Foresee. It may be an external service (OpenAI, Anthropic) or a local model. Raw CSV rows are not sent, only aggregated numbers and metadata.
+          This sends a JSON summary of your current forecast or analysis to the LLM configured by whoever runs Foreko. It may be an external service (OpenAI, Anthropic) or a local model. Raw CSV rows are not sent, only aggregated numbers and metadata.
         </p>
         <p className="text-xs text-text-muted">
           You can change this choice by clearing site data for this app.

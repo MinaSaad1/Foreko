@@ -19,7 +19,7 @@ export function CSVUpload({ onUploaded }: CSVUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const [retryable, setRetryable] = useState(false);
   const lastFileRef = useRef<File | null>(null);
-  const setPreview = useDatasetStore((s) => s.setPreview);
+  const setActiveDatasetId = useDatasetStore((s) => s.setActiveDatasetId);
 
   const attempt = useCallback(
     async (file: File) => {
@@ -28,7 +28,7 @@ export function CSVUpload({ onUploaded }: CSVUploadProps) {
       setRetryable(false);
       try {
         const preview = await api.uploadDataset(file);
-        setPreview(preview);
+        setActiveDatasetId(preview.id);
         onUploaded?.(preview);
       } catch (err) {
         setError(friendlyError(err));
@@ -37,7 +37,7 @@ export function CSVUpload({ onUploaded }: CSVUploadProps) {
         setUploading(false);
       }
     },
-    [onUploaded, setPreview],
+    [onUploaded, setActiveDatasetId],
   );
 
   const onDrop = useCallback(

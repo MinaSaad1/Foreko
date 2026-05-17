@@ -1,120 +1,44 @@
-import { useCallback, useMemo, useState } from"react";
-import { useParams } from"react-router-dom";
-import { useMutation, useQuery, useQueryClient } from"@tanstack/react-query";
-import { api } from"@/api/endpoints";
-import { useDatasetStore } from"@/stores/datasetStore";
-import { ColumnMapper } from"@/components/ColumnMapper";
-import ReactECharts from"echarts-for-react";
-import { useChartTheme } from"@/charts/theme";
-import { PageIntro } from"@/components/common/PageIntro";
-import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
-import { Term } from"@/components/common/Term";
-import { useSyncedDataset } from"@/hooks/useSyncedDataset";
-import { useHealth } from"@/hooks/useHealth";
-import type { ColumnInfo, ColumnMapping } from"@/types/dataset";
-import type { ScenarioRunResult, ScenarioCompareResult } from"@/types/phases";
-
-interface FactorOverride {
-  value: number;
-  rampTo?: number;
-  mode:"flat" |"ramp";
-}
+import { useMemo } from "react";
+import { useParams } from "react-router-dom";
+import { ColumnMapper } from "@/components/ColumnMapper";
+import ReactECharts from "echarts-for-react";
+import { useChartTheme } from "@/charts/theme";
+import { PageIntro } from "@/components/common/PageIntro";
+import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
+import { Term } from "@/components/common/Term";
+import { useSyncedDataset } from "@/hooks/useSyncedDataset";
+import { useHealth } from "@/hooks/useHealth";
+import { useScenariosOrchestrator } from "@/hooks/useScenariosOrchestrator";
+import type { ColumnInfo } from "@/types/dataset";
+import type { ScenarioRunResult, ScenarioCompareResult } from "@/types/phases";
 
 export function ScenariosPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
-  const queryClient = useQueryClient();
-  const storeMapping = useDatasetStore((s) => s.mapping);
-  const setStoreMapping = useDatasetStore((s) => s.setMapping);
-
-  const [mapping, setMapping] = useState<ColumnMapping | null>(storeMapping);
-  const [horizon, setHorizon] = useState(12);
-  const [numericFactors, setNumericFactors] = useState<string[]>([]);
-  const [overrides, setOverrides] = useState<Record<string, FactorOverride>>({});
-  const [counterfactuals, setCounterfactuals] = useState<string[]>([]);
-  const [label, setLabel] = useState("");
-  const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
-
   const { activeId, preview } = useSyncedDataset(datasetId);
   const { data: health } = useHealth();
-  const modelReady = health?.model_status ==="ready";
-  const { data: scenarios } = useQuery({
-    queryKey: ["scenarios", activeId],
-    queryFn: () => api.listScenarios(activeId!),
-    enabled: !!activeId,
-  });
+  const modelReady = health?.model_status === "ready";
 
-  const handleMappingChange = useCallback(
-    (m: ColumnMapping) => {
-      setMapping(m);
-      setStoreMapping(m);
-    },
-    [setStoreMapping],
-  );
-
-  const numericCols: ColumnInfo[] =
-    preview?.columns.filter((c) => c.dtype ==="numeric" && c.name !== mapping?.value_col) ?? [];
-
-  const runMutation = useMutation<ScenarioRunResult, Error>({
-    mutationFn: () => {
-      const future_numeric: Record<string, number[]> = {};
-      for (const f of numericFactors) {
-        const o = overrides[f];
-        if (!o) continue;
-        if (o.mode ==="flat") {
-          future_numeric[f] = new Array(horizon).fill(o.value);
-        } else {
-          const ramp = o.rampTo ?? o.value;
-          future_numeric[f] = Array.from({ length: horizon }, (_, i) =>
-            o.value + ((ramp - o.value) * i) / Math.max(horizon - 1, 1),
-          );
-        }
-      }
-      return api.runScenario({
-        dataset_id: activeId!,
-        mapping: mapping!,
-        horizon,
-        numeric_factors: numericFactors,
-        categorical_factors: [],
-        future_numeric,
-        future_categorical: {},
-        counterfactuals,
-        xreg_mode:"additive",
-      });
-    },
-  });
-
-  const saveMutation = useMutation({
-    mutationFn: () =>
-      api.saveScenario(label ||"Unnamed scenario", {
-        dataset_id: activeId!,
-        mapping: mapping!,
-        horizon,
-        numeric_factors: numericFactors,
-        categorical_factors: [],
-        future_numeric: Object.fromEntries(
-          Object.entries(overrides).map(([k, o]) => {
-            if (o.mode ==="flat") return [k, new Array(horizon).fill(o.value)];
-            const ramp = o.rampTo ?? o.value;
-            return [
-              k,
-              Array.from({ length: horizon }, (_, i) =>
-                o.value + ((ramp - o.value) * i) / Math.max(horizon - 1, 1),
-              ),
-            ];
-          }),
-        ),
-        counterfactuals,
-        xreg_mode:"additive",
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["scenarios", activeId] });
-      setLabel("");
-    },
-  });
-
-  const compareMutation = useMutation<ScenarioCompareResult, Error>({
-    mutationFn: () => api.compareScenarios(selectedForCompare),
-  });
+  const {
+    mapping,
+    handleMappingChange,
+    horizon,
+    setHorizon,
+    numericFactors,
+    setNumericFactors,
+    overrides,
+    setOverrides,
+    counterfactuals,
+    setCounterfactuals,
+    label,
+    setLabel,
+    selectedForCompare,
+    toggleSelectedForCompare,
+    listQuery,
+    runMutation,
+    saveMutation,
+    compareMutation,
+    deleteScenario,
+  } = useScenariosOrchestrator(activeId);
 
   if (!activeId) {
     return (
@@ -126,12 +50,17 @@ export function ScenariosPage() {
     );
   }
 
+  const numericCols: ColumnInfo[] =
+    preview?.columns.filter((c) => c.dtype === "numeric" && c.name !== mapping?.value_col) ?? [];
+
+  const scenarios = listQuery.data;
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="font-display text-2xl font-semibold text-text-primary">What-If Scenarios</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Set future <Term k="factor">factor</Term> values, save named{""}
+          Set future <Term k="factor">factor</Term> values, save named{" "}
           <Term k="scenarios">scenarios</Term>, and compare them side-by-side.
         </p>
       </div>
@@ -164,11 +93,11 @@ export function ScenariosPage() {
               {numericCols.map((c) => {
                 const active = numericFactors.includes(c.name);
                 const cfActive = counterfactuals.includes(c.name);
-                const override = overrides[c.name] ?? { value: 0, mode:"flat" as const };
+                const override = overrides[c.name] ?? { value: 0, mode: "flat" as const };
                 return (
                   <div
                     key={c.name}
-                    className={`border p-3 ${active ?"border-accent/40 bg-accent-dim/30" :"border-border"}`}
+                    className={`border p-3 ${active ? "border-accent/40 bg-accent-dim/30" : "border-border"}`}
                   >
                     <div className="flex items-center justify-between">
                       <label className="flex items-center gap-2 font-mono text-sm text-text-primary">
@@ -203,7 +132,7 @@ export function ScenariosPage() {
                           onChange={(e) =>
                             setOverrides((prev) => ({
                               ...prev,
-                              [c.name]: { ...(prev[c.name] ?? { value: 0, mode:"flat" }), mode: e.target.value as"flat" |"ramp" },
+                              [c.name]: { ...(prev[c.name] ?? { value: 0, mode: "flat" }), mode: e.target.value as "flat" | "ramp" },
                             }))
                           }
                           className="border border-border bg-bg-elevated px-2 py-1 text-xs text-text-primary"
@@ -217,20 +146,20 @@ export function ScenariosPage() {
                           onChange={(e) =>
                             setOverrides((prev) => ({
                               ...prev,
-                              [c.name]: { ...(prev[c.name] ?? { value: 0, mode:"flat" }), value: Number(e.target.value) },
+                              [c.name]: { ...(prev[c.name] ?? { value: 0, mode: "flat" }), value: Number(e.target.value) },
                             }))
                           }
                           className="w-28 border border-border bg-bg-elevated px-2 py-1 text-xs text-text-primary"
                           placeholder="start"
                         />
-                        {override.mode ==="ramp" && (
+                        {override.mode === "ramp" && (
                           <input
                             type="number"
                             value={override.rampTo ?? override.value}
                             onChange={(e) =>
                               setOverrides((prev) => ({
                                 ...prev,
-                                [c.name]: { ...(prev[c.name] ?? { value: 0, mode:"flat" }), rampTo: Number(e.target.value) },
+                                [c.name]: { ...(prev[c.name] ?? { value: 0, mode: "flat" }), rampTo: Number(e.target.value) },
                               }))
                             }
                             className="w-28 border border-border bg-bg-elevated px-2 py-1 text-xs text-text-primary"
@@ -252,7 +181,7 @@ export function ScenariosPage() {
             disabled={!mapping || runMutation.isPending || !modelReady}
             className="btn-terminal-primary"
           >
-            {runMutation.isPending ?"Running..." :"Run scenario"}
+            {runMutation.isPending ? "Running..." : "Run scenario"}
           </button>
           <input
             type="text"
@@ -300,20 +229,13 @@ export function ScenariosPage() {
                   <input
                     type="checkbox"
                     checked={selectedForCompare.includes(s.id)}
-                    onChange={() =>
-                      setSelectedForCompare((prev) =>
-                        prev.includes(s.id) ? prev.filter((x) => x !== s.id) : [...prev, s.id],
-                      )
-                    }
+                    onChange={() => toggleSelectedForCompare(s.id)}
                   />
                   <p className="font-mono text-sm text-text-primary">{s.label}</p>
                   <p className="font-mono text-xs text-text-muted">{s.created_at}</p>
                 </div>
                 <button
-                  onClick={async () => {
-                    await api.deleteScenario(s.id);
-                    queryClient.invalidateQueries({ queryKey: ["scenarios", activeId] });
-                  }}
+                  onClick={() => deleteScenario(s.id)}
                   className="font-mono text-xs text-text-muted hover:text-anomaly"
                 >
                   delete
@@ -336,28 +258,28 @@ function ScenarioResultChart({ data }: { data: ScenarioRunResult }) {
   const fcSeries = data.forecast.map((v, i) => [data.forecast_dates[i], v]);
   const option = useMemo(
     () => ({
-      backgroundColor:"transparent",
+      backgroundColor: "transparent",
       grid: { left: 56, right: 24, top: 24, bottom: 48, containLabel: false },
       xAxis: {
-        type:"category",
+        type: "category",
         data: allDates,
         axisLine: { lineStyle: { color: t.grid } },
-        axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10, rotate: 30, formatter: (v: string) => v.slice(0, 7) },
+        axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10, rotate: 30, formatter: (v: string) => v.slice(0, 7) },
       },
       yAxis: {
-        type:"value",
+        type: "value",
         axisLine: { show: false },
-        axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
+        axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
         splitLine: { lineStyle: { color: t.grid } },
       },
-      tooltip: { trigger:"axis" },
+      tooltip: { trigger: "axis" },
       dataZoom: [
-        { type:"inside", xAxisIndex: 0 },
-        { type:"slider", xAxisIndex: 0, height: 16, bottom: 8, handleStyle: { color: t.accent } },
+        { type: "inside", xAxisIndex: 0 },
+        { type: "slider", xAxisIndex: 0, height: 16, bottom: 8, handleStyle: { color: t.accent } },
       ],
       series: [
-        { name:"Historical", type:"line", data: histSeries, lineStyle: { color: t.historical, width: 2 }, symbol:"none" },
-        { name:"Scenario", type:"line", data: fcSeries, lineStyle: { color: t.accent, width: 2 }, symbol:"none" },
+        { name: "Historical", type: "line", data: histSeries, lineStyle: { color: t.historical, width: 2 }, symbol: "none" },
+        { name: "Scenario", type: "line", data: fcSeries, lineStyle: { color: t.accent, width: 2 }, symbol: "none" },
       ],
     }),
     [allDates, histSeries, fcSeries, t],
@@ -370,7 +292,7 @@ function ScenarioResultChart({ data }: { data: ScenarioRunResult }) {
         </h3>
         <p className="font-mono text-xs text-accent">Total: {data.total.toFixed(0)}</p>
       </div>
-      <ReactECharts option={option} style={{ height: 300, width:"100%" }} notMerge />
+      <ReactECharts option={option} style={{ height: 300, width: "100%" }} notMerge />
     </div>
   );
 }
@@ -385,19 +307,19 @@ function ScenarioCompareChart({ data }: { data: ScenarioCompareResult }) {
   ];
   const series = [
     {
-      name:"Historical",
-      type:"line",
+      name: "Historical",
+      type: "line",
       data: histSeries,
       lineStyle: { color: t.historical, width: 2 },
-      symbol:"none",
+      symbol: "none",
     },
     ...data.scenarios.map((s, i) => ({
       name: s.label,
-      type:"line",
+      type: "line",
       data: s.forecast.map((v, idx) => [s.forecast_dates[idx], v]),
       lineStyle: { color: colors[i % colors.length], width: 2 },
       itemStyle: { color: colors[i % colors.length] },
-      symbol:"none",
+      symbol: "none",
     })),
   ];
 
@@ -422,34 +344,34 @@ function ScenarioCompareChart({ data }: { data: ScenarioCompareResult }) {
       </div>
       <ReactECharts
         option={{
-          backgroundColor:"transparent",
+          backgroundColor: "transparent",
           grid: { left: 56, right: 24, top: 24, bottom: 48, containLabel: false },
           xAxis: {
-            type:"category",
+            type: "category",
             data: allDates,
             axisLine: { lineStyle: { color: t.grid } },
-            axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10, rotate: 30, formatter: (v: string) => v.slice(0, 7) },
+            axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10, rotate: 30, formatter: (v: string) => v.slice(0, 7) },
           },
           yAxis: {
-            type:"value",
+            type: "value",
             axisLine: { show: false },
-            axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
+            axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
             splitLine: { lineStyle: { color: t.grid } },
           },
-          tooltip: { trigger:"axis" },
+          tooltip: { trigger: "axis" },
           legend: {
             data: ["Historical", ...data.scenarios.map((s) => s.label)],
-            textStyle: { color: t.textSecondary, fontFamily:"JetBrains Mono", fontSize: 10 },
+            textStyle: { color: t.textSecondary, fontFamily: "JetBrains Mono", fontSize: 10 },
             top: 0,
             right: 16,
           },
           dataZoom: [
-            { type:"inside", xAxisIndex: 0 },
-            { type:"slider", xAxisIndex: 0, height: 16, bottom: 8 },
+            { type: "inside", xAxisIndex: 0 },
+            { type: "slider", xAxisIndex: 0, height: 16, bottom: 8 },
           ],
           series,
         }}
-        style={{ height: 360, width:"100%" }}
+        style={{ height: 360, width: "100%" }}
         notMerge
       />
     </div>

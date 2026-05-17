@@ -29,7 +29,7 @@ interface DownloadPdfButtonProps {
 export function DownloadPdfButton({
   title,
   sections,
-  filename ="foresee-report.pdf",
+  filename ="foreko-report.pdf",
   label ="Export PDF",
   disabled,
   className ="",

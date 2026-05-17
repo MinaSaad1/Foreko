@@ -106,14 +106,14 @@ const TRUST_POINTS: { title: string; body: string }[] = [
 
 export function LandingPage() {
   const navigate = useNavigate();
-  const setPreview = useDatasetStore((s) => s.setPreview);
+  const setActiveDatasetId = useDatasetStore((s) => s.setActiveDatasetId);
   const [loadingDemo, setLoadingDemo] = useState(false);
 
   const handleDemo = async () => {
     setLoadingDemo(true);
     try {
       const preview = await loadDemoDataset();
-      setPreview(preview);
+      setActiveDatasetId(preview.id);
       navigate(`/compare/${preview.id}`);
     } catch (err) {
       toast.error(err);
@@ -127,20 +127,17 @@ export function LandingPage() {
       <section className="relative py-16 md:py-24">
         <div className="grid items-center gap-10 md:grid-cols-[minmax(0,1fr)_auto]">
           <div className="max-w-3xl space-y-6">
-            <span className="inline-flex items-center gap-2 border border-accent/30 bg-accent/10 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-accent">
-              <span className="h-1.5 w-1.5 bg-accent" /> Local forecasting studio
-            </span>
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight tracking-tight">
               <span className="bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent">
                 Forecast your numbers.
               </span>
               <br />
-              <span className="bg-gradient-to-r from-accent to-text-primary bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-accent to-text-primary bg-clip-text text-transparent whitespace-nowrap">
                 Understand why they move.
               </span>
             </h1>
             <p className="text-lg text-text-secondary md:text-xl">
-              Foresee turns a CSV into a trustworthy forecast with uncertainty
+              Foreko turns your Data into a trustworthy forecast with uncertainty
               ranges, a recommended model, and plain-English explanations, no
               data-science team required.
             </p>
@@ -149,7 +146,7 @@ export function LandingPage() {
                 to="/data"
                 className="btn-terminal-primary"
               >
-                <span>↑</span> Upload your CSV
+                <span>↑</span> Upload your Data
               </Link>
               <button
                 type="button"
@@ -180,8 +177,8 @@ export function LandingPage() {
 
             {/* Mascot, centered via absolute + inset-0 + m-auto */}
             <img
-              src="/foresee-logo.png"
-              alt="Foresee mascot"
+              src="/foreko-logo.png"
+              alt="Foreko mascot"
               className="absolute inset-0 m-auto z-10 h-64 w-64 lg:h-80 lg:w-80 object-contain animate-float-y-slow drop-shadow-[0_0_30px_rgb(var(--color-accent)/0.45)]"
             />
           </div>
@@ -191,7 +188,7 @@ export function LandingPage() {
       <section className="pt-4">
         <div className="mb-6 flex items-baseline justify-between">
           <h2 className="font-display text-2xl font-semibold text-text-primary">
-            What Foresee does for you
+            What Foreko does for you
           </h2>
           <span className="font-mono text-xs uppercase tracking-widest text-text-muted">
             9 analyses · one dataset
@@ -239,7 +236,7 @@ export function LandingPage() {
             {
               n:"01",
               title:"Upload a CSV",
-              body:"A date column and a numeric value column is all Foresee needs.",
+              body:"A date column and a numeric value column is all Foreko needs.",
             },
             {
               n:"02",
@@ -276,7 +273,7 @@ export function LandingPage() {
       </section>
 
       <footer className="mt-16 flex flex-wrap items-center justify-between gap-3 border-t border-border/40 pt-6 font-mono text-xs uppercase tracking-widest text-text-muted">
-        <span>Foresee · Local forecasting studio</span>
+        <span>Foreko · Local forecasting studio</span>
         <div className="flex gap-4">
           <Link to="/glossary" className="hover:text-accent">
             Glossary

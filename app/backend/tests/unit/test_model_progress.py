@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from timesfm_studio.services import model_download, runtime
+from foreko.services import model_download, runtime
 
 
 @pytest.mark.unit
@@ -37,6 +37,56 @@ def test_mark_error_surfaces_message() -> None:
     snap = model_download.progress_snapshot()
     assert snap["state"] == "error"
     assert snap["error"] == "boom"
+
+
+@pytest.mark.unit
+def test_progress_tqdm_ignores_file_counter_and_sums_byte_counters() -> None:
+    """huggingface_hub spawns a file-count tqdm (unit="it") alongside per-file
+    byte tqdms (unit="B"). Only the byte counters should contribute to
+    total_bytes / downloaded_bytes — otherwise total_bytes gets pinned at the
+    file count and the percentage explodes the moment real bytes stream.
+    """
+
+    model_download.reset_for_retry()
+
+    # HF first creates an outer file-counter tqdm. This must NOT pin total_bytes=4.
+    file_counter = model_download._ProgressTqdm(total=4, unit="it")
+    snap = model_download.progress_snapshot()
+    assert snap["total_bytes"] == 0
+    assert snap["downloaded_bytes"] == 0
+
+    # Then per-file byte tqdms open. Their totals should accumulate.
+    small = model_download._ProgressTqdm(total=2500, unit="B")
+    big = model_download._ProgressTqdm(total=1_200_000_000, unit="B")
+    snap = model_download.progress_snapshot()
+    assert snap["total_bytes"] == 2500 + 1_200_000_000
+
+    # Streaming bytes through update() should increment downloaded.
+    small.update(2500)
+    big.update(600_000_000)
+    snap = model_download.progress_snapshot()
+    assert snap["downloaded_bytes"] == 2500 + 600_000_000
+    assert snap["total_bytes"] == 2500 + 1_200_000_000
+
+    # File counter ticks should be ignored.
+    file_counter.update(1)
+    snap = model_download.progress_snapshot()
+    assert snap["downloaded_bytes"] == 2500 + 600_000_000
+
+
+@pytest.mark.unit
+def test_progress_tqdm_credits_resumed_bytes_on_open() -> None:
+    """When HF resumes a partial download, tqdm opens with n=<already-on-disk>.
+    Those bytes are real progress and must show up in downloaded_bytes."""
+
+    model_download.reset_for_retry()
+    resumed = model_download._ProgressTqdm(total=1_000_000, initial=400_000, unit="B")
+    snap = model_download.progress_snapshot()
+    assert snap["downloaded_bytes"] == 400_000
+    assert snap["total_bytes"] == 1_000_000
+    resumed.update(600_000)
+    snap = model_download.progress_snapshot()
+    assert snap["downloaded_bytes"] == 1_000_000
 
 
 @pytest.mark.unit

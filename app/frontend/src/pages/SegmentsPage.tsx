@@ -1,47 +1,23 @@
-import { useCallback, useState } from"react";
-import { useParams } from"react-router-dom";
-import { useMutation } from"@tanstack/react-query";
-import { api } from"@/api/endpoints";
-import { useDatasetStore } from"@/stores/datasetStore";
-import { ColumnMapper } from"@/components/ColumnMapper";
-import ReactECharts from"echarts-for-react";
-import { useChartTheme } from"@/charts/theme";
-import { PageIntro } from"@/components/common/PageIntro";
-import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
-import { Term } from"@/components/common/Term";
-import { useSyncedDataset } from"@/hooks/useSyncedDataset";
-import { useHealth } from"@/hooks/useHealth";
-import type { ColumnMapping } from"@/types/dataset";
-import type { SegmentsResult } from"@/types/phases";
+import { useParams } from "react-router-dom";
+import ReactECharts from "echarts-for-react";
+import { useChartTheme } from "@/charts/theme";
+import { ColumnMapper } from "@/components/ColumnMapper";
+import { PageIntro } from "@/components/common/PageIntro";
+import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
+import { Term } from "@/components/common/Term";
+import { useSyncedDataset } from "@/hooks/useSyncedDataset";
+import { useHealth } from "@/hooks/useHealth";
+import { useSegmentsOrchestrator } from "@/hooks/useSegmentsOrchestrator";
+import type { SegmentsResult } from "@/types/phases";
 
 export function SegmentsPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
-  const storeMapping = useDatasetStore((s) => s.mapping);
-  const setStoreMapping = useDatasetStore((s) => s.setMapping);
-
-  const [mapping, setMapping] = useState<ColumnMapping | null>(storeMapping);
-  const [topN, setTopN] = useState(10);
-  const [sortBy, setSortBy] = useState<"total" |"growth" |"volatility">("total");
-
   const { activeId, preview } = useSyncedDataset(datasetId);
   const { data: health } = useHealth();
-  const modelReady = health?.model_status ==="ready";
-  const handleMappingChange = useCallback(
-    (m: ColumnMapping) => {
-      setMapping(m);
-      setStoreMapping(m);
-    },
-    [setStoreMapping],
-  );
+  const modelReady = health?.model_status === "ready";
 
-  const runMutation = useMutation<SegmentsResult, Error>({
-    mutationFn: () =>
-      api.compareSegments({
-        dataset_id: activeId!,
-        mapping: mapping!,
-        top_n: topN,
-      }),
-  });
+  const { mapping, handleMappingChange, topN, setTopN, sortBy, setSortBy, data, isPending, isError, error, mutate, reset } =
+    useSegmentsOrchestrator(activeId);
 
   if (!activeId) {
     return (
@@ -53,8 +29,6 @@ export function SegmentsPage() {
       />
     );
   }
-
-  const data = runMutation.data;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -84,11 +58,11 @@ export function SegmentsPage() {
             />
           </div>
           <button
-            onClick={() => runMutation.mutate()}
-            disabled={!mapping?.series_id_col || runMutation.isPending || !modelReady}
+            onClick={() => mutate()}
+            disabled={!mapping?.series_id_col || isPending || !modelReady}
             className="w-full btn-terminal-primary"
           >
-            {runMutation.isPending ?"Running..." :"Compare segments"}
+            {isPending ? "Running..." : "Compare segments"}
           </button>
           {!mapping?.series_id_col && (
             <p className="border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
@@ -98,9 +72,9 @@ export function SegmentsPage() {
           {!modelReady && (
             <p className="text-xs text-text-muted">Model still loading, the Run button will enable when it's ready.</p>
           )}
-          {runMutation.isError && (
+          {isError && (
             <p className="border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-xs text-anomaly">
-              {runMutation.error.message}
+              {error?.message}
             </p>
           )}
         </div>
@@ -114,14 +88,14 @@ export function SegmentsPage() {
                 {data.n_segments} segments
               </h3>
               <div className="flex gap-2">
-                {(["total","growth","volatility"] as const).map((s) => (
+                {(["total", "growth", "volatility"] as const).map((s) => (
                   <button
                     key={s}
                     onClick={() => setSortBy(s)}
                     className={`border px-3 py-1 font-mono text-xs transition-colors ${
                       sortBy === s
-                        ?"border-accent bg-accent-dim text-accent"
-                        :"border-border text-text-secondary hover:border-border-strong"
+                        ? "border-accent bg-accent-dim text-accent"
+                        : "border-border text-text-secondary hover:border-border-strong"
                     }`}
                   >
                     by {s}
@@ -140,7 +114,7 @@ export function SegmentsPage() {
           </div>
 
           <button
-            onClick={() => runMutation.reset()}
+            onClick={() => reset()}
             className="text-xs text-text-muted hover:text-text-secondary underline underline-offset-2"
           >
             ← Change settings
@@ -153,7 +127,7 @@ export function SegmentsPage() {
 
 function SegmentRanking({ ranking, sortBy }: { ranking: { id: string; value: number }[]; sortBy: string }) {
   const fmt = (v: number) =>
-    sortBy ==="growth" || sortBy ==="volatility" ? `${(v * 100).toFixed(1)}%` : v.toLocaleString();
+    sortBy === "growth" || sortBy === "volatility" ? `${(v * 100).toFixed(1)}%` : v.toLocaleString();
   return (
     <div className="space-y-1">
       {ranking.slice(0, 10).map((r, i) => (
@@ -177,37 +151,37 @@ function MultiLineSegments({ segments }: { segments: SegmentsResult["segments"] 
   const colors = [t.accent, t.neutral, t.positive, t.warning, t.anomaly, t.textMuted, t.alternative, t.historical];
   const series = segments.map((s, i) => ({
     name: s.id,
-    type:"line",
+    type: "line",
     data: s.values.map((v, idx) => [s.dates[idx], v]),
     lineStyle: { color: colors[i % colors.length], width: 1.5 },
     itemStyle: { color: colors[i % colors.length] },
-    symbol:"none",
+    symbol: "none",
   }));
   const option = {
-    backgroundColor:"transparent",
+    backgroundColor: "transparent",
     grid: { left: 56, right: 24, top: 24, bottom: 40, containLabel: false },
     legend: {
       data: segments.map((s) => s.id),
-      textStyle: { color: t.textSecondary, fontFamily:"JetBrains Mono", fontSize: 10 },
+      textStyle: { color: t.textSecondary, fontFamily: "JetBrains Mono", fontSize: 10 },
       top: 0,
     },
     xAxis: {
-      type:"time",
+      type: "time",
       axisLine: { lineStyle: { color: t.grid } },
-      axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
+      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
     },
     yAxis: {
-      type:"value",
+      type: "value",
       axisLine: { show: false },
-      axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
+      axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
       splitLine: { lineStyle: { color: t.grid } },
     },
-    tooltip: { trigger:"axis" },
+    tooltip: { trigger: "axis" },
     dataZoom: [
-      { type:"inside", xAxisIndex: 0 },
-      { type:"slider", xAxisIndex: 0, height: 16, bottom: 0 },
+      { type: "inside", xAxisIndex: 0 },
+      { type: "slider", xAxisIndex: 0, height: 16, bottom: 0 },
     ],
     series,
   };
-  return <ReactECharts option={option} style={{ height: 320, width:"100%" }} notMerge />;
+  return <ReactECharts option={option} style={{ height: 320, width: "100%" }} notMerge />;
 }

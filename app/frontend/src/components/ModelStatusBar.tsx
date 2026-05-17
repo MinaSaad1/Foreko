@@ -5,9 +5,9 @@ function dot(color: string, isPulsing: boolean) {
   return (
     <span className="relative flex h-2 w-2">
       {isPulsing && (
-        <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${color}`} />
+        <span className={`absolute inline-flex h-full w-full animate-ping opacity-75 ${color}`} />
       )}
-      <span className={`relative inline-flex h-2 w-2 rounded-full ${color}`} />
+      <span className={`relative inline-flex h-2 w-2 ${color}`} />
     </span>
   );
 }
@@ -49,7 +49,7 @@ export function ModelStatusBar() {
   const ramLabel = ramMb ? `${(ramMb / 1024).toFixed(1)} GB` : null;
 
   return (
-    <div className="flex items-center gap-3 font-mono text-xs text-text-muted bg-bg-surface/30 px-3 py-1.5 rounded-full border border-border/50 backdrop-blur shadow-[var(--shadow-elev-1)]">
+    <div className="flex items-center gap-3 font-mono text-xs text-text-muted bg-bg-surface/30 px-3 py-1.5 border border-border/50 backdrop-blur shadow-[var(--shadow-elev-1)]">
       {dot(statusColor, isPulsing)}
       <span className="text-text-secondary">{statusLabel}</span>
       <span className="text-border-strong">|</span>

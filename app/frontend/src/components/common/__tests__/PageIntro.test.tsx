@@ -36,7 +36,7 @@ describe("PageIntro", () => {
 
     const toggle = screen.getByRole("button", { name: /hide this intro/i });
     await user.click(toggle);
-    expect(window.localStorage.getItem("foresee:pageIntro:backtest:open")).toBe("0");
+    expect(window.localStorage.getItem("foreko:pageIntro:backtest:open")).toBe("0");
     unmount();
 
     renderWithRouter(<PageIntro pageKey="backtest" />);

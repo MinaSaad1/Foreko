@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-const STORAGE_KEY = "foresee.backtest.summaries";
+const STORAGE_KEY = "foreko.backtest.summaries";
 
 export interface BacktestSummary {
   datasetId: string;

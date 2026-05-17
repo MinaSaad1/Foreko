@@ -8,7 +8,7 @@ export function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 py-8">
       <div>
-        <h1 className="font-display text-3xl font-semibold text-text-primary">About Foresee</h1>
+        <h1 className="font-display text-3xl font-semibold text-text-primary">About Foreko</h1>
         <p className="mt-2 text-text-secondary">
           A local forecasting studio powered by Google's TimesFM 2.5 foundation model.
         </p>
@@ -26,7 +26,7 @@ export function AboutPage() {
           </div>
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-text-muted">Data home</p>
-            <p className="mt-1 font-mono text-sm text-text-primary">~/.timesfm_studio/</p>
+            <p className="mt-1 font-mono text-sm text-text-primary">~/.foreko/</p>
           </div>
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-text-muted">License</p>

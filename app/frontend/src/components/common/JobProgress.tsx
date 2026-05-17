@@ -8,9 +8,10 @@ interface JobProgressProps {
   onDone?: (result: unknown) => void;
   onError?: (error: string) => void;
   onCancel?: () => void;
+  onReset?: () => void;
 }
 
-export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCancel }: JobProgressProps) {
+export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCancel, onReset }: JobProgressProps) {
   const updateJob = useJobsStore((s) => s.updateJob);
   const job = useJobsStore((s) => s.jobs[jobId]);
 
@@ -49,6 +50,8 @@ export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCa
           updateJob(jobId, { progress: data.progress, status:"running" });
         } else if (data.type ==="state") {
           updateJob(jobId, { status: data.status, progress: data.progress });
+          // Do NOT close or settle here — the backend now follows up a terminal
+          // state event with the actual "done"/"error" event carrying the payload.
         } else if (data.type ==="done") {
           settled = true;
           updateJob(jobId, { status:"done", result: data.result });
@@ -107,10 +110,20 @@ export function JobProgress({ jobId, kind, eventStreamUrl, onDone, onError, onCa
       <p className="font-mono text-xs text-text-muted">
         {job.progress.current}/{job.progress.total} · {pct}%
       </p>
-      {job.error && (
-        <p className="border border-anomaly/30 bg-anomaly/10 px-3 py-2 text-xs text-anomaly">
-          {job.error}
-        </p>
+      {job.status === "error" && (
+        <div className="flex items-start justify-between gap-3 border border-anomaly/30 bg-anomaly/10 px-3 py-2">
+          <p className="text-xs text-anomaly">
+            {job.error || "Job failed. Adjust settings and try again."}
+          </p>
+          {onReset && (
+            <button
+              onClick={onReset}
+              className="shrink-0 font-mono text-xs text-anomaly/70 hover:text-anomaly underline underline-offset-2 whitespace-nowrap"
+            >
+              Try again
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

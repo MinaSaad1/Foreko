@@ -13,7 +13,7 @@ export function NotFoundPage() {
         That page doesn't exist.
       </h1>
       <p className="text-text-secondary">
-        The address you typed doesn't match anything in Foresee. Head back to the
+        The address you typed doesn't match anything in Foreko. Head back to the
         upload page or pick an analysis from the sidebar.
       </p>
       <div className="flex flex-wrap gap-3 pt-2">

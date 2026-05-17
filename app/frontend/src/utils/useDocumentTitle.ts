@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const BASE = "Foresee";
+const BASE = "Foreko";
 
 export function useDocumentTitle(pageTitle?: string): void {
   useEffect(() => {

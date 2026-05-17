@@ -4,7 +4,6 @@ import { SamplesPicker } from"@/components/SamplesPicker";
 import { PageIntro } from"@/components/common/PageIntro";
 import type { PageIntroKey } from"@/data/pageIntros";
 import { useDatasetStore } from"@/stores/datasetStore";
-import type { DatasetPreview } from"@/types/dataset";
 
 interface EmptyDatasetStateProps {
   title: string;
@@ -20,10 +19,10 @@ export function EmptyDatasetState({
   message,
 }: EmptyDatasetStateProps) {
   const navigate = useNavigate();
-  const setPreview = useDatasetStore((s) => s.setPreview);
+  const setActiveDatasetId = useDatasetStore((s) => s.setActiveDatasetId);
 
-  const goToDataset = (preview: DatasetPreview) => {
-    setPreview(preview);
+  const goToDataset = (preview: { id: string }) => {
+    setActiveDatasetId(preview.id);
     navigate(`${basePath}/${preview.id}`);
   };
 

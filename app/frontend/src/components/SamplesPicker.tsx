@@ -12,7 +12,7 @@ interface SamplesPickerProps {
 
 export function SamplesPicker({ redirectTo, compact = false }: SamplesPickerProps) {
   const navigate = useNavigate();
-  const setPreview = useDatasetStore((s) => s.setPreview);
+  const setActiveDatasetId = useDatasetStore((s) => s.setActiveDatasetId);
   const setMapping = useDatasetStore((s) => s.setMapping);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -20,8 +20,8 @@ export function SamplesPicker({ redirectTo, compact = false }: SamplesPickerProp
     setLoadingId(sample.id);
     try {
       const preview = await loadSampleDataset(sample.publicPath, sample.filename);
-      // setPreview clears mapping, so assign the sample's pre-mapping after.
-      setPreview(preview);
+      setActiveDatasetId(preview.id);
+      // setActiveDatasetId resets mapping; assign the sample's pre-defined mapping after.
       setMapping(sample.mapping);
       const target = redirectTo ? redirectTo(preview.id) : `/compare/${preview.id}`;
       navigate(target);

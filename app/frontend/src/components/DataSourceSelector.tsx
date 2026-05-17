@@ -52,7 +52,7 @@ export function DataSourceSelector({ onDatasetReady }: DataSourceSelectorProps) 
       <p className="border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
         Your operating system's keychain is not available. Saved database
         connections are disabled until it is. On Linux, install gnome-keyring
-        or libsecret and restart Foresee.
+        or libsecret and restart Foreko.
       </p>
     ) : null;
 

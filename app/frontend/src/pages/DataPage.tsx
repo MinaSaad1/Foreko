@@ -9,7 +9,8 @@ import { SamplesPicker } from"@/components/SamplesPicker";
 import { PageIntro } from"@/components/common/PageIntro";
 import type { DatasetSummary, DatasetPreview } from"@/types/dataset";
 
-const ADD_PANEL_STORAGE_KEY ="foresee:dataPanelOpen";
+
+const ADD_PANEL_STORAGE_KEY ="foreko:dataPanelOpen";
 
 function readAddPanelOpen(hasDatasets: boolean | null): boolean {
   if (typeof window ==="undefined") return !hasDatasets;
@@ -27,7 +28,7 @@ function readAddPanelOpen(hasDatasets: boolean | null): boolean {
 export function DataPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const setPreview = useDatasetStore((s) => s.setPreview);
+  const setActiveDatasetId = useDatasetStore((s) => s.setActiveDatasetId);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [previews, setPreviews] = useState<Record<string, DatasetPreview>>({});
@@ -77,14 +78,9 @@ export function DataPage() {
     onError: () => toast.error("Delete failed"),
   });
 
-  const handleUse = async (d: DatasetSummary) => {
-    try {
-      const preview = previews[d.id] || (await api.datasetPreview(d.id));
-      setPreview(preview);
-      navigate(`/compare/${d.id}`);
-    } catch {
-      toast.error("Failed to load dataset");
-    }
+  const handleUse = (d: DatasetSummary) => {
+    setActiveDatasetId(d.id);
+    navigate(`/compare/${d.id}`);
   };
 
   const handleExpand = async (id: string) => {
@@ -107,6 +103,7 @@ export function DataPage() {
   };
 
   const handleDatasetReady = (preview: DatasetPreview) => {
+    setActiveDatasetId(preview.id);
     queryClient.invalidateQueries({ queryKey: ["datasets"] });
     navigate(`/compare/${preview.id}`);
   };
@@ -121,6 +118,34 @@ export function DataPage() {
       </div>
 
       <PageIntro pageKey="data" />
+
+      {/* Add new data — collapsible. Expanded by default for new users; collapsed
+          for returning users with datasets. User choice persists. */}
+      <section
+        aria-label="Add new data"
+        className="rounded-panel border border-accent/50 bg-bg-surface/40 backdrop-blur-sm shadow-[var(--shadow-elev-1)]"
+      >
+        <header className="flex items-center justify-between gap-3 px-5 py-4">
+          <h2 className="font-display text-sm font-medium text-text-primary uppercase tracking-widest">
+            {hasDatasets ? "Add new data" : "Add data to get started"}
+          </h2>
+          <button
+            type="button"
+            onClick={toggleAddOpen}
+            aria-expanded={addOpen}
+            aria-controls="data-add-panel"
+            aria-label={addOpen ? "Hide add-data panel" : "Show add-data panel"}
+            className="inline-flex h-6 w-6 items-center justify-center border border-border/60 font-mono text-[10px] text-text-muted hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
+          >
+            {addOpen ? "–" : "+"}
+          </button>
+        </header>
+        {addOpen && (
+          <div id="data-add-panel" className="border-t border-border/40 px-5 py-4">
+            <DataSourceSelector onDatasetReady={handleDatasetReady} />
+          </div>
+        )}
+      </section>
 
       {/* Your datasets — only when there's at least one */}
       {isLoading ? (
@@ -281,34 +306,6 @@ export function DataPage() {
         </section>
       ) : null}
 
-      {/* Add new data — collapsible. Expanded by default for new users; collapsed
-          for returning users with datasets. User choice persists. */}
-      <section
-        aria-label="Add new data"
-        className="rounded-panel border border-border/60 bg-bg-surface/40 backdrop-blur-sm shadow-[var(--shadow-elev-1)]"
-      >
-        <header className="flex items-center justify-between gap-3 px-5 py-4">
-          <h2 className="font-display text-sm font-medium text-text-primary uppercase tracking-widest">
-            {hasDatasets ?"Add new data" :"Add data to get started"}
-          </h2>
-          <button
-            type="button"
-            onClick={toggleAddOpen}
-            aria-expanded={addOpen}
-            aria-controls="data-add-panel"
-            aria-label={addOpen ?"Hide add-data panel" :"Show add-data panel"}
-            className="inline-flex h-6 w-6 items-center justify-center border border-border/60 font-mono text-[10px] text-text-muted hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
-          >
-            {addOpen ?"–" :"+"}
-          </button>
-        </header>
-        {addOpen && (
-          <div id="data-add-panel" className="border-t border-border/40 px-5 py-4">
-            <DataSourceSelector onDatasetReady={handleDatasetReady} />
-          </div>
-        )}
-      </section>
-
       <SamplesPicker />
 
       {/* Onboarding helpers, only shown to first-timers. */}
@@ -322,7 +319,7 @@ export function DataPage() {
               <li>Drop a CSV. A Date column and a numeric Value column is all you need.</li>
               <li>Map the columns and choose how far ahead to forecast.</li>
               <li>
-                Foresee trains two models on your data, backtests them, and shows you which one
+                Foreko trains two models on your data, backtests them, and shows you which one
                 performed better along with the forecast.
               </li>
             </ol>

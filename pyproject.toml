@@ -1,7 +1,7 @@
 [project]
-name = "foresee-web"
+name = "foreko-web"
 version = "0.1.0"
-description = "Foresee — local forecasting studio (web app for localhost dev)."
+description = "Foreko — local forecasting studio (web app for localhost dev)."
 authors = [
     {name = "Mina Saad", email = "mina.saad.wahba@gmail.com"},
 ]
@@ -67,6 +67,27 @@ app-dev = [
     "ruff>=0.3.0",
     "black>=24.0.0",
 ]
+# GPU build of torch. Sync with --extra cuda on machines with a modern NVIDIA
+# driver (>= 570). Plain `uv sync --extra app` keeps the PyPI default, which
+# resolves to the CPU wheel on Windows and the bundled-CUDA wheel on Linux.
+# setup.ps1 / setup.sh pick the right extra automatically based on nvidia-smi.
+cuda = [
+    "torch>=2.7.0",
+]
+
+# Pin torch to the PyTorch CUDA 12.8 wheel index, but only when the `cuda`
+# extra is active. Without the extra, uv falls back to the default index and
+# installs the CPU build. ``explicit = true`` keeps the GPU index from being
+# searched during regular resolution.
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu128", extra = "cuda" },
+]
 
 [tool.ruff]
 line-length = 88
@@ -85,7 +106,7 @@ filterwarnings = [
 
 [tool.setuptools.packages.find]
 where = ["src", "app/backend"]
-include = ["timesfm*", "timesfm_studio*"]
+include = ["timesfm*", "foreko*"]
 
 [build-system]
 requires = ["setuptools>=61.0"]

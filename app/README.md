@@ -1,4 +1,4 @@
-# TimesFM Studio
+# Foreko
 
 Local web app that wraps the [TimesFM 2.5](../src/timesfm) forecasting model with
 a friendly browser UI. Phase A ships zero-shot forecasting with quantile bands.
@@ -28,7 +28,7 @@ In two terminals (both from the repo root):
 
 ```bash
 # Terminal 1 — backend
-uvicorn timesfm_studio.main:app --port 8000 --reload
+uvicorn foreko.main:app --port 8000 --reload
 
 # Terminal 2 — frontend
 cd app/frontend
@@ -62,15 +62,15 @@ real model will be added in later phases.
 ## Configuration
 
 All settings can be overridden via environment variables with the prefix
-`TIMESFM_STUDIO_`:
+`FOREKO_`:
 
 | Variable | Default | Description |
 |---|---|---|
-| `TIMESFM_STUDIO_MODEL_ID` | `google/timesfm-2.5-200m-pytorch` | HF checkpoint to load |
-| `TIMESFM_STUDIO_STORAGE_DIR` | `~/.timesfm_studio` | Runtime data root |
-| `TIMESFM_STUDIO_DATASET_TTL_HOURS` | `24` | How long uploads live |
-| `TIMESFM_STUDIO_MAX_UPLOAD_BYTES` | `52428800` | CSV size cap |
-| `TIMESFM_STUDIO_PRELOAD_MODEL` | `true` | Load model at startup |
+| `FOREKO_MODEL_ID` | `google/timesfm-2.5-200m-pytorch` | HF checkpoint to load |
+| `FOREKO_STORAGE_DIR` | `~/.foreko` | Runtime data root |
+| `FOREKO_DATASET_TTL_HOURS` | `24` | How long uploads live |
+| `FOREKO_MAX_UPLOAD_BYTES` | `52428800` | CSV size cap |
+| `FOREKO_PRELOAD_MODEL` | `true` | Load model at startup |
 
 ## Roadmap
 

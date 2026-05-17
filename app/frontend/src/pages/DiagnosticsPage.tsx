@@ -1,51 +1,26 @@
-import { useCallback, useState } from"react";
-import { useParams } from"react-router-dom";
-import { useMutation } from"@tanstack/react-query";
-import { api } from"@/api/endpoints";
-import { useDatasetStore } from"@/stores/datasetStore";
-import { ColumnMapper } from"@/components/ColumnMapper";
-import { ResidualHistogram } from"@/components/diagnostics/ResidualHistogram";
-import { QQPlot } from"@/components/diagnostics/QQPlot";
-import { ACFChart } from"@/components/diagnostics/ACFChart";
-import { STLPanel } from"@/components/diagnostics/STLPanel";
-import { PageIntro } from"@/components/common/PageIntro";
-import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
-import { Term } from"@/components/common/Term";
-import { useSyncedDataset } from"@/hooks/useSyncedDataset";
-import { useHealth } from"@/hooks/useHealth";
-import type { ColumnMapping } from"@/types/dataset";
-import type { DiagnosticsResult } from"@/types/phases";
+import { useParams } from "react-router-dom";
+import { ColumnMapper } from "@/components/ColumnMapper";
+import { ResidualHistogram } from "@/components/diagnostics/ResidualHistogram";
+import { QQPlot } from "@/components/diagnostics/QQPlot";
+import { ACFChart } from "@/components/diagnostics/ACFChart";
+import { STLPanel } from "@/components/diagnostics/STLPanel";
+import { PageIntro } from "@/components/common/PageIntro";
+import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
+import { Term } from "@/components/common/Term";
+import { useSyncedDataset } from "@/hooks/useSyncedDataset";
+import { useHealth } from "@/hooks/useHealth";
+import { useDiagnosticsOrchestrator } from "@/hooks/useDiagnosticsOrchestrator";
 
 export function DiagnosticsPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
-  const storeMapping = useDatasetStore((s) => s.mapping);
-  const setStoreMapping = useDatasetStore((s) => s.setMapping);
-
-  const [mapping, setMapping] = useState<ColumnMapping | null>(storeMapping);
-  const [horizon, setHorizon] = useState(12);
-  const [model, setModel] = useState("timesfm");
-
   const { activeId, preview } = useSyncedDataset(datasetId);
   const { data: health } = useHealth();
-  const modelReady = health?.model_status ==="ready";
+  const modelReady = health?.model_status === "ready";
 
-  const handleMappingChange = useCallback(
-    (m: ColumnMapping) => {
-      setMapping(m);
-      setStoreMapping(m);
-    },
-    [setStoreMapping],
-  );
+  const { mapping, handleMappingChange, horizon, setHorizon, model, setModel, data, isPending, isError, error, mutate, reset } =
+    useDiagnosticsOrchestrator(activeId);
 
-  const runMutation = useMutation<DiagnosticsResult, Error>({
-    mutationFn: () =>
-      api.runDiagnostics({
-        dataset_id: activeId!,
-        mapping: mapping!,
-        horizon,
-        model,
-      }),
-  });
+  const result = data;
 
   if (!activeId) {
     return (
@@ -57,15 +32,13 @@ export function DiagnosticsPage() {
     );
   }
 
-  const result = runMutation.data;
-
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="font-display text-2xl font-semibold text-text-primary">Forecast Diagnostics</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          <Term k="residual">Residual</Term> analysis, <Term k="qq-plot">Q-Q plot</Term>,{""}
-          <Term k="autocorrelation">autocorrelation</Term>,{""}
+          <Term k="residual">Residual</Term> analysis, <Term k="qq-plot">Q-Q plot</Term>,{" "}
+          <Term k="autocorrelation">autocorrelation</Term>,{" "}
           <Term k="stl">STL decomposition</Term>, and <Term k="ljung-box">Ljung-Box test</Term>.
         </p>
         {preview && (
@@ -111,18 +84,18 @@ export function DiagnosticsPage() {
             </div>
           </div>
 
-          {runMutation.isError && (
+          {isError && (
             <p className="border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
-              {runMutation.error.message}
+              {error?.message}
             </p>
           )}
 
           <button
-            onClick={() => runMutation.mutate()}
-            disabled={!mapping || runMutation.isPending || !modelReady}
+            onClick={() => mutate()}
+            disabled={!mapping || isPending || !modelReady}
             className="w-full btn-terminal-primary"
           >
-            {runMutation.isPending ?"Running..." :"Run diagnostics"}
+            {isPending ? "Running..." : "Run diagnostics"}
           </button>
           {!modelReady && (
             <p className="text-xs text-text-muted text-center">Model still loading, the Run button will enable when it's ready.</p>
@@ -155,7 +128,7 @@ export function DiagnosticsPage() {
                 {result.ljung_box.p_value.toFixed(3)}
               </p>
               <p className="mt-1 font-mono text-xs text-text-muted">
-                {result.ljung_box.p_value < 0.05 ?"autocorrelated residuals" :"white-noise residuals"}
+                {result.ljung_box.p_value < 0.05 ? "autocorrelated residuals" : "white-noise residuals"}
               </p>
             </div>
             <div className="rounded-panel border border-border bg-bg-surface p-4">
@@ -200,7 +173,7 @@ export function DiagnosticsPage() {
           </div>
 
           <button
-            onClick={() => runMutation.reset()}
+            onClick={() => reset()}
             className="text-xs text-text-muted hover:text-text-secondary underline underline-offset-2"
           >
             ← Change settings

@@ -32,7 +32,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
     businessQuestions: [
       "What numbers do I want to forecast?",
       "Which dataset was the one I used last time?",
-      "Can I try Foresee on a sample before bringing my own data?",
+      "Can I try Foreko on a sample before bringing my own data?",
     ],
     relatedTerms: ["preflight", "zero-shot"],
   },
@@ -76,7 +76,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
   compare: {
     title: "Forecast, which model should I trust?",
     summary:
-      "Foresee runs two forecasting approaches on your data, backtests both, and highlights the winner.",
+      "Foreko runs two forecasting approaches on your data, backtests both, and highlights the winner.",
     whenToUse:
       "When you want a forward look with a recommended best-fit model, plus an uncertainty range.",
     businessQuestions: [
@@ -193,7 +193,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
   glossary: {
     title: "Every term, in plain English",
     summary:
-      "A searchable reference of every statistical and forecasting concept Foresee surfaces.",
+      "A searchable reference of every statistical and forecasting concept Foreko surfaces.",
     whenToUse:
       "Whenever a label on a chart or a metric in a table isn't immediately obvious.",
     businessQuestions: [

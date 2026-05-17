@@ -24,9 +24,9 @@ RUN pip install --no-cache-dir -e ".[app]"
 # Copy built frontend
 COPY --from=frontend-builder /workspace/dist ./dist
 
-ENV TIMESFM_STUDIO_STORAGE_DIR=/data
+ENV FOREKO_STORAGE_DIR=/data
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 
-CMD ["uvicorn", "timesfm_studio.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD ["uvicorn", "foreko.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

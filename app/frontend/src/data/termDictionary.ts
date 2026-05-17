@@ -311,7 +311,7 @@ export const TERMS: Record<string, TermDefinition> = {
     shortDefinition:
       "A series whose average and volatility stay stable over time (no runaway growth or shifting variance).",
     businessAngle:
-      "Non-stationary data often needs a transform before forecasting; Foresee's Preflight flags this.",
+      "Non-stationary data often needs a transform before forecasting; Foreko's Preflight flags this.",
     relatedTerms: ["seasonality", "trend"],
   },
   drift: {
@@ -397,7 +397,7 @@ export const TERMS: Record<string, TermDefinition> = {
     shortDefinition:
       "The forecasting approach that produced the lower error on the backtest.",
     businessAngle:
-      "Foresee highlights the model that would have performed best on your history so you know which line to trust.",
+      "Foreko highlights the model that would have performed best on your history so you know which line to trust.",
     relatedTerms: ["backtest", "mape"],
   },
   counterfactual: {

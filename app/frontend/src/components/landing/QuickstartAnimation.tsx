@@ -14,7 +14,7 @@ export function QuickstartAnimation() {
   return (
     <div
       className="relative w-full overflow-hidden rounded-panel border border-accent/30 bg-bg-surface/50 backdrop-blur-sm"
-      aria-label="How Foresee works: from CSV to forecast in seconds"
+      aria-label="How Foreko works: from CSV to forecast in seconds"
       role="img"
     >
       <style>{`

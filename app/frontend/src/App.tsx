@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from"react";
 import { Link, NavLink, Route, Routes, useLocation } from"react-router-dom";
 import { Toaster } from"sonner";
+import { useQuery } from"@tanstack/react-query";
 import { ModelStatusBar } from"@/components/ModelStatusBar";
 import { LoadingSplash } from"@/components/LoadingSplash";
 import { Tour } from"@/components/Tour";
@@ -8,6 +9,8 @@ import { ThemeToggle } from"@/components/ThemeToggle";
 import { ErrorBoundary } from"@/components/common/ErrorBoundary";
 import { useDocumentTitle } from"@/utils/useDocumentTitle";
 import { useThemeStore } from"@/stores/themeStore";
+import { useDatasetStore } from"@/stores/datasetStore";
+import { api } from"@/api/endpoints";
 
 const LandingPage = lazy(() => import("@/pages/LandingPage").then((m) => ({ default: m.LandingPage })));
 const DataPage = lazy(() => import("@/pages/DataPage").then((m) => ({ default: m.DataPage })));
@@ -59,6 +62,36 @@ function SideNavItem({ to, label, icon, isOpen, alsoActiveOn }: SideNavItemProps
         {label}
       </span>
     </NavLink>
+  );
+}
+
+function ActiveDatasetBadge({ isOpen }: { isOpen: boolean }) {
+  const activeDatasetId = useDatasetStore((s) => s.activeDatasetId);
+  const { data: preview } = useQuery({
+    queryKey: ["dataset-preview", activeDatasetId],
+    queryFn: () => api.datasetPreview(activeDatasetId!),
+    enabled: !!activeDatasetId,
+    staleTime: Infinity,
+  });
+  if (!activeDatasetId || !preview) return null;
+
+  const name = preview.filename.replace(/\.[^.]+$/, "");
+
+  return (
+    <Link
+      to="/data"
+      title={`Active dataset: ${preview.filename} — click to switch`}
+      className="flex items-center gap-2 px-3 py-2 border border-accent/30 bg-accent/10 hover:bg-accent/20 hover:border-accent/60 transition-colors overflow-hidden"
+    >
+      <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
+      <span
+        className={`font-mono text-[10px] uppercase tracking-widest text-accent truncate transition-all duration-300 ${
+          isOpen ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
+        }`}
+      >
+        {name}
+      </span>
+    </Link>
   );
 }
 
@@ -129,15 +162,15 @@ export default function App() {
             </button>
           )}
 
-          <Link to="/" className="flex items-center gap-2 group" aria-label="Foresee home">
+          <Link to="/" className="flex items-center gap-2 group" aria-label="Foreko home">
             <img
-              src="/foresee-logo.png"
+              src="/foreko-logo.png"
               alt=""
               aria-hidden="true"
               className="h-8 w-8 object-contain drop-shadow-[0_0_6px_rgb(var(--color-accent)/0.35)] group-hover:drop-shadow-[0_0_10px_rgb(var(--color-accent)/0.55)] transition-all duration-300"
             />
             <span className="font-display text-lg font-semibold bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent tracking-wide group-hover:from-accent group-hover:to-text-primary transition-all duration-300">
-              Foresee
+              Foreko
             </span>
           </Link>
         </div>
@@ -155,7 +188,8 @@ export default function App() {
               <SideNavItem to="/data" label="Data" icon="⊞" isOpen={isSidebarOpen} alsoActiveOn={["/upload","/datasets"]} />
             </nav>
 
-            <div className="mt-6 border-t border-border/30 pt-6">
+            <div className="mt-6 border-t border-border/30 pt-6 space-y-3">
+              <ActiveDatasetBadge isOpen={isSidebarOpen} />
               <div className={`transition-all duration-300 overflow-hidden ${isSidebarOpen ?"h-6 opacity-100" :"h-0 opacity-0"}`}>
                 <p className="px-3 font-mono text-xs text-text-muted uppercase tracking-widest whitespace-nowrap">
                   Analysis

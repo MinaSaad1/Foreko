@@ -80,7 +80,7 @@ export function OperationsPage() {
   });
 
   const testWebhook = useMutation({
-    mutationFn: () => api.testWebhook(webhookUrl,"Foresee test alert"),
+    mutationFn: () => api.testWebhook(webhookUrl,"Foreko test alert"),
   });
 
   const exportPdf = async () => {
@@ -165,11 +165,11 @@ export function OperationsPage() {
       },
     ];
 
-    const blob = await api.exportPdf("Foresee, Operations report", sections);
+    const blob = await api.exportPdf("Foreko, Operations report", sections);
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download ="foresee-operations.pdf";
+    a.download ="foreko-operations.pdf";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

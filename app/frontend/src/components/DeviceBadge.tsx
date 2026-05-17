@@ -26,8 +26,8 @@ export function DeviceBadge() {
 
   if (isError || !data) {
     return (
-      <span className="inline-flex items-center gap-2 rounded-full border border-border bg-bg-elevated px-3 py-1 text-xs font-medium text-text-secondary">
-        <span className="h-2 w-2 rounded-full bg-anomaly" />
+      <span className="inline-flex items-center gap-2 border border-border bg-bg-elevated px-3 py-1 text-xs font-medium text-text-secondary">
+        <span className="h-2 w-2 bg-anomaly" />
         Backend offline
       </span>
     );
@@ -53,10 +53,10 @@ export function DeviceBadge() {
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${tone}`}
+        className={`inline-flex items-center gap-2 border px-3 py-1 text-xs font-medium ${tone}`}
         title={`Model: ${model_status}`}
       >
-        <span className={`h-2 w-2 rounded-full ${statusDot}`} />
+        <span className={`h-2 w-2 ${statusDot}`} />
         {kindLabel} · {model_status}
       </button>
       {open && (

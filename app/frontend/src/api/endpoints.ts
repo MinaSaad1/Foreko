@@ -248,7 +248,7 @@ export const api = {
     apiGet<AlertRule[]>(datasetId ? `/alerts/rules?dataset_id=${datasetId}` : "/alerts/rules"),
   deleteAlertRule: (id: string) => apiDelete<void>(`/alerts/rules/${id}`),
   testWebhook: (url: string, message?: string) =>
-    apiPost<{ ok: boolean }>("/alerts/test-webhook", { url, message: message || "Foresee test alert" }),
+    apiPost<{ ok: boolean }>("/alerts/test-webhook", { url, message: message || "Foreko test alert" }),
   createAnnotation: (req: { dataset_id: string; date: string; label: string; note?: string }) =>
     apiPost<{ id: string }>("/annotations", req),
   listAnnotations: (datasetId: string) =>

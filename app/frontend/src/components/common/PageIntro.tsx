@@ -6,7 +6,7 @@ interface PageIntroProps {
   defaultOpen?: boolean;
 }
 
-const STORAGE_PREFIX ="foresee:pageIntro:";
+const STORAGE_PREFIX ="foreko:pageIntro:";
 
 function readPersisted(pageKey: PageIntroKey, fallback: boolean): boolean {
   if (typeof window ==="undefined") return fallback;

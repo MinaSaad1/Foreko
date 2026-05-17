@@ -23,9 +23,9 @@ export function FeatureImportance({ items }: FeatureImportanceProps) {
                 {Math.round(item.weight * 100)}%
               </span>
             </div>
-            <div className="h-1.5 rounded-full bg-bg-base overflow-hidden">
+            <div className="h-1.5 bg-bg-base overflow-hidden">
               <div
-                className="h-full rounded-full bg-accent transition-all duration-500"
+                className="h-full bg-accent transition-all duration-500"
                 style={{ width: `${pct}%` }}
               />
             </div>

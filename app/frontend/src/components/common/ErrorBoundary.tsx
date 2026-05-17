@@ -17,7 +17,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, info: { componentStack?: string | null }): void {
     // eslint-disable-next-line no-console
-    console.error("[Foresee] render error", error, info.componentStack);
+    console.error("[Foreko] render error", error, info.componentStack);
   }
 
   private reset = (): void => {
@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             Something broke
           </p>
           <h1 className="font-display text-2xl font-semibold text-text-primary">
-            Foresee hit an unexpected error
+            Foreko hit an unexpected error
           </h1>
           <p className="text-sm text-text-secondary">
             The UI encountered a problem and stopped. Your data is still safe, nothing leaves this machine. You can try reloading the page, or restart the app.

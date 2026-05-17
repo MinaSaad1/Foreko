@@ -1,18 +1,18 @@
 import { create } from "zustand";
-import type { DatasetPreview, ColumnMapping } from "@/types/dataset";
+import type { ColumnMapping } from "@/types/dataset";
 
 interface DatasetState {
-  preview: DatasetPreview | null;
+  activeDatasetId: string | null;
   mapping: ColumnMapping | null;
-  setPreview: (preview: DatasetPreview | null) => void;
+  setActiveDatasetId: (id: string | null) => void;
   setMapping: (mapping: ColumnMapping | null) => void;
   reset: () => void;
 }
 
 export const useDatasetStore = create<DatasetState>((set) => ({
-  preview: null,
+  activeDatasetId: null,
   mapping: null,
-  setPreview: (preview) => set({ preview, mapping: null }),
+  setActiveDatasetId: (id) => set({ activeDatasetId: id, mapping: null }),
   setMapping: (mapping) => set({ mapping }),
-  reset: () => set({ preview: null, mapping: null }),
+  reset: () => set({ activeDatasetId: null, mapping: null }),
 }));

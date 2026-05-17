@@ -1,79 +1,34 @@
-import { useCallback, useState } from"react";
-import { useParams } from"react-router-dom";
-import { useMutation } from"@tanstack/react-query";
-import { api } from"@/api/endpoints";
-import { useDatasetStore } from"@/stores/datasetStore";
-import { ColumnMapper } from"@/components/ColumnMapper";
-import { MethodAgreementMatrix } from"@/components/anomaly/MethodAgreementMatrix";
-import { RootCauseHints } from"@/components/anomaly/RootCauseHints";
-import { PageIntro } from"@/components/common/PageIntro";
-import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
-import { Term } from"@/components/common/Term";
-import { useSyncedDataset } from"@/hooks/useSyncedDataset";
-import type { ColumnInfo, ColumnMapping } from"@/types/dataset";
-import type {
-  AnomalyMethodsResult,
-  ChangepointsResult,
-  LagResult,
-  RootCauseResult,
-  GrangerRow,
-} from"@/types/phases";
-import ReactECharts from"echarts-for-react";
-import { useChartTheme } from"@/charts/theme";
+import { useParams } from "react-router-dom";
+import { ColumnMapper } from "@/components/ColumnMapper";
+import { MethodAgreementMatrix } from "@/components/anomaly/MethodAgreementMatrix";
+import { RootCauseHints } from "@/components/anomaly/RootCauseHints";
+import { PageIntro } from "@/components/common/PageIntro";
+import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
+import { Term } from "@/components/common/Term";
+import { useSyncedDataset } from "@/hooks/useSyncedDataset";
+import { useExplainOrchestrator } from "@/hooks/useExplainOrchestrator";
+import type { ColumnInfo } from "@/types/dataset";
+import type { LagResult } from "@/types/phases";
+import ReactECharts from "echarts-for-react";
+import { useChartTheme } from "@/charts/theme";
 
 export function ExplainPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
-  const storeMapping = useDatasetStore((s) => s.mapping);
-  const setStoreMapping = useDatasetStore((s) => s.setMapping);
-
-  const [mapping, setMapping] = useState<ColumnMapping | null>(storeMapping);
-  const [numericFactors, setNumericFactors] = useState<string[]>([]);
-  const [categoricalFactors, setCategoricalFactors] = useState<string[]>([]);
-
   const { activeId, preview } = useSyncedDataset(datasetId);
 
-  const handleMappingChange = useCallback(
-    (m: ColumnMapping) => {
-      setMapping(m);
-      setStoreMapping(m);
-    },
-    [setStoreMapping],
-  );
-
-  const anomalyMethods = useMutation<AnomalyMethodsResult, Error>({
-    mutationFn: () => api.detectAnomalyMethods({ dataset_id: activeId!, mapping: mapping! }),
-  });
-  const rootCause = useMutation<RootCauseResult, Error>({
-    mutationFn: () =>
-      api.explainAnomalies({
-        dataset_id: activeId!,
-        mapping: mapping!,
-        anomaly_dates: (anomalyMethods.data?.records ?? []).map((r) => r.date),
-        numeric_factors: numericFactors,
-        categorical_factors: categoricalFactors,
-      }),
-  });
-  const changepoints = useMutation<ChangepointsResult, Error>({
-    mutationFn: () => api.detectChangepoints({ dataset_id: activeId!, mapping: mapping!, penalty: 10 }),
-  });
-  const lagMutation = useMutation<{ results: LagResult[]; max_lag: number }, Error>({
-    mutationFn: () =>
-      api.lagAnalysis({
-        dataset_id: activeId!,
-        mapping: mapping!,
-        numeric_factors: numericFactors,
-        max_lag: 14,
-      }),
-  });
-  const grangerMutation = useMutation<{ results: GrangerRow[] }, Error>({
-    mutationFn: () =>
-      api.grangerTests({
-        dataset_id: activeId!,
-        mapping: mapping!,
-        numeric_factors: numericFactors,
-        max_lag: 5,
-      }),
-  });
+  const {
+    mapping,
+    handleMappingChange,
+    numericFactors,
+    setNumericFactors,
+    categoricalFactors,
+    setCategoricalFactors,
+    anomalyMethodsMutation,
+    rootCauseMutation,
+    changepointsMutation,
+    lagMutation,
+    grangerMutation,
+  } = useExplainOrchestrator(activeId);
 
   if (!activeId) {
     return (
@@ -86,12 +41,12 @@ export function ExplainPage() {
   }
 
   const numericCols: ColumnInfo[] =
-    preview?.columns.filter((c) => c.dtype ==="numeric" && c.name !== mapping?.value_col) ?? [];
+    preview?.columns.filter((c) => c.dtype === "numeric" && c.name !== mapping?.value_col) ?? [];
   const categoricalCols: ColumnInfo[] =
-    preview?.columns.filter((c) => c.dtype ==="categorical" || c.dtype ==="string") ?? [];
+    preview?.columns.filter((c) => c.dtype === "categorical" || c.dtype === "string") ?? [];
 
-  const toggle = (col: string, kind:"num" |"cat") => {
-    if (kind ==="num") {
+  const toggle = (col: string, kind: "num" | "cat") => {
+    if (kind === "num") {
       setNumericFactors((prev) => (prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]));
     } else {
       setCategoricalFactors((prev) => (prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]));
@@ -103,8 +58,8 @@ export function ExplainPage() {
       <div>
         <h1 className="font-display text-2xl font-semibold text-text-primary">Explain Your Data</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Multi-method <Term k="severity">anomaly detection</Term>,{""}
-          <Term k="changepoint">changepoints</Term>, <Term k="lag">lag analysis</Term>, and{""}
+          Multi-method <Term k="severity">anomaly detection</Term>,{" "}
+          <Term k="changepoint">changepoints</Term>, <Term k="lag">lag analysis</Term>, and{" "}
           <Term k="granger">Granger causality</Term>, all in one place.
         </p>
       </div>
@@ -123,11 +78,11 @@ export function ExplainPage() {
               {numericCols.map((c) => (
                 <button
                   key={c.name}
-                  onClick={() => toggle(c.name,"num")}
+                  onClick={() => toggle(c.name, "num")}
                   className={`border px-3 py-1 font-mono text-xs transition-colors ${
                     numericFactors.includes(c.name)
-                      ?"border-accent bg-accent-dim text-accent"
-                      :"border-border text-text-secondary hover:border-border-strong"
+                      ? "border-accent bg-accent-dim text-accent"
+                      : "border-border text-text-secondary hover:border-border-strong"
                   }`}
                 >
                   {c.name}
@@ -145,11 +100,11 @@ export function ExplainPage() {
               {categoricalCols.map((c) => (
                 <button
                   key={c.name}
-                  onClick={() => toggle(c.name,"cat")}
+                  onClick={() => toggle(c.name, "cat")}
                   className={`border px-3 py-1 font-mono text-xs transition-colors ${
                     categoricalFactors.includes(c.name)
-                      ?"border-accent bg-accent-dim text-accent"
-                      :"border-border text-text-secondary hover:border-border-strong"
+                      ? "border-accent bg-accent-dim text-accent"
+                      : "border-border text-text-secondary hover:border-border-strong"
                   }`}
                 >
                   {c.name}
@@ -161,54 +116,54 @@ export function ExplainPage() {
 
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => anomalyMethods.mutate()}
-            disabled={!mapping || anomalyMethods.isPending}
+            onClick={() => anomalyMethodsMutation.mutate()}
+            disabled={!mapping || anomalyMethodsMutation.isPending}
             className="btn-terminal-primary"
           >
-            {anomalyMethods.isPending ?"Running…" :"Detect anomalies (5 methods)"}
+            {anomalyMethodsMutation.isPending ? "Running…" : "Detect anomalies (5 methods)"}
           </button>
           <button
-            onClick={() => changepoints.mutate()}
-            disabled={!mapping || changepoints.isPending}
+            onClick={() => changepointsMutation.mutate()}
+            disabled={!mapping || changepointsMutation.isPending}
             className="btn-terminal"
           >
-            {changepoints.isPending ?"Running…" :"Detect changepoints"}
+            {changepointsMutation.isPending ? "Running…" : "Detect changepoints"}
           </button>
           <button
             onClick={() => lagMutation.mutate()}
             disabled={!mapping || !numericFactors.length || lagMutation.isPending}
             className="btn-terminal"
           >
-            {lagMutation.isPending ?"Running…" :"Lag analysis"}
+            {lagMutation.isPending ? "Running…" : "Lag analysis"}
           </button>
           <button
             onClick={() => grangerMutation.mutate()}
             disabled={!mapping || !numericFactors.length || grangerMutation.isPending}
             className="btn-terminal"
           >
-            {grangerMutation.isPending ?"Running…" :"Granger causality"}
+            {grangerMutation.isPending ? "Running…" : "Granger causality"}
           </button>
           <button
-            onClick={() => rootCause.mutate()}
+            onClick={() => rootCauseMutation.mutate()}
             disabled={
               !mapping ||
-              !anomalyMethods.data ||
-              rootCause.isPending ||
+              !anomalyMethodsMutation.data ||
+              rootCauseMutation.isPending ||
               (!numericFactors.length && !categoricalFactors.length)
             }
             className="btn-terminal"
           >
-            {rootCause.isPending ?"Running…" :"Find root cause"}
+            {rootCauseMutation.isPending ? "Running…" : "Find root cause"}
           </button>
         </div>
       </div>
 
-      {anomalyMethods.data && (
+      {anomalyMethodsMutation.data && (
         <>
           <MethodAgreementMatrix
-            methods={anomalyMethods.data.methods}
-            matrix={anomalyMethods.data.agreement_matrix}
-            counts={anomalyMethods.data.method_counts}
+            methods={anomalyMethodsMutation.data.methods}
+            matrix={anomalyMethodsMutation.data.agreement_matrix}
+            counts={anomalyMethodsMutation.data.method_counts}
           />
           <div className="rounded-panel border border-border bg-bg-surface p-5 space-y-2">
             <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
@@ -225,7 +180,7 @@ export function ExplainPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...anomalyMethods.data.records]
+                  {[...anomalyMethodsMutation.data.records]
                     .sort((a, b) => b.votes - a.votes)
                     .slice(0, 30)
                     .map((r) => (
@@ -245,24 +200,24 @@ export function ExplainPage() {
         </>
       )}
 
-      {rootCause.data && <RootCauseHints data={rootCause.data} />}
+      {rootCauseMutation.data && <RootCauseHints data={rootCauseMutation.data} />}
 
-      {changepoints.data && (
+      {changepointsMutation.data && (
         <div className="rounded-panel border border-border bg-bg-surface p-5 space-y-3">
           <h3 className="font-display text-sm font-medium uppercase tracking-widest text-text-secondary">
-            Changepoints detected: {changepoints.data.changepoints.length}
+            Changepoints detected: {changepointsMutation.data.changepoints.length}
           </h3>
           <div className="flex flex-wrap gap-2">
-            {changepoints.data.changepoints.map((c) => (
+            {changepointsMutation.data.changepoints.map((c) => (
               <div
                 key={c.index}
                 className={`border px-3 py-2 font-mono text-xs ${
-                  c.direction ==="up"
-                    ?"border-positive/40 bg-positive/5 text-positive"
-                    :"border-anomaly/40 bg-anomaly/5 text-anomaly"
+                  c.direction === "up"
+                    ? "border-positive/40 bg-positive/5 text-positive"
+                    : "border-anomaly/40 bg-anomaly/5 text-anomaly"
                 }`}
               >
-                {c.date} · {c.direction ==="up" ?"▲" :"▼"}{""}
+                {c.date} · {c.direction === "up" ? "▲" : "▼"}{" "}
                 {(c.shift_percent * 100).toFixed(0)}%
               </div>
             ))}
@@ -335,32 +290,32 @@ function LagCharts({ data }: { data: LagResult[] }) {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {data.map((r) => {
           const option = {
-            backgroundColor:"transparent",
+            backgroundColor: "transparent",
             grid: { left: 40, right: 16, top: 24, bottom: 24, containLabel: false },
             title: {
               text: `${r.factor} · peak lag=${r.peak_lag} (${r.peak_corr.toFixed(2)})`,
-              textStyle: { color: t.textPrimary, fontFamily:"JetBrains Mono", fontSize: 11 },
+              textStyle: { color: t.textPrimary, fontFamily: "JetBrains Mono", fontSize: 11 },
               top: 0,
               left: 0,
             },
             xAxis: {
-              type:"category",
+              type: "category",
               data: r.lags.map((l) => l.lag),
               axisLine: { lineStyle: { color: t.grid } },
-              axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
+              axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
             },
             yAxis: {
-              type:"value",
+              type: "value",
               min: -1,
               max: 1,
               axisLine: { show: false },
-              axisLabel: { color: t.axisLabel, fontFamily:"JetBrains Mono", fontSize: 10 },
+              axisLabel: { color: t.axisLabel, fontFamily: "JetBrains Mono", fontSize: 10 },
               splitLine: { lineStyle: { color: t.grid } },
             },
-            tooltip: { trigger:"axis" },
+            tooltip: { trigger: "axis" },
             series: [
               {
-                type:"bar",
+                type: "bar",
                 data: r.lags.map((l) => l.corr),
                 barMaxWidth: 8,
                 itemStyle: {
@@ -369,7 +324,7 @@ function LagCharts({ data }: { data: LagResult[] }) {
               },
             ],
           };
-          return <ReactECharts key={r.factor} option={option} style={{ height: 180, width:"100%" }} notMerge />;
+          return <ReactECharts key={r.factor} option={option} style={{ height: 180, width: "100%" }} notMerge />;
         })}
       </div>
     </div>

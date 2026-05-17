@@ -11,13 +11,13 @@ interface StorageRow {
 }
 
 const STORAGE_INVENTORY: StorageRow[] = [
-  { path:"~/.timesfm_studio/datasets/", what:"Your uploaded CSVs. Kept for 30 days, then auto-purged." },
-  { path:"~/.timesfm_studio/models/", what:"The TimesFM model weights (around 1.2 GB), downloaded on first run. If HuggingFace is unreachable, you can pre-populate this folder from another machine." },
-  { path:"~/.timesfm_studio/data/foresee.db", what:"Cached forecasts, backtests, anomaly results, saved scenarios." },
-  { path:"~/.timesfm_studio/adapters/", what:"Any fine-tuned adapters you create." },
-  { path:"~/.timesfm_studio/jobs/", what:"Background job state for long-running operations." },
-  { path:"~/.timesfm_studio/exports/", what:"PDFs and CSVs you export from reports." },
-  { path:"~/.timesfm_studio/logs/", what:"App logs you can inspect if something goes wrong." },
+  { path:"~/.foreko/datasets/", what:"Your uploaded CSVs. Kept for 30 days, then auto-purged." },
+  { path:"~/.foreko/models/", what:"The TimesFM model weights (around 1.2 GB), downloaded on first run. If HuggingFace is unreachable, you can pre-populate this folder from another machine." },
+  { path:"~/.foreko/data/foreko.db", what:"Cached forecasts, backtests, anomaly results, saved scenarios." },
+  { path:"~/.foreko/adapters/", what:"Any fine-tuned adapters you create." },
+  { path:"~/.foreko/jobs/", what:"Background job state for long-running operations." },
+  { path:"~/.foreko/exports/", what:"PDFs and CSVs you export from reports." },
+  { path:"~/.foreko/logs/", what:"App logs you can inspect if something goes wrong." },
 ];
 
 export function PrivacyPage() {
@@ -58,19 +58,19 @@ export function PrivacyPage() {
       <div>
         <h1 className="font-display text-3xl font-semibold text-text-primary">Privacy</h1>
         <p className="mt-2 text-text-secondary">
-          Foresee is a local-first app. Your data stays on the machine running it.
+          Foreko is a local-first app. Your data stays on the machine running it.
         </p>
       </div>
 
       <section className="rounded-panel border border-border/60 bg-bg-surface/30 backdrop-blur-sm p-6 space-y-4">
         <h2 className="font-display text-sm font-medium uppercase tracking-widest text-text-primary">
-          What Foresee writes to your machine
+          What Foreko writes to your machine
         </h2>
         <p className="text-sm text-text-secondary">
-          Everything Foresee touches lives under
-          <code className="mx-1 font-mono text-text-primary">~/.timesfm_studio/</code>
+          Everything Foreko touches lives under
+          <code className="mx-1 font-mono text-text-primary">~/.foreko/</code>
           (or
-          <code className="mx-1 font-mono text-text-primary">%USERPROFILE%\.timesfm_studio\</code>
+          <code className="mx-1 font-mono text-text-primary">%USERPROFILE%\.foreko\</code>
           on Windows). Delete that folder to remove all app data.
         </p>
         <ul className="space-y-2 text-sm">
@@ -90,7 +90,7 @@ export function PrivacyPage() {
         <ul className="space-y-2 text-sm text-text-secondary">
           <li>
             <span className="text-text-primary">LLM-generated narratives.</span> If you click a"Narrate" button, a summary of your forecast is sent to the LLM you have configured
-            (OpenAI, Anthropic, or local). Foresee asks for your consent the first time, and the
+            (OpenAI, Anthropic, or local). Foreko asks for your consent the first time, and the
             setting is stored locally. No LLM is called otherwise.
           </li>
           <li>
@@ -99,7 +99,7 @@ export function PrivacyPage() {
           </li>
         </ul>
         <p className="text-xs text-text-muted">
-          Foresee never sends telemetry, crash reports, or usage analytics automatically.
+          Foreko never sends telemetry, crash reports, or usage analytics automatically.
         </p>
       </section>
 
@@ -128,7 +128,7 @@ export function PrivacyPage() {
           <div>
             <p className="text-sm text-text-primary">Download a log bundle</p>
             <p className="text-xs text-text-muted">
-              Zipped copy of <code className="font-mono">~/.timesfm_studio/logs/</code>, useful when filing bug reports.
+              Zipped copy of <code className="font-mono">~/.foreko/logs/</code>, useful when filing bug reports.
             </p>
           </div>
           <button
@@ -178,20 +178,20 @@ export function PrivacyPage() {
         </div>
 
         <p className="text-xs text-text-muted pt-1">
-          To also remove the 1.2 GB model weights, close Foresee and delete
-          <code className="mx-1 font-mono">~/.timesfm_studio/models/</code>
+          To also remove the 1.2 GB model weights, close Foreko and delete
+          <code className="mx-1 font-mono">~/.foreko/models/</code>
           manually.
         </p>
       </section>
 
       <section className="rounded-panel border border-border/60 bg-bg-surface/30 backdrop-blur-sm p-6 space-y-3">
         <h2 className="font-display text-sm font-medium uppercase tracking-widest text-text-primary">
-          How to remove all Foresee data
+          How to remove all Foreko data
         </h2>
         <p className="text-sm text-text-secondary">
           Close the app and delete
-          <code className="mx-1 font-mono text-text-primary">~/.timesfm_studio/</code>.
-          That removes uploaded datasets, cached results, logs, and the model weights. Foresee does
+          <code className="mx-1 font-mono text-text-primary">~/.foreko/</code>.
+          That removes uploaded datasets, cached results, logs, and the model weights. Foreko does
           not write anywhere else on your machine.
         </p>
       </section>

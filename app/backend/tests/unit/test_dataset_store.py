@@ -13,8 +13,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from timesfm_studio.services import dataset_store
-from timesfm_studio.services.loaders import LOADERS, register
+from foreko.services import dataset_store
+from foreko.services.loaders import LOADERS, register
 
 
 @pytest.mark.unit
@@ -113,7 +113,7 @@ def test_csv_ingest_writes_new_meta_fields(tmp_path: Path) -> None:
 
     rows = "\n".join(f"2021-{m:02d}-01,{m}" for m in range(1, 13))
     content = f"Date,QTY\n{rows}\n".encode()
-    from timesfm_studio.services.loaders.csv import ingest_upload
+    from foreko.services.loaders.csv import ingest_upload
 
     preview = ingest_upload(filename="new.csv", content=content, datasets_dir=tmp_path)
     meta = dataset_store.read_meta(tmp_path / preview.id)
