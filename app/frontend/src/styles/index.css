@@ -177,39 +177,24 @@ svg .animate-wobble {
   }
   
   .btn-terminal:hover:not(:disabled) {
-    @apply border-accent text-accent shadow-[0_0_16px_rgb(var(--color-accent)/0.35)];
-    background: linear-gradient(90deg, rgb(var(--color-accent)/0.1) 0%, transparent 100%);
+    @apply border-accent text-accent bg-accent/10;
   }
-  
+
   .btn-terminal:active:not(:disabled) {
-    @apply shadow-[0_0_8px_rgb(var(--color-accent)/0.5)] scale-[0.98];
+    @apply scale-[0.98];
   }
 
   .btn-terminal:disabled {
     @apply opacity-40 cursor-not-allowed border-text-muted/30 text-text-muted;
   }
 
-  /* Blinking cursor micro-animation on hover */
-  .btn-terminal::after {
-    content: "_";
-    @apply opacity-0 text-accent font-mono animate-cursor-blink transition-opacity duration-300;
-  }
-
-  .btn-terminal:hover:not(:disabled)::after {
-    @apply opacity-100;
-  }
-
   /* Variant for primary solid actions, if needed */
   .btn-terminal-primary {
     @apply btn-terminal border-accent bg-accent/10 text-accent;
   }
-  
+
   .btn-terminal-primary:hover:not(:disabled) {
-    @apply bg-accent text-on-accent shadow-[0_0_24px_rgb(var(--color-accent)/0.5)];
-  }
-  
-  .btn-terminal-primary:hover:not(:disabled)::after {
-    @apply text-on-accent;
+    @apply bg-accent text-on-accent;
   }
 
   /* Terminal data grids */

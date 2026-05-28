@@ -24,7 +24,6 @@ from .routers import model as model_router
 from .routers import phase2 as phase2_routers
 from .routers import scenarios as scenarios_router
 from .routers import phase4 as phase4_routers
-from .routers import phase5 as phase5_routers
 from .routers import phase6 as phase6_routers
 from .routers import connections as connections_router
 from .routers import datasets as datasets_router
@@ -104,7 +103,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(
         title="Foreko",
         version=__version__,
-        description="Local web app wrapping Google's TimesFM 2.5 forecasting model.",
+        description=(
+            "Foreko, a local-first time-series forecasting workbench. "
+            "TimesFM and LightGBM side by side, with backtesting, "
+            "diagnostics, factor analysis, anomaly detection, and "
+            "Monte Carlo scenarios."
+        ),
         lifespan=lifespan,
     )
     app.state.settings = settings
@@ -179,13 +183,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(phase4_routers.segments_router, prefix="/api")
     app.include_router(phase4_routers.ensemble_router, prefix="/api")
     app.include_router(phase4_routers.tx_router, prefix="/api")
-    app.include_router(phase5_routers.narrative_router, prefix="/api")
-    app.include_router(phase5_routers.query_router, prefix="/api")
     app.include_router(phase6_routers.exports_router, prefix="/api")
-    app.include_router(phase6_routers.schedules_router, prefix="/api")
-    app.include_router(phase6_routers.alerts_router, prefix="/api")
     app.include_router(phase6_routers.annotations_router, prefix="/api")
-    app.include_router(phase6_routers.share_router, prefix="/api")
     app.include_router(finetune_router.router, prefix="/api")
     app.include_router(adapters_router.router, prefix="/api")
     app.include_router(model_router.router, prefix="/api")
@@ -196,6 +195,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     #   2. Monorepo dev build -> <repo>/dist (produced by `npm run build`)
     import sys
     from pathlib import Path
+    from fastapi.responses import FileResponse
     from fastapi.staticfiles import StaticFiles
 
     candidates: list[Path] = []
@@ -204,22 +204,45 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         candidates.append(Path(meipass) / "frontend")
     candidates.append(Path(__file__).parent.parent.parent / "frontend" / "dist")
 
-    mounted = False
+    static_dir: Path | None = None
     for candidate in candidates:
         if candidate.exists() and (candidate / "index.html").exists():
+            static_dir = candidate
             app.mount(
                 "/",
                 StaticFiles(directory=str(candidate), html=True),
                 name="static",
             )
             logger.info("Serving SPA from %s", candidate)
-            mounted = True
             break
-    if not mounted:
+    if static_dir is None:
         logger.error(
             "Frontend SPA not found. Searched: %s. The desktop window will be blank.",
             [str(c) for c in candidates],
         )
+        return app
+
+    # SPA deep-link fallback. ``StaticFiles(html=True)`` returns index.html
+    # only for the root and existing directories; a refresh on /semantic/abc
+    # or any other client-routed path would otherwise 404 with the bare
+    # ``{"detail":"Not Found"}`` JSON. We catch GET 404s on non-API paths
+    # and return index.html so React Router can pick up the route. The
+    # built assets under /assets/ are intentionally NOT rewritten — a
+    # missing asset is still a real 404.
+    index_html = static_dir / "index.html"
+
+    @app.middleware("http")
+    async def spa_history_fallback(request: Request, call_next):
+        response = await call_next(request)
+        if (
+            response.status_code == 404
+            and request.method == "GET"
+            and not request.url.path.startswith("/api/")
+            and not request.url.path.startswith("/assets/")
+            and "." not in request.url.path.rsplit("/", 1)[-1]
+        ):
+            return FileResponse(index_html)
+        return response
 
     return app
 

@@ -88,19 +88,6 @@ class Settings(BaseSettings):
     def logs_dir(self) -> Path:
         return self.storage_dir / "logs"
 
-    # LLM settings (Phase 5)
-    llm_provider: str = Field(default="none", description="none | anthropic | openai | ollama")
-    llm_model: str = Field(default="claude-sonnet-4-6", description="Model id")
-    llm_api_key: str = Field(default="", description="API key (empty for local ollama)")
-    llm_budget_monthly_usd: float = Field(default=5.0)
-
-    # Alerts (Phase 6)
-    smtp_host: str = Field(default="")
-    smtp_port: int = Field(default=587)
-    smtp_user: str = Field(default="")
-    smtp_password: str = Field(default="")
-    alert_webhook_url: str = Field(default="")
-
     def ensure_dirs(self) -> None:
         for d in (
             self.datasets_dir,

@@ -49,25 +49,6 @@ CREATE TABLE IF NOT EXISTS forecast_history (
 );
 CREATE INDEX IF NOT EXISTS idx_fhistory_dataset ON forecast_history(dataset_id);
 
-CREATE TABLE IF NOT EXISTS schedules (
-  id            TEXT PRIMARY KEY,
-  dataset_id    TEXT NOT NULL,
-  cron          TEXT NOT NULL,
-  action_json   TEXT NOT NULL,
-  last_run_at   TEXT,
-  active        INTEGER NOT NULL DEFAULT 1,
-  created_at    TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS alert_rules (
-  id          TEXT PRIMARY KEY,
-  dataset_id  TEXT NOT NULL,
-  kind        TEXT NOT NULL,
-  config_json TEXT NOT NULL,
-  active      INTEGER NOT NULL DEFAULT 1,
-  created_at  TEXT NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS annotations (
   id          TEXT PRIMARY KEY,
   dataset_id  TEXT NOT NULL,
@@ -77,13 +58,6 @@ CREATE TABLE IF NOT EXISTS annotations (
   created_at  TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_annot_dataset ON annotations(dataset_id);
-
-CREATE TABLE IF NOT EXISTS share_tokens (
-  token       TEXT PRIMARY KEY,
-  analysis_id TEXT NOT NULL,
-  created_at  TEXT NOT NULL,
-  expires_at  TEXT
-);
 """
 
 
@@ -319,103 +293,6 @@ class Store:
         with _db_lock, self._conn() as c:
             cur = c.execute("DELETE FROM annotations WHERE id=?", (aid,))
             return cur.rowcount > 0
-
-    # ---------- schedules ----------
-
-    def schedule_create(self, dataset_id: str, cron: str, action: dict[str, Any]) -> str:
-        sid = _gen_id()
-        with _db_lock, self._conn() as c:
-            c.execute(
-                "INSERT INTO schedules (id, dataset_id, cron, action_json, active, created_at) "
-                "VALUES (?,?,?,?,1,?)",
-                (sid, dataset_id, cron, json.dumps(action, default=str), _now()),
-            )
-        return sid
-
-    def schedule_list(self) -> list[dict[str, Any]]:
-        with self._conn() as c:
-            rows = c.execute(
-                "SELECT id, dataset_id, cron, action_json, last_run_at, active, created_at FROM schedules"
-            ).fetchall()
-        return [
-            {
-                "id": r["id"],
-                "dataset_id": r["dataset_id"],
-                "cron": r["cron"],
-                "action": json.loads(r["action_json"]),
-                "last_run_at": r["last_run_at"],
-                "active": bool(r["active"]),
-                "created_at": r["created_at"],
-            }
-            for r in rows
-        ]
-
-    def schedule_delete(self, sid: str) -> bool:
-        with _db_lock, self._conn() as c:
-            cur = c.execute("DELETE FROM schedules WHERE id=?", (sid,))
-            return cur.rowcount > 0
-
-    def schedule_mark_run(self, sid: str) -> None:
-        with _db_lock, self._conn() as c:
-            c.execute("UPDATE schedules SET last_run_at=? WHERE id=?", (_now(), sid))
-
-    # ---------- alert rules ----------
-
-    def alert_rule_create(self, dataset_id: str, kind: str, config: dict[str, Any]) -> str:
-        rid = _gen_id()
-        with _db_lock, self._conn() as c:
-            c.execute(
-                "INSERT INTO alert_rules (id, dataset_id, kind, config_json, active, created_at) VALUES (?,?,?,?,1,?)",
-                (rid, dataset_id, kind, json.dumps(config, default=str), _now()),
-            )
-        return rid
-
-    def alert_rule_list(self, dataset_id: str | None = None) -> list[dict[str, Any]]:
-        with self._conn() as c:
-            if dataset_id:
-                rows = c.execute(
-                    "SELECT id, dataset_id, kind, config_json, active, created_at FROM alert_rules WHERE dataset_id=?",
-                    (dataset_id,),
-                ).fetchall()
-            else:
-                rows = c.execute(
-                    "SELECT id, dataset_id, kind, config_json, active, created_at FROM alert_rules"
-                ).fetchall()
-        return [
-            {
-                "id": r["id"],
-                "dataset_id": r["dataset_id"],
-                "kind": r["kind"],
-                "config": json.loads(r["config_json"]),
-                "active": bool(r["active"]),
-                "created_at": r["created_at"],
-            }
-            for r in rows
-        ]
-
-    def alert_rule_delete(self, rid: str) -> bool:
-        with _db_lock, self._conn() as c:
-            cur = c.execute("DELETE FROM alert_rules WHERE id=?", (rid,))
-            return cur.rowcount > 0
-
-    # ---------- share tokens ----------
-
-    def share_mint(self, analysis_id: str, expires_at: str | None = None) -> str:
-        token = _gen_id()
-        with _db_lock, self._conn() as c:
-            c.execute(
-                "INSERT INTO share_tokens (token, analysis_id, created_at, expires_at) VALUES (?,?,?,?)",
-                (token, analysis_id, _now(), expires_at),
-            )
-        return token
-
-    def share_resolve(self, token: str) -> str | None:
-        with self._conn() as c:
-            row = c.execute(
-                "SELECT analysis_id FROM share_tokens WHERE token=?",
-                (token,),
-            ).fetchone()
-        return row["analysis_id"] if row else None
 
 
 _singleton: Store | None = None

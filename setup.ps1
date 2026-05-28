@@ -52,7 +52,18 @@ if (-not $gpuName) {
 # 2. Python deps. One uv sync call installs the right torch build because
 #    pyproject.toml binds the `cuda` extra to the CUDA wheel index.
 # ---------------------------------------------------------------------------
-$extras = @("--extra", "app", "--extra", "connectors", "--extra", "app-dev")
+$extras = @(
+  "--extra", "app",
+  "--extra", "connectors",
+  "--extra", "app-dev",
+  # The local LLM runtime ships as a prebuilt CPU wheel for Windows/macOS/Linux
+  # x86_64. We include it by default so the narrate_* paths actually run
+  # against llama.cpp on first boot instead of silently degrading to the
+  # template fallback. CUDA acceleration for llama-cpp-python still requires
+  # a manual rebuild with CMAKE_ARGS="-DGGML_CUDA=on"; we don't attempt it
+  # here so the no-compiler path keeps working.
+  "--extra", "llm-local"
+)
 if ($useCuda) {
   $extras += @("--extra", "cuda")
   Write-Step "Installing Python dependencies with CUDA 12.8 torch (uv sync $($extras -join ' '))"

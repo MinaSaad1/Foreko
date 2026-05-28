@@ -1,7 +1,9 @@
 """LightGBM baseline forecasting service.
 
-Trains a fresh LGBMRegressor on each dataset using lag and rolling
-features, then forecasts recursively one step at a time.
+Trains LGBMRegressor models on each dataset using lag and rolling features,
+then forecasts recursively one step at a time. Produces a point forecast
+plus P10 and P90 quantile forecasts via separate quantile-regression models
+(LightGBM `objective='quantile'`).
 """
 
 from __future__ import annotations
@@ -41,6 +43,11 @@ _FEATURE_CATEGORIES: list[tuple[str, str]] = [
 class LGBMResult:
     point_forecast: np.ndarray
     feature_importance: dict[str, float]
+    # 80% prediction interval bounds, same length as point_forecast. Both are
+    # produced by separate LightGBM quantile-regression models so the chart can
+    # render an honest uncertainty band, not a degenerate P10=P50=P90 line.
+    p10_forecast: np.ndarray
+    p90_forecast: np.ndarray
 
 
 def _make_features(
@@ -94,6 +101,54 @@ def _aggregate_importance(
     return {cat: round(v / total, 4) for cat, v in category_totals.items()}
 
 
+def _build_next_row_features(
+    step_date: pd.Timestamp,
+    history_values: list[float],
+    feature_cols: list[str],
+) -> np.ndarray:
+    """Build a single-row feature vector aligned to the model's training schema."""
+    next_row_df = pd.DataFrame(
+        {
+            "year": [step_date.year],
+            "month": [step_date.month],
+            "day": [step_date.day],
+            "dayofweek": [step_date.dayofweek],
+            "dayofyear": [step_date.dayofyear],
+            "week": [step_date.isocalendar()[1]],
+            "quarter": [step_date.quarter],
+        }
+    )
+
+    for lag in _LAG_WINDOWS:
+        col = f"lag_{lag}"
+        if col in feature_cols:
+            idx = len(history_values) - lag
+            next_row_df[col] = history_values[idx] if idx >= 0 else np.nan
+
+    for w in _ROLL_WINDOWS:
+        for stat in ("mean", "std", "min", "max"):
+            col = f"roll_{stat}_{w}"
+            if col in feature_cols:
+                window = history_values[-w:] if len(history_values) >= w else history_values
+                arr = np.array(window, dtype=float)
+                if stat == "mean":
+                    val = float(arr.mean())
+                elif stat == "std":
+                    val = float(arr.std())
+                elif stat == "min":
+                    val = float(arr.min())
+                else:
+                    val = float(arr.max())
+                next_row_df[col] = val
+
+    for col in feature_cols:
+        if col not in next_row_df.columns:
+            next_row_df[col] = np.nan
+
+    arr = np.asarray(next_row_df[feature_cols].to_numpy(), dtype=float)
+    return arr  # type: ignore[return-value]
+
+
 def fit_and_forecast(
     dates: pd.DatetimeIndex,
     values: np.ndarray,
@@ -102,8 +157,14 @@ def fit_and_forecast(
 ) -> LGBMResult:
     """Train LightGBM on (dates, values) and recursively forecast horizon steps.
 
-    Requires lightgbm to be installed. The caller is responsible for
-    ensuring the dependency is present.
+    Trains three LGBMRegressor models on the same feature set:
+      * a default (mean-squared-error) point regressor used for recursive forecasting
+      * a quantile regressor at alpha=0.1 for the lower band (P10)
+      * a quantile regressor at alpha=0.9 for the upper band (P90)
+
+    The point model drives the recursion (its predictions become the next-step
+    lag inputs). At each step the quantile models also predict using the same
+    feature vector, producing a per-step P10/P90 band.
     """
     try:
         import lightgbm as lgb
@@ -120,83 +181,72 @@ def fit_and_forecast(
     X_train = df_train[feature_cols].values
     y_train = df_train["y"].values
 
-    model = lgb.LGBMRegressor(
+    common_params = dict(
         n_estimators=500,
         learning_rate=0.05,
         num_leaves=31,
         min_child_samples=20,
         verbose=-1,
     )
-    model.fit(X_train, y_train)
+
+    point_model = lgb.LGBMRegressor(**common_params)
+    point_model.fit(X_train, y_train)
+
+    # Quantile regressors. Note: LightGBM tends to under-cover with very low
+    # n_estimators on quantile loss; the same n_estimators here is fine since
+    # we cap horizons modestly.
+    p10_model = lgb.LGBMRegressor(objective="quantile", alpha=0.1, **common_params)
+    p10_model.fit(X_train, y_train)
+
+    p90_model = lgb.LGBMRegressor(objective="quantile", alpha=0.9, **common_params)
+    p90_model.fit(X_train, y_train)
 
     importances = _aggregate_importance(
         feature_cols,
-        model.feature_importances_,
+        point_model.feature_importances_,
     )
 
-    # Recursive forecasting: extend the history one step at a time
+    # Recursive forecasting: extend the history one step at a time using the
+    # POINT model. At each step, also predict P10 and P90 from the quantile
+    # models using the same feature vector.
     history_dates = list(dates)
     history_values = list(values)
-    predictions: list[float] = []
+    point_predictions: list[float] = []
+    p10_predictions: list[float] = []
+    p90_predictions: list[float] = []
 
     for step_date in future_dates:
-        step_df = _make_features(
-            pd.DatetimeIndex(history_dates),
-            np.array(history_values),
-            max_lag=len(history_values),
-        )
-        step_df = step_df.dropna()
+        next_row = _build_next_row_features(step_date, history_values, feature_cols)
 
-        # Build a single-row feature vector for the next step
-        next_row_df = pd.DataFrame(
-            {
-                "year": [step_date.year],
-                "month": [step_date.month],
-                "day": [step_date.day],
-                "dayofweek": [step_date.dayofweek],
-                "dayofyear": [step_date.dayofyear],
-                "week": [step_date.isocalendar()[1]],
-                "quarter": [step_date.quarter],
-            }
-        )
+        point_pred = float(point_model.predict(next_row)[0])
+        p10_pred = float(p10_model.predict(next_row)[0])
+        p90_pred = float(p90_model.predict(next_row)[0])
 
-        # Add lag and rolling features from current history
-        for lag in _LAG_WINDOWS:
-            col = f"lag_{lag}"
-            if col in feature_cols:
-                idx = len(history_values) - lag
-                next_row_df[col] = history_values[idx] if idx >= 0 else np.nan
+        # Guard against quantile-crossing (LightGBM's independent quantile fits
+        # can occasionally produce p10 > p90). Sort and widen the tighter side
+        # using the point estimate as the anchor.
+        if p10_pred > p90_pred:
+            p10_pred, p90_pred = p90_pred, p10_pred
+        # Quantiles must bracket the point forecast for sane interpretation.
+        p10_pred = min(p10_pred, point_pred)
+        p90_pred = max(p90_pred, point_pred)
 
-        for w in _ROLL_WINDOWS:
-            for stat in ("mean", "std", "min", "max"):
-                col = f"roll_{stat}_{w}"
-                if col in feature_cols:
-                    window = history_values[-w:] if len(history_values) >= w else history_values
-                    arr = np.array(window, dtype=float)
-                    if stat == "mean":
-                        val = float(arr.mean())
-                    elif stat == "std":
-                        val = float(arr.std())
-                    elif stat == "min":
-                        val = float(arr.min())
-                    else:
-                        val = float(arr.max())
-                    next_row_df[col] = val
-
-        # Align columns to training feature order
-        for col in feature_cols:
-            if col not in next_row_df.columns:
-                next_row_df[col] = np.nan
-
-        pred = float(model.predict(next_row_df[feature_cols].values)[0])
-        predictions.append(pred)
+        point_predictions.append(point_pred)
+        p10_predictions.append(p10_pred)
+        p90_predictions.append(p90_pred)
 
         history_dates.append(step_date)
-        history_values.append(pred)
+        history_values.append(point_pred)
 
-    logger.info("LightGBM trained on %d points, forecasted %d steps.", n, horizon)
+    logger.info(
+        "LightGBM trained (point + P10 + P90) on %d points, forecasted %d steps.",
+        n,
+        horizon,
+    )
 
     return LGBMResult(
-        point_forecast=np.array(predictions),
+        point_forecast=np.array(point_predictions),
         feature_importance=importances,
+        p10_forecast=np.array(p10_predictions),
+        p90_forecast=np.array(p90_predictions),
     )

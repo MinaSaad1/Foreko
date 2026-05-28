@@ -24,7 +24,9 @@ router = APIRouter(tags=["system"])
 
 
 @router.get("/health", response_model=HealthInfo)
-def health(registry: ModelRegistry = Depends(get_registry)) -> HealthInfo:
+def health(
+    registry: ModelRegistry = Depends(get_registry),
+) -> HealthInfo:
     return HealthInfo(
         status="ok",
         model_status=registry.status,
@@ -34,7 +36,9 @@ def health(registry: ModelRegistry = Depends(get_registry)) -> HealthInfo:
 
 
 @router.get("/model-info", response_model=ModelInfo)
-def model_info(registry: ModelRegistry = Depends(get_registry)) -> ModelInfo:
+def model_info(
+    registry: ModelRegistry = Depends(get_registry),
+) -> ModelInfo:
     return ModelInfo(
         model_id=registry.model_id,
         model_status=registry.status,
@@ -74,7 +78,6 @@ def wipe_storage(settings: Settings = Depends(get_settings)) -> StorageWipeResul
         if target.exists():
             shutil.rmtree(target, ignore_errors=True)
             removed.append(str(target))
-    # Recreate the skeleton so subsequent writes have a home.
     settings.ensure_dirs()
     kept = [str(settings.storage_dir / "models")]
     logger.warning("Storage wipe: removed %s, kept %s", removed, kept)
@@ -83,11 +86,7 @@ def wipe_storage(settings: Settings = Depends(get_settings)) -> StorageWipeResul
 
 @router.get("/system/log-bundle")
 def log_bundle(settings: Settings = Depends(get_settings)) -> StreamingResponse:
-    """Return a zip of the logs directory for troubleshooting.
-
-    The zip is built in memory. Current log files are small (rotating daily at
-    most), so this never grows beyond a few MB in practice.
-    """
+    """Return a zip of the logs directory for troubleshooting."""
 
     buf = io.BytesIO()
     logs_dir = settings.logs_dir

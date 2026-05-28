@@ -1,11 +1,11 @@
 [project]
 name = "foreko-web"
 version = "0.1.0"
-description = "Foreko — local forecasting studio (web app for localhost dev)."
+description = "Foreko, a local-first time-series forecasting workbench. TimesFM and LightGBM side by side, free and MIT-licensed."
 authors = [
     {name = "Mina Saad", email = "mina.saad.wahba@gmail.com"},
 ]
-license = {text = "Apache-2.0"}
+license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

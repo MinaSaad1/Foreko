@@ -6,10 +6,33 @@ import { ACFChart } from "@/components/diagnostics/ACFChart";
 import { STLPanel } from "@/components/diagnostics/STLPanel";
 import { PageIntro } from "@/components/common/PageIntro";
 import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
-import { Term } from "@/components/common/Term";
+import {
+  LeftRail,
+  PageHeader,
+  RailChoiceGrid,
+  RailResetButton,
+  RailRow,
+  RailSection,
+  RightRail,
+  ThreeRailLayout,
+  WhatYoullGet,
+} from "@/components/common/Rails";
 import { useSyncedDataset } from "@/hooks/useSyncedDataset";
 import { useHealth } from "@/hooks/useHealth";
 import { useDiagnosticsOrchestrator } from "@/hooks/useDiagnosticsOrchestrator";
+
+const HORIZON_OPTIONS = [
+  { value: 4, label: "4" },
+  { value: 8, label: "8" },
+  { value: 12, label: "12" },
+  { value: 24, label: "24" },
+];
+
+const MODEL_OPTIONS = [
+  { value: "timesfm", label: "TimesFM" },
+  { value: "ets", label: "ETS" },
+  { value: "seasonal_naive", label: "Naive" },
+];
 
 export function DiagnosticsPage() {
   const { datasetId } = useParams<{ datasetId?: string }>();
@@ -32,57 +55,107 @@ export function DiagnosticsPage() {
     );
   }
 
+  const displayName = preview ? preview.filename.replace(/\.[^.]+$/, "") : "Diagnostics";
+
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-text-primary">Forecast Diagnostics</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          <Term k="residual">Residual</Term> analysis, <Term k="qq-plot">Q-Q plot</Term>,{" "}
-          <Term k="autocorrelation">autocorrelation</Term>,{" "}
-          <Term k="stl">STL decomposition</Term>, and <Term k="ljung-box">Ljung-Box test</Term>.
-        </p>
-        {preview && (
-          <p className="mt-1 text-sm text-text-muted font-mono">
-            {preview.filename} · {preview.row_count.toLocaleString()} rows
-          </p>
-        )}
+    <ThreeRailLayout
+      left={
+        <LeftRail ariaLabel="Diagnostics configuration">
+          <RailSection label="Dataset">
+            {preview ? (
+              <>
+                <RailRow k="File" v={preview.filename} />
+                <RailRow k="Rows" v={preview.row_count.toLocaleString()} />
+              </>
+            ) : (
+              <p className="font-mono text-[10px] text-text-faint">Loading…</p>
+            )}
+          </RailSection>
+
+          <RailSection label="Horizon">
+            <RailChoiceGrid
+              options={HORIZON_OPTIONS}
+              value={horizon}
+              onChange={setHorizon}
+              disabled={!!result}
+              columns={2}
+            />
+          </RailSection>
+
+          <RailSection label="Model">
+            <RailChoiceGrid
+              options={MODEL_OPTIONS}
+              value={model}
+              onChange={setModel}
+              disabled={!!result}
+              columns={3}
+            />
+          </RailSection>
+
+          {result && <RailResetButton onClick={() => reset()} />}
+        </LeftRail>
+      }
+      right={
+        <RightRail ariaLabel="Diagnostics insights">
+          {!result && (
+            <WhatYoullGet
+              summary="Residual analysis on a held-out forecast. Surfaces residual distribution, Q-Q plot, autocorrelation, STL decomposition, and the Ljung-Box white-noise test."
+              reading={[
+                "Residual histogram should look bell-shaped and centered near 0.",
+                "Q-Q dots on the diagonal = normally distributed residuals.",
+                "Ljung-Box p < 0.05 = residuals carry leftover structure; widen the model.",
+              ]}
+            />
+          )}
+          {result && (
+            <>
+              <RailSection label="Residuals">
+                <RailRow k="Mean" v={result.residual_stats.mean.toFixed(3)} />
+                <RailRow k="Std" v={result.residual_stats.std.toFixed(3)} />
+                <RailRow k="Skew" v={result.residual_stats.skew.toFixed(2)} />
+                <RailRow k="Kurtosis" v={result.residual_stats.kurtosis.toFixed(2)} />
+              </RailSection>
+              <RailSection label="Ljung-Box">
+                <RailRow
+                  k="p-value"
+                  v={result.ljung_box.p_value.toFixed(3)}
+                  tone={result.ljung_box.p_value < 0.05 ? "warn" : "ok"}
+                />
+                <RailRow
+                  k="Verdict"
+                  v={result.ljung_box.p_value < 0.05 ? "Autocorrelated" : "White noise"}
+                  tone={result.ljung_box.p_value < 0.05 ? "warn" : "ok"}
+                />
+              </RailSection>
+              <RailSection label="Series">
+                <RailRow k="Period" v={String(result.period)} />
+                <RailRow k="Freq" v={result.freq} />
+              </RailSection>
+            </>
+          )}
+        </RightRail>
+      }
+    >
+      <PageHeader
+        kicker="Inspect"
+        title={displayName}
+        subtitle={preview ? `${preview.row_count.toLocaleString()} rows · ${model} · horizon ${horizon}` : undefined}
+      />
+
+      <div className="lg:hidden">
+        <PageIntro pageKey="diagnostics" />
       </div>
 
-      <PageIntro pageKey="diagnostics" />
-
       {!result && (
-        <div className="rounded-panel border border-border bg-bg-surface p-6 space-y-5">
-          {preview && <ColumnMapper preview={preview} value={mapping} onChange={handleMappingChange} />}
-
-          <div className="flex items-end gap-4">
-            <div>
-              <label className="block font-mono text-xs uppercase tracking-widest text-text-muted mb-1">
-                Horizon
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={256}
-                value={horizon}
-                onChange={(e) => setHorizon(Math.max(1, Number(e.target.value)))}
-                className="w-24 border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
-              />
-            </div>
-            <div>
-              <label className="block font-mono text-xs uppercase tracking-widest text-text-muted mb-1">
-                Model
-              </label>
-              <select
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                className="border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
-              >
-                <option value="timesfm">TimesFM</option>
-                <option value="ets">ETS</option>
-                <option value="seasonal_naive">Seasonal Naive</option>
-              </select>
-            </div>
+        <div className="border border-border-strong/70 bg-bg-surface px-6 py-6 space-y-5 shadow-[var(--shadow-elev-1)]">
+          <div className="flex items-center gap-2">
+            <span className="text-accent leading-none" aria-hidden>▣</span>
+            <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
+              Set up diagnostics
+            </h2>
           </div>
+
+          {preview && <ColumnMapper preview={preview} value={mapping} onChange={handleMappingChange} />}
 
           {isError && (
             <p className="border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
@@ -98,46 +171,15 @@ export function DiagnosticsPage() {
             {isPending ? "Running..." : "Run diagnostics"}
           </button>
           {!modelReady && (
-            <p className="text-xs text-text-muted text-center">Model still loading, the Run button will enable when it's ready.</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-text-muted text-center">
+              Model still loading; the Run button enables when it's ready.
+            </p>
           )}
         </div>
       )}
 
       {result && (
         <div className="space-y-5">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-            <div className="rounded-panel border border-border bg-bg-surface p-4">
-              <p className="font-mono text-xs uppercase tracking-widest text-text-muted">Residual mean</p>
-              <p className="mt-2 font-display text-xl text-text-primary">
-                {result.residual_stats.mean.toFixed(2)}
-              </p>
-              <p className="mt-1 font-mono text-xs text-text-muted">std: {result.residual_stats.std.toFixed(2)}</p>
-            </div>
-            <div className="rounded-panel border border-border bg-bg-surface p-4">
-              <p className="font-mono text-xs uppercase tracking-widest text-text-muted">Skewness</p>
-              <p className="mt-2 font-display text-xl text-text-primary">
-                {result.residual_stats.skew.toFixed(2)}
-              </p>
-              <p className="mt-1 font-mono text-xs text-text-muted">
-                kurt: {result.residual_stats.kurtosis.toFixed(2)}
-              </p>
-            </div>
-            <div className="rounded-panel border border-border bg-bg-surface p-4">
-              <p className="font-mono text-xs uppercase tracking-widest text-text-muted">Ljung-Box p</p>
-              <p className="mt-2 font-display text-xl text-text-primary">
-                {result.ljung_box.p_value.toFixed(3)}
-              </p>
-              <p className="mt-1 font-mono text-xs text-text-muted">
-                {result.ljung_box.p_value < 0.05 ? "autocorrelated residuals" : "white-noise residuals"}
-              </p>
-            </div>
-            <div className="rounded-panel border border-border bg-bg-surface p-4">
-              <p className="font-mono text-xs uppercase tracking-widest text-text-muted">Period</p>
-              <p className="mt-2 font-display text-xl text-text-primary">{result.period}</p>
-              <p className="mt-1 font-mono text-xs text-text-muted">freq: {result.freq}</p>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-panel border border-border bg-bg-surface p-5 space-y-2">
               <p className="font-mono text-xs uppercase tracking-widest text-text-muted">Residual distribution</p>
@@ -171,15 +213,8 @@ export function DiagnosticsPage() {
               residual={result.stl.residual}
             />
           </div>
-
-          <button
-            onClick={() => reset()}
-            className="text-xs text-text-muted hover:text-text-secondary underline underline-offset-2"
-          >
-            ← Change settings
-          </button>
         </div>
       )}
-    </div>
+    </ThreeRailLayout>
   );
 }

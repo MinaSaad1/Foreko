@@ -56,8 +56,6 @@ def probe() -> DeviceInfo:
                 memory_free_mb=free_mb,
             )
 
-        # torch is installed but reports no CUDA — check whether a GPU actually
-        # exists so we can give the user an actionable message.
         gpu_name = _nvidia_smi_gpu_name()
         if gpu_name:
             logger.warning(

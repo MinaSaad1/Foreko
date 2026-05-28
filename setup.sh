@@ -51,7 +51,11 @@ fi
 # 2. Python deps. One uv sync call installs the right torch build because
 #    pyproject.toml binds the `cuda` extra to the CUDA wheel index.
 # ---------------------------------------------------------------------------
-EXTRAS=(--extra app --extra connectors --extra app-dev)
+# `llm-local` ships as a prebuilt CPU wheel; include it by default so the
+# narrate_* paths run against llama.cpp out of the box. CUDA acceleration
+# for llama-cpp-python still needs a manual rebuild with
+# CMAKE_ARGS="-DGGML_CUDA=on".
+EXTRAS=(--extra app --extra connectors --extra app-dev --extra llm-local)
 if [[ "$USE_CUDA" -eq 1 ]]; then
   EXTRAS+=(--extra cuda)
   step "Installing Python dependencies with CUDA 12.8 torch (uv sync ${EXTRAS[*]})"

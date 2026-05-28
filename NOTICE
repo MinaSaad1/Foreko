@@ -1,14 +1,14 @@
 Foreko
-Copyright 2026 MinaSaad1
+Copyright 2026 Mina Saad
 
-Licensed under the Apache License, Version 2.0 (the "License"); you may not
-use this file except in compliance with the License. You may obtain a copy
-of the License at
+Foreko is licensed under the MIT License (see LICENSE).
 
-    http://www.apache.org/licenses/LICENSE-2.0
+This NOTICE documents the upstream projects Foreko depends on so that users
+know what they are installing. Each project keeps its own license; obligations
+that flow with a given dependency are listed below for reference.
 
 --------------------------------------------------------------------------------
-This product includes software developed by Google LLC:
+Model:
 --------------------------------------------------------------------------------
 
 TimesFM 2.5 — Copyright 2024 Google LLC
@@ -19,10 +19,8 @@ TimesFM 2.5 — Copyright 2024 Google LLC
   Apache License 2.0.
 
 --------------------------------------------------------------------------------
-This product bundles the following third-party libraries:
---------------------------------------------------------------------------------
-
 Python dependencies (see pyproject.toml for exact versions):
+--------------------------------------------------------------------------------
   - PyTorch                 BSD 3-Clause
   - Transformers            Apache-2.0   Hugging Face
   - HuggingFace Hub         Apache-2.0   Hugging Face
@@ -43,8 +41,11 @@ Python dependencies (see pyproject.toml for exact versions):
   - SciPy                   BSD 3-Clause
   - JAX (optional)          Apache-2.0   Google LLC
   - python-multipart        Apache-2.0
+  - ReportLab               BSD 3-Clause
 
+--------------------------------------------------------------------------------
 JavaScript dependencies (see app/frontend/package.json):
+--------------------------------------------------------------------------------
   - React                   MIT          Meta
   - React DOM               MIT          Meta
   - React Router            MIT
@@ -61,18 +62,12 @@ JavaScript dependencies (see app/frontend/package.json):
   - Testing Library         MIT
   - jsdom                   MIT
 
-Rust / desktop shell dependencies (see app/desktop/src-tauri/Cargo.toml):
-  - Tauri v2                MIT or Apache-2.0
-  - tauri-plugin-shell      MIT or Apache-2.0
-  - serde / serde_json      MIT or Apache-2.0
-  - reqwest                 MIT or Apache-2.0
-  - dirs                    MIT or Apache-2.0
-
+--------------------------------------------------------------------------------
 Fonts loaded at runtime from Google Fonts:
+--------------------------------------------------------------------------------
   - Inter                   SIL Open Font License 1.1
   - Outfit                  SIL Open Font License 1.1
   - JetBrains Mono          SIL Open Font License 1.1
 
 Full license texts for each project are available in their respective source
-repositories. This NOTICE file is intended as an overview for end users and
-procurement teams; the LICENSE file at the root governs your use of Foreko.
+repositories.

@@ -34,11 +34,7 @@ import type {
   SegmentsResult,
   EnsembleResult,
   STLResult,
-  NarrativeResult,
-  FactorSuggestion,
   Annotation,
-  Schedule,
-  AlertRule,
 } from "@/types/phases";
 import { apiGet, apiPost, apiUpload, ApiError } from "./client";
 
@@ -90,7 +86,7 @@ export const api = {
   datasetSeries: (id: string, mapping: ColumnMapping) =>
     apiPost<SeriesExtraction>(`/datasets/${id}/series`, mapping),
 
-  // Saved database connections (PR 3 backend; the UI is in DataSourceSelector).
+  // Saved database connections.
   listConnections: () => apiGet<Connection[]>("/datasets/connections"),
   createConnection: (payload: ConnectionCreate) =>
     apiPost<Connection>("/datasets/connections", payload),
@@ -122,7 +118,7 @@ export const api = {
   analyzeFactors: (req: FactorAnalysisRequest) =>
     apiPost<FactorAnalysisResponse>("/factors/analyze", req),
 
-  // Phase 1: backtest, diagnostics, calibration, preflight, analyses cache
+  // Backtest, diagnostics, calibration, preflight, analyses cache
   startBacktest: (req: BacktestRequest) =>
     apiPost<JobHandle>("/backtest/walk-forward", req),
   getBacktestJob: (jobId: string) =>
@@ -143,7 +139,7 @@ export const api = {
   deleteAnalysis: (id: string) =>
     apiDelete<void>(`/analyses/${id}`),
 
-  // Phase 2: anomaly methods, root cause, changepoints, factor diagnostics
+  // Anomaly methods, root cause, changepoints, factor diagnostics
   detectAnomalyMethods: (req: { dataset_id: string; mapping: unknown; critical_z?: number; warning_z?: number }) =>
     apiPost<AnomalyMethodsResult>("/anomaly-methods/detect", req),
   explainAnomalies: (req: {
@@ -177,7 +173,7 @@ export const api = {
     max_lag: number;
   }) => apiPost<{ results: GrangerRow[] }>("/factor-diagnostics/granger", req),
 
-  // Phase 3: scenarios
+  // Scenarios (what-if)
   runScenario: (config: Record<string, unknown>) =>
     apiPost<ScenarioRunResult>("/scenarios/run", config),
   saveScenario: (label: string, config: Record<string, unknown>) =>
@@ -193,7 +189,7 @@ export const api = {
   forecastHistory: (datasetId: string) =>
     apiGet<{ id: string; model: string; run_at: string; horizon: number; forecast: unknown }[]>(`/scenarios/history/${datasetId}`),
 
-  // Phase 4: segments, stl, ensemble, transforms
+  // Segments, STL, ensemble, transforms
   stlDecompose: (req: { dataset_id: string; mapping: unknown; period?: number | null }) =>
     apiPost<STLResult>("/stl/decompose", req),
   compareSegments: (req: { dataset_id: string; mapping: unknown; top_n?: number }) =>
@@ -203,19 +199,7 @@ export const api = {
   transformRoundtrip: (req: { dataset_id: string; mapping: unknown; kind: string; period?: number }) =>
     apiPost<{ kind: string; reversible: boolean; transformed_preview?: number[]; n_points_after?: number; error?: string }>("/transforms/roundtrip", req),
 
-  // Phase 5: narrative, query, suggest
-  narrateForecast: (payload: unknown) =>
-    apiPost<NarrativeResult>("/narrative/forecast", { payload }),
-  narrateAnomaly: (payload: unknown) =>
-    apiPost<NarrativeResult>("/narrative/anomaly", { payload }),
-  narrateFactors: (payload: unknown) =>
-    apiPost<NarrativeResult>("/narrative/factors", { payload }),
-  suggestFactors: (columns: unknown[]) =>
-    apiPost<{ suggestions: FactorSuggestion[] }>("/narrative/suggest-factors", { columns }),
-  runNlq: (req: { records: unknown[]; query: string; date_field?: string }) =>
-    apiPost<{ results: Record<string, unknown>[]; count: number; filters: unknown[] }>("/query", req),
-
-  // Phase 6: exports, schedules, alerts, annotations, share
+  // Exports + annotations
   exportPdf: async (title: string, sections: unknown[]): Promise<Blob> => {
     const res = await fetch("/api/export/pdf", {
       method: "POST",
@@ -238,24 +222,9 @@ export const api = {
     }
     return res.blob();
   },
-  createSchedule: (req: { dataset_id: string; cron: string; action: Record<string, unknown> }) =>
-    apiPost<{ id: string }>("/schedules", req),
-  listSchedules: () => apiGet<Schedule[]>("/schedules"),
-  deleteSchedule: (id: string) => apiDelete<void>(`/schedules/${id}`),
-  createAlertRule: (req: { dataset_id: string; kind: string; config: Record<string, unknown> }) =>
-    apiPost<{ id: string }>("/alerts/rules", req),
-  listAlertRules: (datasetId?: string) =>
-    apiGet<AlertRule[]>(datasetId ? `/alerts/rules?dataset_id=${datasetId}` : "/alerts/rules"),
-  deleteAlertRule: (id: string) => apiDelete<void>(`/alerts/rules/${id}`),
-  testWebhook: (url: string, message?: string) =>
-    apiPost<{ ok: boolean }>("/alerts/test-webhook", { url, message: message || "Foreko test alert" }),
   createAnnotation: (req: { dataset_id: string; date: string; label: string; note?: string }) =>
     apiPost<{ id: string }>("/annotations", req),
   listAnnotations: (datasetId: string) =>
     apiGet<Annotation[]>(`/annotations/${datasetId}`),
   deleteAnnotation: (id: string) => apiDelete<void>(`/annotations/${id}`),
-  mintShare: (analysisId: string, expiresAt?: string) =>
-    apiPost<{ token: string }>("/share/mint", { analysis_id: analysisId, expires_at: expiresAt }),
-  resolveShare: (token: string) =>
-    apiGet<{ id: string; kind: string; result: unknown; created_at: string }>(`/share/${token}`),
 };

@@ -10,6 +10,9 @@ export interface SampleDescriptor {
   horizon: string;
   /** Pre-filled column mapping so the forecast is one click away. */
   mapping: ColumnMapping;
+  /** Where to navigate after the sample finishes uploading. Defaults to
+   * /compare/<id> via the samples picker. */
+  redirectTo?: string;
 }
 
 export const SAMPLES: SampleDescriptor[] = [

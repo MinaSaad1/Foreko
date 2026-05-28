@@ -159,7 +159,7 @@ async def run_comparison(
     tfm_q90 = tfm_full_quant[:, _IDX_Q90]
 
     # --- LightGBM backtest + full forecast (in thread) ---
-    def _run_lgb() -> tuple[np.ndarray, np.ndarray, np.ndarray, dict[str, float]]:
+    def _run_lgb() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict[str, float]]:
         holdout_res = fit_and_forecast(
             train_dates, train_values, holdout_dates, holdout
         )
@@ -169,12 +169,13 @@ async def run_comparison(
         return (
             holdout_res.point_forecast,
             full_res.point_forecast,
-            full_res.point_forecast,
+            full_res.p10_forecast,
+            full_res.p90_forecast,
             full_res.feature_importance,
         )
 
     loop = asyncio.get_running_loop()
-    lgb_holdout, lgb_full_point, _, lgb_importance = await loop.run_in_executor(
+    lgb_holdout, lgb_full_point, lgb_p10, lgb_p90, lgb_importance = await loop.run_in_executor(
         None, _run_lgb
     )
 
@@ -192,8 +193,8 @@ async def run_comparison(
         name="your_model",
         display_name="LightGBM",
         point=lgb_full_point,
-        q10=None,
-        q90=None,
+        q10=lgb_p10,
+        q90=lgb_p90,
         mape=lgb_mape,
         importance=lgb_importance,
     )

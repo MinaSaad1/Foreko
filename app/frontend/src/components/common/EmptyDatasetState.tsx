@@ -6,40 +6,40 @@ import type { PageIntroKey } from"@/data/pageIntros";
 import { useDatasetStore } from"@/stores/datasetStore";
 
 interface EmptyDatasetStateProps {
-  title: string;
-  pageKey: PageIntroKey;
-  basePath: string;
-  message?: string;
+ title: string;
+ pageKey: PageIntroKey;
+ basePath: string;
+ message?: string;
 }
 
 export function EmptyDatasetState({
-  title,
-  pageKey,
-  basePath,
-  message,
+ title,
+ pageKey,
+ basePath,
+ message,
 }: EmptyDatasetStateProps) {
-  const navigate = useNavigate();
-  const setActiveDatasetId = useDatasetStore((s) => s.setActiveDatasetId);
+ const navigate = useNavigate();
+ const setActiveDatasetId = useDatasetStore((s) => s.setActiveDatasetId);
 
-  const goToDataset = (preview: { id: string }) => {
-    setActiveDatasetId(preview.id);
-    navigate(`${basePath}/${preview.id}`);
-  };
+ const goToDataset = (preview: { id: string }) => {
+ setActiveDatasetId(preview.id);
+ navigate(`${basePath}/${preview.id}`);
+ };
 
-  return (
-    <div className="mx-auto max-w-2xl space-y-6 py-8">
-      <div>
-        <h1 className="font-display text-3xl font-semibold text-text-primary">{title}</h1>
-        <p className="mt-2 text-text-secondary">
-          {message ??"Upload a CSV first, or pick a sample to explore this analysis."}
-        </p>
-      </div>
+ return (
+ <div className="mx-auto max-w-2xl space-y-6 py-8">
+ <div>
+ <h1 className="font-display text-3xl font-semibold text-text-primary">{title}</h1>
+ <p className="mt-2 text-text-secondary">
+ {message ??"Upload a CSV first, or pick a sample to explore this analysis."}
+ </p>
+ </div>
 
-      <PageIntro pageKey={pageKey} />
+ <PageIntro pageKey={pageKey} />
 
-      <CSVUpload onUploaded={goToDataset} />
+ <CSVUpload onUploaded={goToDataset} />
 
-      <SamplesPicker redirectTo={(id) => `${basePath}/${id}`} />
-    </div>
-  );
+ <SamplesPicker redirectTo={(id) => `${basePath}/${id}`} />
+ </div>
+ );
 }

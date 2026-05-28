@@ -7,25 +7,25 @@ import { LoadingSplash } from"./components/LoadingSplash";
 import"./styles/index.css";
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 30_000,
-    },
-  },
+ defaultOptions: {
+ queries: {
+ refetchOnWindowFocus: false,
+ retry: 1,
+ staleTime: 30_000,
+ },
+ },
 });
 
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("#root not found");
 
 createRoot(rootEl).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-        <LoadingSplash />
-      </BrowserRouter>
-    </QueryClientProvider>
-  </StrictMode>,
+ <StrictMode>
+ <QueryClientProvider client={queryClient}>
+ <BrowserRouter>
+ <App />
+ <LoadingSplash />
+ </BrowserRouter>
+ </QueryClientProvider>
+ </StrictMode>,
 );

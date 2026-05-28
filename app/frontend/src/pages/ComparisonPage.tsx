@@ -1,15 +1,25 @@
 import { useRef } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useBacktestStore } from "@/stores/backtestStore";
 import { ColumnMapper } from "@/components/ColumnMapper";
 import { WinnerCard } from "@/components/WinnerCard";
 import { AlternativeCard } from "@/components/AlternativeCard";
-import { NextStepsCallout } from "@/components/NextStepsCallout";
 import { PageIntro } from "@/components/common/PageIntro";
 import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
 import { HelpHint } from "@/components/common/HelpHint";
 import { Term } from "@/components/common/Term";
 import { DownloadPdfButton, type PdfSection } from "@/components/common/DownloadPdfButton";
+import {
+  LeftRail,
+  PageHeader,
+  RailChoiceGrid,
+  RailResetButton,
+  RailRow,
+  RailSection,
+  RightRail,
+  ThreeRailLayout,
+  WhatYoullGet,
+} from "@/components/common/Rails";
 import { useDocumentTitle } from "@/utils/useDocumentTitle";
 import { useSyncedDataset } from "@/hooks/useSyncedDataset";
 import { useHealth } from "@/hooks/useHealth";
@@ -133,98 +143,131 @@ function buildForecastReport(
     });
   }
 
-  sections.push({
-    heading: "Model comparison",
-    body: `Both models were trained on the same history and evaluated on a ${backtest_holdout}-period holdout.`,
-    table: {
-      headers: ["Metric", winner.display_name, alternative.display_name, "Delta"],
-      rows: [
-        ["Accuracy",
-          formatPct(winner.accuracy),
-          formatPct(alternative.accuracy),
-          `${((winner.accuracy - alternative.accuracy) * 100).toFixed(1)} pp`,
-        ],
-        ["MAPE (lower is better)",
-          formatPct(winner.mape),
-          formatPct(alternative.mape),
-          `${((winner.mape - alternative.mape) * 100).toFixed(1)} pp`,
-        ],
-        ["Confidence",
-          winner.confidence,
-          alternative.confidence,
-          winner.confidence === alternative.confidence ? "-" : "differ",
-        ],
-        ["Expected total",
-          formatNumber(winner.total_forecast),
-          formatNumber(alternative.total_forecast),
-          formatNumber(winner.total_forecast - alternative.total_forecast),
-        ],
-      ],
-    },
-  });
-
-  const rowLimit = Math.min(12, dates.length);
-  if (rowLimit > 0) {
-    const rows: (string | number)[][] = [];
-    for (let i = 0; i < rowLimit; i++) {
-      rows.push([
-        dates[i],
-        formatNumber(winner.point_forecast[i]),
-        formatNumber(winner.p10[i]),
-        formatNumber(winner.p90[i]),
-        formatNumber(alternative.point_forecast[i]),
-      ]);
-    }
-    sections.push({
-      heading: `Forecast values${dates.length > rowLimit ? ` (first ${rowLimit} of ${dates.length})` : ""}`,
-      table: {
-        headers: ["Date",
-          `${winner.display_name} point`, "P10 (low)", "P90 (high)",
-          `${alternative.display_name} point`,
-        ],
-        rows,
-      },
-    });
-  }
-
-  const fi = winner.feature_importance ?? alternative.feature_importance;
-  if (fi && fi.length > 0) {
-    const top = [...fi]
-      .sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight))
-      .slice(0, 10);
-    sections.push({
-      heading: "What drives the forecast",
-      body: "Top signals ranked by their contribution to the model.",
-      table: {
-        headers: ["Rank", "Driver", "Weight"],
-        rows: top.map((item, idx) => [idx + 1, item.category, item.weight.toFixed(4)]),
-      },
-    });
-  }
-
-  const takeaways: string[] = [];
-  takeaways.push(
-    `Use ${winner.display_name} as the primary forecast, it beats ${alternative.display_name} by ${lift.toFixed(1)}% on holdout error.`,
-  );
-  takeaways.push(
-    `Expect roughly ${formatNumber(winner.total_forecast)} total across the next ${ctx.horizon} periods, ` +
-    `with the P10–P90 band widening as the horizon grows.`,
-  );
-  if (Math.abs(trendPct) >= 5) {
-    takeaways.push(
-      `The winner projects a ${trendPct >= 0 ? "rising" : "declining"} trend of ${Math.abs(trendPct).toFixed(1)}% from the first to the last forecasted period.`,
-    );
-  }
-  if (winner.confidence === "Low" || alternative.confidence === "Low") {
-    takeaways.push("One or both models flagged Low confidence, treat the point forecasts as directional and use the P10/P90 band for planning bounds.");
-  }
-
-  sections.push({
-    heading: "Takeaways",
-    body: takeaways.map((t, i) => `${i + 1}. ${t}`).join("\n"),
-  });
-
   return sections;
+}
+
+interface ForecastLeftRailProps {
+  preview: { filename: string; row_count: number } | undefined;
+  horizon: number;
+  setHorizon: (h: number) => void;
+  result: ComparisonResponse | null;
+  isRunning: boolean;
+  onReset: () => void;
+}
+
+function ForecastLeftRail({ preview, horizon, setHorizon, result, isRunning, onReset }: ForecastLeftRailProps) {
+  const horizonLocked = !!result || isRunning;
+  return (
+    <LeftRail ariaLabel="Forecast configuration">
+      <RailSection label="Dataset">
+        {preview ? (
+          <>
+            <RailRow k="File" v={preview.filename} />
+            <RailRow k="Rows" v={preview.row_count.toLocaleString()} />
+          </>
+        ) : (
+          <p className="font-mono text-[10px] text-text-faint">Loading…</p>
+        )}
+      </RailSection>
+
+      <RailSection label="Horizon">
+        <RailChoiceGrid
+          options={HORIZON_OPTIONS}
+          value={horizon}
+          onChange={setHorizon}
+          disabled={horizonLocked}
+          disabledTitle="Use ← Change settings to adjust"
+        />
+      </RailSection>
+
+      <RailSection label="Models">
+        <RailRow k="Primary" v="TimesFM 2.5" tone="accent" />
+        <RailRow k="Challenger" v="LightGBM" />
+      </RailSection>
+
+      {result && <RailResetButton onClick={onReset} />}
+    </LeftRail>
+  );
+}
+
+interface NextStepsRailItem {
+  to: string;
+  eyebrow: string;
+  title: string;
+}
+
+function NextStepsCompact({ datasetId }: { datasetId: string }) {
+  const items: NextStepsRailItem[] = [
+    { to: `/backtest/${datasetId}`, eyebrow: "Validate", title: "Backtest" },
+    { to: `/anomaly/${datasetId}`, eyebrow: "Investigate", title: "Anomalies" },
+    { to: `/explain/${datasetId}`, eyebrow: "Understand", title: "Explain" },
+  ];
+  return (
+    <div className="border border-border-strong/70 divide-y divide-border-strong/70">
+      {items.map((it) => (
+        <Link
+          key={it.to}
+          to={it.to}
+          className="group flex items-center justify-between px-3 py-3 hover:bg-accent/10 transition-colors"
+        >
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-accent">{it.eyebrow}</p>
+            <p className="mt-0.5 font-display text-sm text-text-primary group-hover:text-accent transition-colors">{it.title}</p>
+          </div>
+          <span className="font-mono text-text-muted group-hover:text-accent transition-colors">→</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+interface ForecastRightRailProps {
+  result: ComparisonResponse | null;
+  datasetId: string;
+  horizon: number;
+}
+
+function ForecastRightRail({ result, datasetId, horizon }: ForecastRightRailProps) {
+  return (
+    <RightRail ariaLabel="Forecast insights">
+      {!result && (
+        <WhatYoullGet
+          summary="A calibrated point forecast plus a P10/P90 uncertainty band, the recommended model with its confidence rating, and an alternative for comparison."
+          reading={[
+            "Cyan band = uncertainty; wider = less certain.",
+            "Recommended model is opinionated. Flip to the alternative inline.",
+            "Defend the forecast by following the next-step links after running.",
+          ]}
+        />
+      )}
+
+      {result && (
+        <>
+          <RailSection label="Backtest metrics">
+            <RailRow k="Winner" v={result.winner.display_name} tone="accent" />
+            <RailRow k="Accuracy" v={formatPct(result.winner.accuracy)} tone="ok" />
+            <RailRow k="MAPE" v={formatPct(result.winner.mape)} />
+            <RailRow
+              k="Confidence"
+              v={result.winner.confidence}
+              tone={result.winner.confidence === "High" ? "ok" : result.winner.confidence === "Low" ? "warn" : undefined}
+            />
+            <RailRow k="Horizon" v={`${horizon} periods`} />
+          </RailSection>
+
+          <RailSection label="Alternative">
+            <RailRow k="Model" v={result.alternative.display_name} />
+            <RailRow k="Accuracy" v={formatPct(result.alternative.accuracy)} />
+            <RailRow k="MAPE" v={formatPct(result.alternative.mape)} tone="muted" />
+          </RailSection>
+
+          <RailSection label="Next steps">
+            <NextStepsCompact datasetId={datasetId} />
+          </RailSection>
+        </>
+      )}
+    </RightRail>
+  );
 }
 
 export function ComparisonPage() {
@@ -238,8 +281,18 @@ export function ComparisonPage() {
   );
   const chartHandleRef = useRef<ComparisonChartHandle | null>(null);
 
-  const { mapping, handleMappingChange, horizon, setHorizon, result, isRunning, isError, error, startComparison, reset } =
-    useComparisonOrchestrator(activeId);
+  const {
+    mapping,
+    handleMappingChange,
+    horizon,
+    setHorizon,
+    result,
+    isRunning,
+    isError,
+    error,
+    startComparison,
+    reset,
+  } = useComparisonOrchestrator(activeId);
 
   if (!activeId) {
     return (
@@ -251,24 +304,61 @@ export function ComparisonPage() {
     );
   }
 
+  const resolved = result ? resolveRecommendation(result, backtestSummary) : null;
+  const displayName = preview ? preview.filename.replace(/\.[^.]+$/, "") : "Forecast";
+
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-text-primary">Forecast</h1>
-        {preview && (
-          <p className="mt-1 text-sm text-text-muted font-mono">
-            {preview.filename} · {preview.row_count.toLocaleString()} rows
-          </p>
-        )}
+    <ThreeRailLayout
+      left={
+        <ForecastLeftRail
+          preview={preview}
+          horizon={horizon}
+          setHorizon={setHorizon}
+          result={resolved?.data ?? null}
+          isRunning={isRunning}
+          onReset={reset}
+        />
+      }
+      right={
+        <ForecastRightRail
+          result={resolved?.data ?? null}
+          datasetId={activeId}
+          horizon={horizon}
+        />
+      }
+    >
+      <PageHeader
+        kicker="01 — Forecast Studio"
+        title={displayName}
+        subtitle={preview ? `${preview.row_count.toLocaleString()} rows · horizon ${horizon}` : undefined}
+        actions={
+          resolved && (
+            <DownloadPdfButton
+              title="Foreko, Forecast report"
+              filename="foreko-forecast.pdf"
+              sections={() => buildForecastReport(resolved.data, {
+                horizon,
+                datasetName: preview?.filename,
+                rowCount: preview?.row_count,
+                chartPng: chartHandleRef.current?.getPng({ backgroundColor: "#ffffff", pixelRatio: 3 }) ?? null,
+              })}
+            />
+          )
+        }
+      />
+
+      <div className="lg:hidden">
+        <PageIntro pageKey="compare" />
       </div>
 
-      <PageIntro pageKey="compare" />
-
-      {preview && !result && (
-        <div className="rounded-panel border border-border bg-bg-surface p-6 space-y-6">
-          <h2 className="font-display text-base font-medium text-text-primary">
-            Set up your forecast
-          </h2>
+      {preview && !resolved && !isRunning && (
+        <div className="border border-border-strong/70 bg-bg-surface px-6 py-6 space-y-5 shadow-[var(--shadow-elev-1)]">
+          <div className="flex items-center gap-2">
+            <span className="text-accent leading-none" aria-hidden>▣</span>
+            <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
+              Set up your forecast
+            </h2>
+          </div>
 
           <ColumnMapper
             preview={preview}
@@ -276,30 +366,17 @@ export function ComparisonPage() {
             onChange={handleMappingChange}
           />
 
-          <div>
-            <label className="font-mono text-xs uppercase tracking-widest text-text-muted mb-2 flex items-center">
-              How far ahead (<Term k="horizon">horizon</Term>)
-              <HelpHint termKey="horizon" />
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {HORIZON_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setHorizon(opt.value)}
-                  className={`border px-3 py-1.5 text-sm transition-colors ${
-                    horizon === opt.value
-                      ? "border-accent bg-accent-dim text-accent"
-                      : "border-border text-text-secondary hover:border-border-strong hover:text-text-primary"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">
+            <span>Horizon (<Term k="horizon">horizon</Term>)</span>
+            <HelpHint termKey="horizon" />
+            <span className="text-text-faint">|</span>
+            <span className="text-accent">{horizon} periods</span>
+            <span className="text-text-faint">·</span>
+            <span className="text-text-faint">change in the left rail</span>
           </div>
 
           {isError && (
-            <p className="border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
+            <p className="border border-anomaly/40 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
               {error instanceof Error
                 ? error.message
                 : "Comparison failed. Check that the model is loaded."}
@@ -315,55 +392,39 @@ export function ComparisonPage() {
           </button>
 
           {!modelReady && (
-            <p className="text-xs text-text-muted text-center">
-              Model still loading, the Run button will enable when it's ready.
-            </p>
-          )}
-
-          {isRunning && (
-            <p className="text-xs text-text-muted text-center">
-              Training and comparing both models on your data. This takes 10-30 seconds.
+            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-text-muted text-center">
+              Model still loading; the Run button enables when it's ready.
             </p>
           )}
         </div>
       )}
 
-      {result && (() => {
-        const resolved = resolveRecommendation(result, backtestSummary);
-        return (
-          <div className="space-y-4">
-            <div className="flex justify-end">
-              <DownloadPdfButton
-                title="Foreko, Forecast report"
-                filename="foreko-forecast.pdf"
-                sections={() => buildForecastReport(resolved.data, {
-                  horizon,
-                  datasetName: preview?.filename,
-                  rowCount: preview?.row_count,
-                  chartPng: chartHandleRef.current?.getPng({ backgroundColor: "#ffffff", pixelRatio: 3 }) ?? null,
-                })}
-              />
-            </div>
-            <WinnerCard
-              data={resolved.data}
-              chartRef={chartHandleRef}
-              recommendationSource={resolved.source}
-              recommendationNote={resolved.note}
-            />
-            <AlternativeCard
-              model={resolved.data.alternative}
-              winnerAccuracy={resolved.data.winner.accuracy}
-            />
-            <NextStepsCallout datasetId={activeId} />
-            <button
-              onClick={() => reset()}
-              className="text-xs text-text-muted hover:text-text-secondary underline underline-offset-2"
-            >
-              ← Change settings
-            </button>
-          </div>
-        );
-      })()}
-    </div>
+      {isRunning && (
+        <div className="border border-accent/40 bg-bg-surface px-6 py-12 text-center space-y-4 shadow-[var(--shadow-elev-1)]">
+          <div className="mx-auto h-8 w-8 border-2 border-border/60 border-t-accent rounded-full animate-spin" />
+          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-accent">
+            Running comparison…
+          </p>
+          <p className="text-[13px] text-text-secondary max-w-[48ch] mx-auto leading-relaxed">
+            Training and comparing both models on your data. This takes 10-30 seconds.
+          </p>
+        </div>
+      )}
+
+      {resolved && (
+        <>
+          <WinnerCard
+            data={resolved.data}
+            chartRef={chartHandleRef}
+            recommendationSource={resolved.source}
+            recommendationNote={resolved.note}
+          />
+          <AlternativeCard
+            model={resolved.data.alternative}
+            winnerAccuracy={resolved.data.winner.accuracy}
+          />
+        </>
+      )}
+    </ThreeRailLayout>
   );
 }
