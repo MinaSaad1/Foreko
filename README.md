@@ -1,104 +1,271 @@
 <div align="center">
 
-<img src="app/frontend/public/foreko-logo.png" alt="Foreko" width="120" />
+<img src="docs/svg/hero.svg" alt="Foreko, local-first time-series forecasting workbench" width="100%"/>
 
-# Foreko
+<br/>
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-00B8C9.svg?style=flat-square)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![Node 20+](https://img.shields.io/badge/Node-20%2B-339933.svg?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688.svg?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React 18](https://img.shields.io/badge/React-18-61DAFB.svg?style=flat-square&logo=react&logoColor=000)](https://react.dev/)
+[![TimesFM](https://img.shields.io/badge/Model-TimesFM%202.5-FF6F00.svg?style=flat-square)](https://github.com/google-research/timesfm)
+[![CUDA optional](https://img.shields.io/badge/CUDA-12.8%20optional-76B900.svg?style=flat-square&logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-zone)
 
 **Forecast your numbers. Stay on your machine.**
 
-A free, MIT-licensed time-series forecasting workbench that runs locally.
-TimesFM and LightGBM side by side, with backtesting, diagnostics, factor
-analysis, anomaly detection, and what-if scenarios. All on your own data.
+</div>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-00B8C9.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Node 20+](https://img.shields.io/badge/Node-20%2B-339933.svg)](https://nodejs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com/)
-[![React 18](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev/)
-[![TimesFM](https://img.shields.io/badge/Model-TimesFM%202.5-FF6F00.svg)](https://github.com/google-research/timesfm)
-[![CUDA](https://img.shields.io/badge/CUDA-12.8%20optional-76B900.svg)](https://developer.nvidia.com/cuda-zone)
+<br/>
+
+<p align="center">
+  <img src="docs/screenshots/04b-forecast-result.png" alt="Foreko forecast result: TimesFM vs LightGBM with P10/P90 bands, accuracy stats, and next-step rail" width="100%"/>
+</p>
+
+<br/>
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### Local-first
+
+Your data never leaves your machine. No accounts, no telemetry, no cloud.
+The only outbound request is the one-time TimesFM weights download.
+
+</td>
+<td width="50%" valign="top">
+
+### Two models, one click
+
+Google's TimesFM foundation model and a LightGBM baseline run side by
+side, backtested on your data. Foreko shows the winner and the runner-up.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### Honest uncertainty
+
+P10 / P50 / P90 bands, walk-forward backtests across multiple folds,
+prediction-interval calibration. Every confidence claim is measurable.
+
+</td>
+<td width="50%" valign="top">
+
+### MIT licensed, forever free
+
+No paid tier, no upsell, no commercial gating. The whole app is in this
+repo and runs in two `npm` commands.
+
+</td>
+</tr>
+</table>
+
+<br/>
+
+---
+
+<div align="center">
+
+## The flow
+
+<img src="docs/svg/workflow.svg" alt="Workflow: Ingest, Preflight, Forecast, Diagnose, Operate" width="100%"/>
 
 </div>
 
 ---
 
-## Why Foreko
-
-- **Local-first.** Data never leaves your machine. No telemetry. No accounts.
-- **Two models, one click.** Google's TimesFM foundation model and a LightGBM baseline run side by side, backtested on your data.
-- **Honest uncertainty.** P10/P50/P90 bands, walk-forward backtests across multiple folds, prediction-interval calibration.
-- **Plain English in, plain English out.** Upload a CSV with a date column and a number to predict. Foreko does the rest.
-- **MIT licensed.** No upsell, no paid tier, no commercial gating. The whole app is in this repo.
-
----
-
-## What's inside
-
-| Page | What it does | Key signals |
-|---|---|---|
-| **Data** | Upload CSV / Excel / JSON, or connect to Postgres / MySQL / SQL Server. Picks samples to try without your data. | Row count, schema, dataset library |
-| **Preflight** | Pre-forecast data-quality check. ADF stationarity, STL seasonality, outliers, missing data, recommended transforms. | Quality score, transform recommendations |
-| **Forecast** | TimesFM (zero-shot foundation model) vs LightGBM (gradient-boosted baseline). Picks a winner by holdout MAPE. | Winner, alternative, confidence, P10/P50/P90 |
-| **Backtest** | Walk-forward evaluation across N expanding-window folds. MAPE, RMSE, MASE, pinball loss, per-horizon decay, calibration. | Per-fold metrics, per-horizon curve, reliability plot |
-| **Diagnostics** | Is the model honest? Residual histogram, Q-Q plot, ACF, STL, Ljung-Box. | White-noise residuals, leftover autocorrelation |
-| **Anomalies** | Flag unusual points by severity. Critical (\|z\| >= 3) and Warning (\|z\| >= 2). | Anomaly chart, table, severity counts |
-| **Explain** | Five-method anomaly vote, changepoint detection, lag analysis, Granger causality. | Method agreement, root-cause hints, leading factors |
-| **Factors** | Quantify how price, weather, promos, holidays shift the forecast versus baseline. | Factor influence ranking, comparison chart |
-| **Segments** | Forecast multiple series side by side. Rank by total, growth, or volatility. | Per-segment timelines, top-N ranking |
-| **Scenarios** | What-if: pin factors flat, ramp them, or zero them out. Save and compare runs. | Scenario forecast, comparison overlay |
-| **Operations** | Tag the timeline with annotations, revisit saved analyses without re-running, export a PDF briefing. | Annotations, saved analyses, PDF export |
-
----
-
 ## Quickstart
 
-### 1. Install
-
 ```bash
-git clone https://github.com/MinaSaad1/foreko-web.git
-cd foreko-web
+# 1. Clone
+git clone https://github.com/MinaSaad1/foreko-web.git && cd foreko-web
 
-# Auto-detects NVIDIA GPU + driver and picks CUDA vs CPU torch
+# 2. Install (auto-detects NVIDIA GPU + CUDA driver)
 ./setup.ps1            # Windows
-./setup.sh             # Linux/macOS
-```
+./setup.sh             # Linux / macOS
 
-Or run `uv` manually:
-
-```bash
-# CPU torch (works on any machine)
-uv sync --extra app --extra app-dev
-
-# GPU torch (CUDA 12.8 wheel; needs NVIDIA driver >= 570)
-uv sync --extra app --extra app-dev --extra cuda
-
-# Frontend deps
-cd app/frontend && npm ci && cd ../..
-```
-
-### 2. Run
-
-Two terminals:
-
-```bash
-# Backend  -> http://localhost:8000
+# 3. Run, two terminals
 uv run uvicorn foreko.main:app --port 8000 --reload --app-dir app/backend
+cd app/frontend && npm run dev
 ```
 
-```bash
-# Frontend -> http://localhost:5173
-cd app/frontend
-npm run dev
-```
-
-### 3. Forecast
-
-Open [http://localhost:5173](http://localhost:5173) and either upload a CSV
-or try one of the bundled samples (daily sales, web traffic, hourly energy,
-monthly revenue).
+Then open **<http://localhost:5173>** and either upload a CSV or click
+**Try demo dataset**.
 
 > The first forecast downloads TimesFM 2.5 weights (~1.2 GB) into
-> `~/.foreko/models/`. Subsequent runs reuse the cached weights.
+> `~/.foreko/models/`. Cached after that.
+
+---
+
+## The pages
+
+<table>
+<tr>
+<td width="33%" align="center" valign="top">
+
+<a href="docs/screenshots/02-data.png"><img src="docs/screenshots/02-data.png" alt="Data ingestion page"/></a>
+
+**Data**
+<br/>
+<sub>CSV, Excel, JSON, or a live DB. Browse your library, pick a sample.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<a href="docs/screenshots/03b-preflight-result.png"><img src="docs/screenshots/03b-preflight-result.png" alt="Preflight data-quality check"/></a>
+
+**Preflight**
+<br/>
+<sub>Pre-forecast health check. ADF, STL, outliers, missing data, transforms.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<a href="docs/screenshots/04b-forecast-result.png"><img src="docs/screenshots/04b-forecast-result.png" alt="Forecast comparison"/></a>
+
+**Forecast**
+<br/>
+<sub>TimesFM vs LightGBM side by side. Winner picked by holdout MAPE.</sub>
+
+</td>
+</tr>
+<tr>
+<td width="33%" align="center" valign="top">
+
+<a href="docs/screenshots/05-backtest-config.png"><img src="docs/screenshots/05-backtest-config.png" alt="Walk-forward backtest"/></a>
+
+**Backtest**
+<br/>
+<sub>Walk-forward across N folds. MAPE, RMSE, MASE, pinball, calibration.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<a href="docs/screenshots/06b-diagnostics-result.png"><img src="docs/screenshots/06b-diagnostics-result.png" alt="Forecast diagnostics"/></a>
+
+**Diagnostics**
+<br/>
+<sub>Residual histogram, Q-Q, ACF, STL, Ljung-Box. White noise or not.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<a href="docs/screenshots/07b-anomaly-result.png"><img src="docs/screenshots/07b-anomaly-result.png" alt="Anomaly detection"/></a>
+
+**Anomalies**
+<br/>
+<sub>z-score severity, monthly heatmap, drillable table of flagged points.</sub>
+
+</td>
+</tr>
+<tr>
+<td width="33%" align="center" valign="top">
+
+<a href="docs/screenshots/08-explain-config.png"><img src="docs/screenshots/08-explain-config.png" alt="Explain"/></a>
+
+**Explain**
+<br/>
+<sub>5-method anomaly vote, changepoints, lag analysis, Granger causality.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<a href="docs/screenshots/09-factors-config.png"><img src="docs/screenshots/09-factors-config.png" alt="Factors"/></a>
+
+**Factors**
+<br/>
+<sub>Price, promos, weather, holidays. Influence ranked, comparison charted.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<a href="docs/screenshots/10-segments-config.png"><img src="docs/screenshots/10-segments-config.png" alt="Segments"/></a>
+
+**Segments**
+<br/>
+<sub>Multi-series side by side, ranked by total, growth, or volatility.</sub>
+
+</td>
+</tr>
+<tr>
+<td width="33%" align="center" valign="top">
+
+<a href="docs/screenshots/11-scenarios-config.png"><img src="docs/screenshots/11-scenarios-config.png" alt="What-if scenarios"/></a>
+
+**Scenarios**
+<br/>
+<sub>Pin factors flat, ramp them, zero them. Save and compare runs.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<a href="docs/screenshots/12-operations.png"><img src="docs/screenshots/12-operations.png" alt="Operations"/></a>
+
+**Operations**
+<br/>
+<sub>Tag launches and incidents, revisit cached runs, export a PDF briefing.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<a href="docs/screenshots/13-glossary.png"><img src="docs/screenshots/13-glossary.png" alt="Glossary"/></a>
+
+**Glossary**
+<br/>
+<sub>Every stats term in plain English. Hover any Term tag to peek inline.</sub>
+
+</td>
+</tr>
+</table>
+
+---
+
+## The models
+
+<p align="center">
+  <img src="docs/svg/models.svg" alt="TimesFM vs LightGBM comparison" width="100%"/>
+</p>
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+  user([Browser<br/>:5173])
+  api[FastAPI<br/>:8000]
+  user -->|api/*| api
+
+  subgraph services [Services]
+    forecast[forecaster<br/>TimesFM]
+    lgb[lightgbm_baseline<br/>quantile P10/P90]
+    classical[classical<br/>ETS · naive]
+    diag[diagnostics<br/>residuals · ACF · STL]
+    anomaly[anomaly_methods<br/>5-method vote]
+    factor[factor_diagnostics<br/>lag · Granger]
+    exports[exports<br/>ReportLab PDF]
+  end
+
+  subgraph storage [~/.foreko]
+    datasets[(datasets/)]
+    models[(models/<br/>TimesFM weights)]
+    db[(foreko.db<br/>SQLite)]
+    out[(exports/)]
+  end
+
+  api --> services
+  services --> storage
+
+  classDef cyan fill:#00B8C9,stroke:#00B8C9,color:#0a1119,font-weight:600
+  classDef neutral fill:#0d1722,stroke:#5a6c83,color:#A8B0BC
+  classDef store fill:#0a1119,stroke:#1f2d3e,color:#5a6c83
+  class user,api cyan
+  class forecast,lgb,classical,diag,anomaly,factor,exports neutral
+  class datasets,models,db,out store
+```
 
 ---
 
@@ -106,14 +273,14 @@ monthly revenue).
 
 | Layer | Tech |
 |---|---|
-| **Backend** | FastAPI + Uvicorn, Python 3.10+ |
-| **Forecasting** | Google TimesFM 2.5 (transformer foundation model), LightGBM with lag + rolling features, classical baselines (ETS, seasonal naive) |
-| **Probabilistic** | Per-step quantile regression (LightGBM `objective='quantile'`), block-bootstrap residuals for calibration |
-| **Frontend** | React 18, Vite, TanStack Query, Zustand, Tailwind, Apache ECharts, Sonner |
-| **Storage** | SQLite for annotations + cached analyses, local filesystem for datasets |
-| **Connectors** | SQLAlchemy with Postgres, MySQL, SQL Server drivers; OS keyring for credentials |
-| **Reports** | ReportLab for in-process PDF export |
-| **Tests** | pytest (backend), Vitest + Testing Library (frontend) |
+| Backend | FastAPI · Uvicorn · Python 3.10+ |
+| Forecasting | TimesFM 2.5 (transformer) · LightGBM (with quantile regression) · ETS · seasonal-naive |
+| Probabilistic | LightGBM `objective='quantile'` for P10/P90 · block-bootstrap residuals · prediction-interval calibration |
+| Frontend | React 18 · Vite · TanStack Query · Zustand · Tailwind · Apache ECharts · Sonner |
+| Storage | SQLite (annotations, saved analyses) · local filesystem (datasets, model cache, exports) |
+| Connectors | SQLAlchemy · Postgres · MySQL · SQL Server · OS keyring for secrets |
+| Reports | ReportLab in-process PDF |
+| Tests | pytest (backend, ~120 tests) · Vitest + Testing Library (frontend) |
 
 ---
 
@@ -124,57 +291,16 @@ Every setting is overridable via `FOREKO_<FIELD>` environment variables.
 | Variable | Default | Purpose |
 |---|---|---|
 | `FOREKO_MODEL_ID` | `google/timesfm-2.5-200m-pytorch` | HuggingFace model id |
-| `FOREKO_STORAGE_DIR` | `~/.foreko` | Where datasets, models, analyses live |
+| `FOREKO_STORAGE_DIR` | `~/.foreko` | Datasets, model cache, analyses, exports |
 | `FOREKO_PRELOAD_MODEL` | `true` | Load weights at startup so the first forecast is instant |
-| `FOREKO_MAX_UPLOAD_BYTES` | `52428800` (50 MB) | Hard cap on CSV upload size |
-| `FOREKO_DATASET_TTL_HOURS` | `720` (30 days) | When the janitor sweeps old uploads |
-| `FOREKO_CORS_ORIGINS` | `localhost:5173, 127.0.0.1:5173, localhost:8000` | Allowed dev origins |
+| `FOREKO_MAX_UPLOAD_BYTES` | `52428800` | Hard cap on CSV upload size (50 MB) |
+| `FOREKO_DATASET_TTL_HOURS` | `720` | When the janitor sweeps old uploads (30 days) |
+| `FOREKO_CORS_ORIGINS` | dev origins | Allowed origins, comma-separated |
 | `FOREKO_MAX_SQL_ROWS` | `5000000` | Hard cap on rows from a SQL ingest |
-
-Example:
 
 ```bash
 FOREKO_STORAGE_DIR=/tmp/foreko FOREKO_PRELOAD_MODEL=false \
   uv run uvicorn foreko.main:app --port 8000 --app-dir app/backend
-```
-
----
-
-## Architecture
-
-```
-       Browser (Vite, :5173 in dev)
-                  |
-                  |  /api/*  (proxied in dev, served by FastAPI in prod)
-                  v
-   +-------------------------------+
-   |  FastAPI (Uvicorn, :8000)     |
-   |  +-------------------------+  |
-   |  | Routers                 |  |   forecast, comparison, backtest,
-   |  |                         |  |   diagnostics, anomaly, factors,
-   |  |                         |  |   covariates, scenarios, segments,
-   |  |                         |  |   preflight, datasets, connections,
-   |  |                         |  |   annotations, export
-   |  +-------------------------+  |
-   |  | Services                |  |   forecaster (TimesFM),
-   |  |                         |  |   lightgbm_baseline (quantile),
-   |  |                         |  |   classical_baselines (ETS, naive),
-   |  |                         |  |   diagnostics, anomaly_methods,
-   |  |                         |  |   factor_diagnostics, ensembles,
-   |  |                         |  |   transformations, calibration,
-   |  |                         |  |   exports (PDF), store (SQLite)
-   |  +-------------------------+  |
-   |  | Job manager + SSE       |  |   long-running backtests stream
-   |  +-------------------------+  |   progress to the UI
-   +-------------------------------+
-                  |
-                  v
-       ~/.foreko/
-         datasets/        uploaded files + metadata
-         models/          cached TimesFM weights (~1.2 GB)
-         data/foreko.db   SQLite (annotations, analyses, scenarios)
-         exports/         generated PDFs
-         logs/            rotating logs
 ```
 
 ---
@@ -184,9 +310,9 @@ FOREKO_STORAGE_DIR=/tmp/foreko FOREKO_PRELOAD_MODEL=false \
 ```
 src/timesfm/                  TimesFM 2.5 model code (Apache 2.0, vendored)
 app/backend/foreko/
-  routers/                    HTTP endpoints (one file per concern)
+  routers/                    HTTP endpoints, one file per concern
   services/                   forecaster, baselines, diagnostics, store, ...
-  schemas/                    Pydantic request/response models
+  schemas/                    Pydantic request / response models
   jobs/                       async job manager + SSE
   main.py                     FastAPI app factory + lifespan
   settings.py                 env-driven config
@@ -198,8 +324,13 @@ app/frontend/
   src/hooks/                  orchestrator hooks per page
   src/api/                    typed FastAPI client
   src/charts/theme.ts         centralised ECharts colours + tokens
-.github/workflows/            CI
+docs/
+  screenshots/                README screenshots, captured via Playwright
+  svg/                        hand-drawn SVG diagrams
+scripts/
+  capture_screenshots.mjs     re-run to refresh the gallery
 setup.ps1 / setup.sh          one-shot installers
+.github/workflows/            CI
 ```
 
 ---
@@ -207,73 +338,115 @@ setup.ps1 / setup.sh          one-shot installers
 ## Development
 
 ```bash
-# Backend tests (fast)
-uv run pytest app/backend/tests -q -m "not integration"
+# Backend
+uv run pytest app/backend/tests -q -m "not integration"   # fast unit pass
+uv run pytest app/backend/tests -q -m integration         # runs with real model
 
-# Backend tests including ones that load the real TimesFM model
-uv run pytest app/backend/tests -q -m integration
-
-# Frontend tests
+# Frontend
 cd app/frontend && npm test
-
-# Frontend typecheck
 cd app/frontend && npm run typecheck
 
-# Production build (output in app/frontend/dist, served by the backend)
+# Production frontend (served by the backend at :8000)
 cd app/frontend && npm run build
+
+# Refresh README screenshots (with the dev servers running)
+node scripts/capture_screenshots.mjs
 ```
 
 ---
 
 ## FAQ
 
-**Does Foreko send my data anywhere?**
+<details>
+<summary><b>Does Foreko send my data anywhere?</b></summary>
+<br/>
+
 No. The backend runs on your machine, the SPA talks to it on `localhost`,
-and the only outbound request is the one-time HuggingFace download of the
-TimesFM weights. There is no telemetry, no analytics, no account.
+and the only outbound request is the one-time TimesFM weights download
+from the HuggingFace Hub. There is no telemetry, no analytics, no account.
 
-**Can I use Foreko commercially?**
-Yes. MIT license. Build whatever you want on top. Foreko itself will never
-have a paid tier.
+</details>
 
-**Do I need a GPU?**
-No. CPU mode works for most workloads. A modern NVIDIA GPU (CUDA 12.8 +
-driver >= 570) makes TimesFM inference noticeably faster on long histories,
-but every feature works without one.
+<details>
+<summary><b>Can I use Foreko commercially?</b></summary>
+<br/>
 
-**Why TimesFM AND LightGBM?**
-TimesFM is a pretrained foundation model: strong zero-shot performance, no
-training step. LightGBM trains in seconds on your data and often wins when
-the series has explicit features (lags, calendar effects). Running both and
-picking the winner on a holdout gives you an honest answer.
+Yes. MIT license. Build whatever you want on top. Foreko itself will
+never have a paid tier.
 
-**Where are my files?**
-Everything lives under `~/.foreko/` by default. Override with
-`FOREKO_STORAGE_DIR`.
+</details>
 
-**How do I share a forecast?**
-Use the **Export PDF** button on Forecast / Backtest / Anomalies / Operations.
-The PDF is generated in-process by ReportLab and contains the charts,
-metrics, and a written takeaway.
+<details>
+<summary><b>Do I need a GPU?</b></summary>
+<br/>
+
+No. CPU mode works for every feature. A modern NVIDIA GPU (CUDA 12.8 +
+driver `>= 570`) makes TimesFM inference noticeably faster on long
+histories, but it is optional.
+
+</details>
+
+<details>
+<summary><b>Why TimesFM AND LightGBM?</b></summary>
+<br/>
+
+TimesFM is a pretrained foundation model with strong zero-shot
+performance, no training step. LightGBM trains in seconds on your data
+and often wins when the series has explicit features like lags or
+calendar effects. Running both and picking the winner on a holdout gives
+you an honest answer.
+
+</details>
+
+<details>
+<summary><b>Where do my files live?</b></summary>
+<br/>
+
+Under `~/.foreko/` by default. Override with `FOREKO_STORAGE_DIR`.
+
+</details>
+
+<details>
+<summary><b>How do I share a forecast?</b></summary>
+<br/>
+
+Use the **Export PDF** button on Forecast, Backtest, Anomalies, or
+Operations. The PDF is generated in-process by ReportLab and contains
+the charts, metrics, and a written takeaway.
+
+</details>
+
+<details>
+<summary><b>How do I add a new model?</b></summary>
+<br/>
+
+Drop a class with a `fit_and_forecast(...)` method into
+`app/backend/foreko/services/`, register it in `comparison.py`, and add
+a frontend toggle in `pages/BacktestPage.tsx`. Both backtest and the
+forecast comparison will pick it up.
+
+</details>
 
 ---
 
 ## License & attribution
 
-Foreko is **MIT licensed**. See [`LICENSE`](LICENSE).
+<p align="left">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-00B8C9.svg?style=for-the-badge"/></a>
+</p>
 
 Builds on:
 
-- **TimesFM 2.5** (Google, Apache 2.0). See [`NOTICE`](NOTICE) for the
-  full dependency attribution.
-- PyTorch, Transformers, FastAPI, LightGBM, statsmodels, scikit-learn,
-  React, Vite, Tailwind, ECharts, and the rest of the open-source ecosystem
-  Foreko stands on. Full list in [`NOTICE`](NOTICE).
+- **TimesFM 2.5** (Google, Apache 2.0). See [`NOTICE`](NOTICE).
+- PyTorch · Transformers · FastAPI · LightGBM · statsmodels · scikit-learn · React · Vite · Tailwind · ECharts.
+- Full dependency attribution in [`NOTICE`](NOTICE).
 
 ---
 
 <div align="center">
 
 Built by [Mina Saad](https://github.com/MinaSaad1). No telemetry. No upsell.
+
+<sub>Star the repo if you find it useful.</sub>
 
 </div>
