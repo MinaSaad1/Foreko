@@ -2,8 +2,7 @@
 
 Connection records live in a single JSON file under the app data directory
 (``{app_data_dir}/connections.json``). This matches the "one file per concept"
-storage pattern used for datasets' meta.json and is trivial to copy between
-the foreko-web and foreko-desktop repos.
+storage pattern used for datasets' meta.json.
 
 Passwords do NOT live in this file. They go through ``services.secrets``
 which routes to the OS keyring. The record here just names the keyring entry

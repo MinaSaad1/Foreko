@@ -81,7 +81,7 @@ repo and runs in two `npm` commands.
 
 ```bash
 # 1. Clone
-git clone https://github.com/MinaSaad1/foreko-web.git && cd foreko-web
+git clone https://github.com/MinaSaad1/foreko.git && cd foreko
 
 # 2. Install (auto-detects NVIDIA GPU + CUDA driver)
 ./setup.ps1            # Windows

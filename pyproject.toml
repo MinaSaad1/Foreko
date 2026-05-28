@@ -1,5 +1,5 @@
 [project]
-name = "foreko-web"
+name = "foreko"
 version = "0.1.0"
 description = "Foreko, a local-first time-series forecasting workbench. TimesFM and LightGBM side by side, free and MIT-licensed."
 authors = [
