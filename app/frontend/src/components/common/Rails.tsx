@@ -220,7 +220,7 @@ export function WhatYoullGet({
 }
 
 interface PageHeaderProps {
-  /** Small uppercase eyebrow above the title, e.g. "01 — Forecast Studio". */
+  /** Small uppercase eyebrow above the title, e.g. "Forecast" or "Investigate". */
   kicker: string;
   /** Big page title. */
   title: string;
@@ -242,7 +242,7 @@ export function PageHeader({ kicker, title, subtitle, actions }: PageHeaderProps
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-text-quiet">
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-text-faint">
             {subtitle}
           </p>
         )}

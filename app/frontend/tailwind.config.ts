@@ -24,6 +24,7 @@ export default {
           primary: "rgb(var(--color-text-primary) / <alpha-value>)",
           secondary: "rgb(var(--color-text-secondary) / <alpha-value>)",
           muted: "rgb(var(--color-text-muted) / <alpha-value>)",
+          faint: "rgb(var(--color-text-faint) / <alpha-value>)",
         },
         accent: {
           DEFAULT: "rgb(var(--color-accent) / <alpha-value>)",

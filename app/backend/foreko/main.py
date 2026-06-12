@@ -107,7 +107,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "Foreko, a local-first time-series forecasting workbench. "
             "TimesFM and LightGBM side by side, with backtesting, "
             "diagnostics, factor analysis, anomaly detection, and "
-            "Monte Carlo scenarios."
+            "what-if scenarios."
         ),
         lifespan=lifespan,
     )

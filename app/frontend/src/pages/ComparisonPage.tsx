@@ -328,7 +328,7 @@ export function ComparisonPage() {
       }
     >
       <PageHeader
-        kicker="01 — Forecast Studio"
+        kicker="Forecast"
         title={displayName}
         subtitle={preview ? `${preview.row_count.toLocaleString()} rows · horizon ${horizon}` : undefined}
         actions={

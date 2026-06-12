@@ -14,6 +14,7 @@ html.light {
   --color-text-primary: 15 23 42;
   --color-text-secondary: 71 85 105;
   --color-text-muted: 100 116 139;
+  --color-text-faint: 148 163 184;
   --color-accent: 14 116 144;
   --color-on-accent: 255 255 255;
   --color-accent-2: 234 88 12;
@@ -39,6 +40,7 @@ html.dark {
   --color-text-primary: 248 250 252;
   --color-text-secondary: 148 163 184;
   --color-text-muted: 100 116 139;
+  --color-text-faint: 71 85 105;
   --color-accent: 0 240 255;
   --color-on-accent: 3 7 18;
   --color-accent-2: 251 146 60;

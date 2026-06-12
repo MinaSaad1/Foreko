@@ -30,7 +30,7 @@ export function AboutPage() {
  </div>
  <div>
  <p className="font-mono text-[10px] uppercase tracking-widest text-text-muted">License</p>
- <p className="mt-1 font-mono text-sm text-text-primary">Apache 2.0</p>
+ <p className="mt-1 font-mono text-sm text-text-primary">MIT</p>
  </div>
  </div>
  </section>
