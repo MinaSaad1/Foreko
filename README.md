@@ -42,6 +42,8 @@ forecast with uncertainty bands, a recommended model, and plain-English diagnost
 <tr>
 <td width="50%" valign="top">
 
+<img src="docs/img/feat-local.png" width="58" alt=""/>
+
 ### Local-first
 
 Your data never leaves your machine. No accounts, no telemetry, no cloud.
@@ -49,6 +51,8 @@ The only outbound request is the one-time TimesFM weights download.
 
 </td>
 <td width="50%" valign="top">
+
+<img src="docs/img/feat-models.png" width="58" alt=""/>
 
 ### Two models, one click
 
@@ -60,6 +64,8 @@ side, backtested on your data. Foreko shows the winner and the runner-up.
 <tr>
 <td width="50%" valign="top">
 
+<img src="docs/img/feat-uncertainty.png" width="58" alt=""/>
+
 ### Honest uncertainty
 
 P10 / P50 / P90 bands, walk-forward backtests across multiple folds,
@@ -67,6 +73,8 @@ prediction-interval calibration. Every confidence claim is measurable.
 
 </td>
 <td width="50%" valign="top">
+
+<img src="docs/img/feat-free.png" width="58" alt=""/>
 
 ### Apache 2.0, forever free
 
@@ -85,13 +93,15 @@ repo, under a permissive Apache 2.0 license.
 
 ## The flow
 
-<img src="docs/svg/workflow.svg" alt="Workflow: Ingest, Preflight, Forecast, Diagnose, Operate" width="100%"/>
+<img src="docs/img/flow.png" alt="Workflow: Ingest, Preflight, Forecast, Diagnose, Operate" width="100%"/>
 
 </div>
 
 ---
 
 ## Install
+
+<img src="docs/img/banner-install.png" width="100%" alt=""/>
 
 Two ways to run Foreko. Both stay entirely on your machine.
 
@@ -127,6 +137,8 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 ---
 
 ## The pages
+
+<img src="docs/img/banner-pages.png" width="100%" alt=""/>
 
 <table>
 <tr>
@@ -252,50 +264,30 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 ## The models
 
 <p align="center">
-  <img src="docs/svg/models.svg" alt="TimesFM vs LightGBM comparison" width="100%"/>
+  <img src="docs/img/models.png" alt="TimesFM vs LightGBM comparison" width="100%"/>
 </p>
 
 ---
 
 ## Architecture
 
-```mermaid
-flowchart LR
-  user([Browser<br/>:5173])
-  api[FastAPI<br/>:8000]
-  user -->|api/*| api
+<img src="docs/img/architecture.png" width="100%" alt="Foreko architecture: Browser to FastAPI to forecasting and analysis services to local storage"/>
 
-  subgraph services [Services]
-    forecast[forecaster<br/>TimesFM]
-    lgb[lightgbm_baseline<br/>quantile P10/P90]
-    classical[classical<br/>ETS · naive]
-    diag[diagnostics<br/>residuals · ACF · STL]
-    anomaly[anomaly_methods<br/>5-method vote]
-    factor[factor_diagnostics<br/>lag · Granger]
-    exports[exports<br/>ReportLab PDF]
-  end
+The React SPA talks to a local FastAPI server, which fans each request out to the
+forecasting and analysis services. Everything is persisted under `~/.foreko/`.
 
-  subgraph storage [~/.foreko]
-    datasets[(datasets/)]
-    models[(models/<br/>TimesFM weights)]
-    db[(foreko.db<br/>SQLite)]
-    out[(exports/)]
-  end
-
-  api --> services
-  services --> storage
-
-  classDef cyan fill:#00B8C9,stroke:#00B8C9,color:#0a1119,font-weight:600
-  classDef neutral fill:#0d1722,stroke:#5a6c83,color:#A8B0BC
-  classDef store fill:#0a1119,stroke:#1f2d3e,color:#5a6c83
-  class user,api cyan
-  class forecast,lgb,classical,diag,anomaly,factor,exports neutral
-  class datasets,models,db,out store
-```
+| Layer | Pieces |
+|---|---|
+| Browser `:5173` | React single-page app |
+| FastAPI `:8000` | HTTP API + async job manager (SSE progress) |
+| Services | forecaster (TimesFM) · baselines (LightGBM, ETS, seasonal-naive) · diagnostics (residuals, ACF, STL) · anomaly methods · factor diagnostics · exports (ReportLab PDF) |
+| `~/.foreko/` | `datasets/` · `models/` (TimesFM weights) · `foreko.db` (SQLite) · `exports/` |
 
 ---
 
 ## Stack
+
+<img src="docs/img/banner-stack.png" width="100%" alt=""/>
 
 | Layer | Tech |
 |---|---|
@@ -311,6 +303,8 @@ flowchart LR
 ---
 
 ## Configuration
+
+<img src="docs/img/banner-config.png" width="100%" alt=""/>
 
 Every setting is overridable via `FOREKO_<FIELD>` environment variables.
 
@@ -352,7 +346,7 @@ app/frontend/
   src/charts/theme.ts         centralised ECharts colours + tokens
 docs/
   screenshots/                README screenshots, captured via Playwright
-  svg/                        hand-drawn SVG diagrams
+  img/                        README illustrations + diagrams
 scripts/
   capture_screenshots.mjs     re-run to refresh the gallery
 setup.ps1 / setup.sh          one-shot installers
@@ -382,6 +376,8 @@ node scripts/capture_screenshots.mjs
 ---
 
 ## FAQ
+
+<img src="docs/img/banner-faq.png" width="100%" alt=""/>
 
 <details>
 <summary><b>Does Foreko send my data anywhere?</b></summary>
