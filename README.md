@@ -4,7 +4,7 @@
 
 <br/>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-00B8C9.svg?style=flat-square)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-00B8C9.svg?style=flat-square)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Node 20+](https://img.shields.io/badge/Node-20%2B-339933.svg?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688.svg?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -22,6 +22,11 @@
 <br/>
 
 <a href="#install"><b>Install</b></a> &nbsp;·&nbsp; <a href="#the-pages"><b>Screenshots</b></a> &nbsp;·&nbsp; <a href="#the-models"><b>Models</b></a> &nbsp;·&nbsp; <a href="#architecture"><b>Architecture</b></a> &nbsp;·&nbsp; <a href="#faq"><b>FAQ</b></a>
+
+<br/>
+
+A free, local-first forecasting workbench. Point it at a CSV and get a trustworthy
+forecast with uncertainty bands, a recommended model, and plain-English diagnostics.
 
 </div>
 
@@ -63,10 +68,10 @@ prediction-interval calibration. Every confidence claim is measurable.
 </td>
 <td width="50%" valign="top">
 
-### MIT licensed, forever free
+### Apache 2.0, forever free
 
 No paid tier, no upsell, no commercial gating. The whole app is in this
-repo and runs in two `npm` commands.
+repo, under a permissive Apache 2.0 license.
 
 </td>
 </tr>
@@ -403,8 +408,8 @@ features. Use whichever path you prefer.
 <summary><b>Can I use Foreko commercially?</b></summary>
 <br/>
 
-Yes. MIT license. Build whatever you want on top. Foreko itself will
-never have a paid tier.
+Yes. Apache 2.0 license. Build whatever you want on top. Foreko itself
+will never have a paid tier.
 
 </details>
 
@@ -464,7 +469,7 @@ forecast comparison will pick it up.
 ## License & attribution
 
 <p align="left">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-00B8C9.svg?style=for-the-badge"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-00B8C9.svg?style=for-the-badge"/></a>
 </p>
 
 Builds on:
