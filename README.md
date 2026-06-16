@@ -101,8 +101,6 @@ repo, under a permissive Apache 2.0 license.
 
 ## Install
 
-<img src="docs/img/banner-install.png" width="100%" alt=""/>
-
 Two ways to run Foreko. Both stay entirely on your machine.
 
 ### Windows installer (easiest)
@@ -137,8 +135,6 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 ---
 
 ## The pages
-
-<img src="docs/img/banner-pages.png" width="100%" alt=""/>
 
 <table>
 <tr>
@@ -287,8 +283,6 @@ forecasting and analysis services. Everything is persisted under `~/.foreko/`.
 
 ## Stack
 
-<img src="docs/img/banner-stack.png" width="100%" alt=""/>
-
 | Layer | Tech |
 |---|---|
 | Backend | FastAPI · Uvicorn · Python 3.10+ |
@@ -303,8 +297,6 @@ forecasting and analysis services. Everything is persisted under `~/.foreko/`.
 ---
 
 ## Configuration
-
-<img src="docs/img/banner-config.png" width="100%" alt=""/>
 
 Every setting is overridable via `FOREKO_<FIELD>` environment variables.
 
