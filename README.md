@@ -89,16 +89,6 @@ repo, under a permissive Apache 2.0 license.
 
 ---
 
-<div align="center">
-
-## The flow
-
-<img src="docs/img/flow.png" alt="Workflow: Ingest, Preflight, Forecast, Diagnose, Operate" width="100%"/>
-
-</div>
-
----
-
 ## Install
 
 Two ways to run Foreko. Both stay entirely on your machine.
@@ -254,14 +244,6 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 </td>
 </tr>
 </table>
-
----
-
-## The models
-
-<p align="center">
-  <img src="docs/img/models.png" alt="TimesFM vs LightGBM comparison" width="100%"/>
-</p>
 
 ---
 
