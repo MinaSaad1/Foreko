@@ -140,7 +140,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 <tr>
 <td width="33%" align="center" valign="top">
 
-<a href="docs/screenshots/02-data.png"><img src="docs/screenshots/02-data.png" alt="Data ingestion page"/></a>
+<img src="docs/img/pages/data.png" alt="Data" width="100%"/>
 
 **Data**
 <br/>
@@ -149,7 +149,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 </td>
 <td width="33%" align="center" valign="top">
 
-<a href="docs/screenshots/03b-preflight-result.png"><img src="docs/screenshots/03b-preflight-result.png" alt="Preflight data-quality check"/></a>
+<img src="docs/img/pages/preflight.png" alt="Preflight" width="100%"/>
 
 **Preflight**
 <br/>
@@ -158,7 +158,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 </td>
 <td width="33%" align="center" valign="top">
 
-<a href="docs/screenshots/04b-forecast-result.png"><img src="docs/screenshots/04b-forecast-result.png" alt="Forecast comparison"/></a>
+<img src="docs/img/pages/forecast.png" alt="Forecast" width="100%"/>
 
 **Forecast**
 <br/>
@@ -169,7 +169,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 <tr>
 <td width="33%" align="center" valign="top">
 
-<a href="docs/screenshots/05-backtest-config.png"><img src="docs/screenshots/05-backtest-config.png" alt="Walk-forward backtest"/></a>
+<img src="docs/img/pages/backtest.png" alt="Backtest" width="100%"/>
 
 **Backtest**
 <br/>
@@ -178,7 +178,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 </td>
 <td width="33%" align="center" valign="top">
 
-<a href="docs/screenshots/06b-diagnostics-result.png"><img src="docs/screenshots/06b-diagnostics-result.png" alt="Forecast diagnostics"/></a>
+<img src="docs/img/pages/diagnostics.png" alt="Diagnostics" width="100%"/>
 
 **Diagnostics**
 <br/>
@@ -187,7 +187,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 </td>
 <td width="33%" align="center" valign="top">
 
-<a href="docs/screenshots/07b-anomaly-result.png"><img src="docs/screenshots/07b-anomaly-result.png" alt="Anomaly detection"/></a>
+<img src="docs/img/pages/anomalies.png" alt="Anomalies" width="100%"/>
 
 **Anomalies**
 <br/>
@@ -198,7 +198,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 <tr>
 <td width="33%" align="center" valign="top">
 
-<a href="docs/screenshots/08-explain-config.png"><img src="docs/screenshots/08-explain-config.png" alt="Explain"/></a>
+<img src="docs/img/pages/explain.png" alt="Explain" width="100%"/>
 
 **Explain**
 <br/>
@@ -207,7 +207,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 </td>
 <td width="33%" align="center" valign="top">
 
-<a href="docs/screenshots/09-factors-config.png"><img src="docs/screenshots/09-factors-config.png" alt="Factors"/></a>
+<img src="docs/img/pages/factors.png" alt="Factors" width="100%"/>
 
 **Factors**
 <br/>
@@ -216,7 +216,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 </td>
 <td width="33%" align="center" valign="top">
 
-<a href="docs/screenshots/10-segments-config.png"><img src="docs/screenshots/10-segments-config.png" alt="Segments"/></a>
+<img src="docs/img/pages/segments.png" alt="Segments" width="100%"/>
 
 **Segments**
 <br/>
@@ -227,7 +227,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 <tr>
 <td width="33%" align="center" valign="top">
 
-<a href="docs/screenshots/11-scenarios-config.png"><img src="docs/screenshots/11-scenarios-config.png" alt="What-if scenarios"/></a>
+<img src="docs/img/pages/scenarios.png" alt="Scenarios" width="100%"/>
 
 **Scenarios**
 <br/>
@@ -236,7 +236,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 </td>
 <td width="33%" align="center" valign="top">
 
-<a href="docs/screenshots/12-operations.png"><img src="docs/screenshots/12-operations.png" alt="Operations"/></a>
+<img src="docs/img/pages/operations.png" alt="Operations" width="100%"/>
 
 **Operations**
 <br/>
@@ -245,7 +245,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 </td>
 <td width="33%" align="center" valign="top">
 
-<a href="docs/screenshots/13-glossary.png"><img src="docs/screenshots/13-glossary.png" alt="Glossary"/></a>
+<img src="docs/img/pages/glossary.png" alt="Glossary" width="100%"/>
 
 **Glossary**
 <br/>
