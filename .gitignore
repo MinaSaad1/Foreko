@@ -37,8 +37,9 @@ uv.lock
 # Claude Code workspace state
 .claude/
 
-# Hero / preview intermediates produced by scripts/build_hero.py + preview_hero.mjs
-docs/svg/_*
+# Local-only, kept out of the public repo
+CLAUDE.md
+1_0_READINESS_PLAN.md
 
 # Playwright run output
 app/frontend/e2e/artifacts/
