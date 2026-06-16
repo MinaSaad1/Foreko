@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/svg/hero.svg" alt="Foreko, local-first time-series forecasting workbench" width="100%"/>
+<img src="docs/header.png" alt="Foreko, local-first time-series forecasting workbench" width="100%"/>
 
 <br/>
 
@@ -12,7 +12,16 @@
 [![TimesFM](https://img.shields.io/badge/Model-TimesFM%202.5-FF6F00.svg?style=flat-square)](https://github.com/google-research/timesfm)
 [![CUDA optional](https://img.shields.io/badge/CUDA-12.8%20optional-76B900.svg?style=flat-square&logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-zone)
 
-**Forecast your numbers. Stay on your machine.**
+<br/>
+
+<a href="https://github.com/MinaSaad1/Foreko/releases/latest"><img src="https://img.shields.io/badge/Download_for_Windows-00B8C9?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows"/></a>
+&nbsp;&nbsp;
+<a href="#install"><img src="https://img.shields.io/badge/Run_from_source-0E1A26?style=for-the-badge&logo=gnubash&logoColor=00D4E8" alt="Run from source"/></a>
+
+<br/>
+<br/>
+
+<a href="#install"><b>Install</b></a> &nbsp;·&nbsp; <a href="#the-pages"><b>Screenshots</b></a> &nbsp;·&nbsp; <a href="#the-models"><b>Models</b></a> &nbsp;·&nbsp; <a href="#architecture"><b>Architecture</b></a> &nbsp;·&nbsp; <a href="#faq"><b>FAQ</b></a>
 
 </div>
 
@@ -77,7 +86,19 @@ repo and runs in two `npm` commands.
 
 ---
 
-## Quickstart
+## Install
+
+Two ways to run Foreko. Both stay entirely on your machine.
+
+### Windows installer (easiest)
+
+Download the latest **`.exe`** installer from the
+[**Releases page**](https://github.com/MinaSaad1/Foreko/releases/latest),
+run it, then launch Foreko from the Start menu. No Python, no Node, no
+command line. The installer bundles the backend and opens the app in
+your browser.
+
+### Run from source (any OS)
 
 ```bash
 # 1. Clone
@@ -95,8 +116,8 @@ cd app/frontend && npm run dev
 Then open **<http://localhost:5173>** and either upload a CSV or click
 **Try demo dataset**.
 
-> The first forecast downloads TimesFM 2.5 weights (~1.2 GB) into
-> `~/.foreko/models/`. Cached after that.
+> Whichever path you pick, the first forecast downloads TimesFM 2.5
+> weights (~1.2 GB) into `~/.foreko/models/`. Cached after that.
 
 ---
 
@@ -364,6 +385,17 @@ node scripts/capture_screenshots.mjs
 No. The backend runs on your machine, the SPA talks to it on `localhost`,
 and the only outbound request is the one-time TimesFM weights download
 from the HuggingFace Hub. There is no telemetry, no analytics, no account.
+
+</details>
+
+<details>
+<summary><b>Is the Windows installer different from the source app?</b></summary>
+<br/>
+
+No. The `.exe` installer is the same app wrapped for one-click install
+(a Tauri shell plus the bundled backend, built from the `foreko-desktop`
+repo). It runs locally, sends no data anywhere, and has no extra or paid
+features. Use whichever path you prefer.
 
 </details>
 
