@@ -21,8 +21,20 @@ from typing import Any
 import pandas as pd
 
 from .loaders import LOADERS, get_loader
+from .paths import validate_segment
 
 _LEGACY_KIND = "csv"
+
+
+def dataset_dir(datasets_dir: Path, dataset_id: str) -> Path:
+    """Return the on-disk directory for *dataset_id*, validating the id first.
+
+    Centralizes the ``datasets_dir / dataset_id`` join so the path-traversal
+    guard cannot be bypassed by a caller that builds the path itself.
+    """
+
+    validate_segment(dataset_id, kind="dataset id")
+    return datasets_dir / dataset_id
 
 
 def read_meta(dataset_dir: Path) -> dict[str, Any]:
@@ -59,12 +71,12 @@ def load_dataset(dataset_id: str, datasets_dir: Path) -> pd.DataFrame:
     Raises FileNotFoundError if the dataset does not exist.
     """
 
-    dataset_dir = datasets_dir / dataset_id
-    if not dataset_dir.exists():
-        raise FileNotFoundError(f"Dataset {dataset_id} not found at {dataset_dir}")
-    meta = read_meta(dataset_dir)
+    target = dataset_dir(datasets_dir, dataset_id)
+    if not target.exists():
+        raise FileNotFoundError(f"Dataset {dataset_id} not found at {target}")
+    meta = read_meta(target)
     loader = get_loader(meta["kind"])
-    return loader.load(dataset_dir)
+    return loader.load(target)
 
 
 def list_known_kinds() -> list[str]:
@@ -74,6 +86,7 @@ def list_known_kinds() -> list[str]:
 
 
 __all__ = [
+    "dataset_dir",
     "read_meta",
     "write_meta",
     "load_dataset",

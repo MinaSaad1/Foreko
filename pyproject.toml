@@ -1,6 +1,6 @@
 [project]
 name = "foreko"
-version = "0.1.0"
+version = "1.0.0"
 description = "Foreko, a local-first time-series forecasting workbench. TimesFM and LightGBM side by side, free and Apache-2.0-licensed."
 authors = [
     {name = "Mina Saad", email = "mina.saad.wahba@gmail.com"},

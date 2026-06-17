@@ -4,7 +4,11 @@ All notable changes to Foreko are documented here. Format follows [Keep a Change
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-17
+
 ### Added
+- Dataset TTL janitor: a startup-plus-hourly sweep deletes uploads older than `FOREKO_DATASET_TTL_HOURS` (default 720, 30 days). Set the value to `0` to keep datasets forever. Previously the setting was advertised but nothing swept, so `~/.foreko/datasets/` grew without bound.
+- Build sha on the About page (`VITE_GIT_SHA`, resolved at build time) so a running build can be pinned to a commit.
 - Landing-page quickstart animation: self-contained SVG + CSS loop showing the CSV to forecast flow, with a reduced-motion fallback to the final frame.
 - CSV dialect robustness: delimiter sniffing on upload (comma / semicolon / tab / pipe) with a European decimal-comma fallback. Detected dialect is persisted to `meta.json` so reload and series extraction use the same parser.
 - Inline "Retry upload" button on `CSVUpload` when the failure is network-level (status 0 / 502 / 503 / 504). Validation errors stay one-shot.
@@ -25,6 +29,8 @@ All notable changes to Foreko are documented here. Format follows [Keep a Change
 - Backend CSV upload validation: rejects files with fewer than two columns, fewer than ten rows, no numeric column, duplicate timestamps, or constant value columns. Orphan dataset directories are now cleaned up on failure.
 
 ### Changed
+- Minimum-series-length guard: a series shorter than `2 x horizon` is now rejected with a clear message instead of being silently left-padded with zeros and returning a fabricated forecast. Applies to the forecast, comparison, and covariate paths.
+- About page license corrected from MIT to Apache 2.0 to match `LICENSE` and `NOTICE`.
 - `LoadingSplash` no longer re-blocks the app after the model has once been ready in the session. Mid-session reloads (via `/model/retry`) surface through the header `ModelStatusBar` instead of a full-screen takeover. Cold-start and error states still block.
 - Default dataset retention raised from 24 hours to 30 days (`FOREKO_DATASET_TTL_HOURS`, default 720). Surfaced on the Datasets and Privacy pages.
 - Privacy page rewritten with a complete inventory of what Foreko writes to `~/.foreko/`.
@@ -33,8 +39,13 @@ All notable changes to Foreko are documented here. Format follows [Keep a Change
 - README and Privacy page corrected to point at `~/.foreko/models/` (not `~/.cache/huggingface/hub/`).
 
 ### Fixed
+- CI ran on a `master` branch that does not exist, so it never executed. Repointed to `main` and expanded from a build-only job to a real matrix: ruff lint plus backend unit tests on Python 3.10/3.12 across Ubuntu and Windows, and frontend typecheck, Vitest, and production build on Node 20.
+- Model registry is now marked failed when the snapshot download fails before load, so forecast requests fail fast with the offline instructions instead of waiting on a model that will never load.
 - `LoadingSplash` is now rendered globally from `App.tsx`; previously it was imported nowhere, so first-run users saw no feedback while the 1.2 GB model downloaded.
 - `POST /api/model/ensure` called `model_download.ensure_model()` with only the model id; the signature requires `(model_id, local_dir)`. Endpoint is now routed through a shared helper that reads both from the registry.
 
 ### Security
+- Dataset and adapter ids from the URL are validated as single path segments before being joined onto the storage directory, closing a Windows directory-escape where a crafted id (`..%5C..%5C...`) could read or delete files outside `~/.foreko/`.
+- Upload size is enforced before the body is buffered: the `Content-Length` header is checked up front and the body is read in capped chunks, so a client can no longer force the server to hold an oversized payload in memory.
+- Per-request inference timeout (`FOREKO_INFERENCE_TIMEOUT_S`, default 600 seconds) so a pathological series cannot hang a request indefinitely; the request returns HTTP 504 with an actionable message.
 - Bumped Vite 5 to 6.3 and Vitest 2 to 3.2 (plus `@vitejs/plugin-react` 4.3.4 and `jsdom` 26). Closes all 5 of the previously-flagged moderate advisories (esbuild dev-server request spoofing + Vite `.map` path traversal). `npm audit` is clean.

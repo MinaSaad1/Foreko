@@ -1,6 +1,6 @@
 import { Link } from"react-router-dom";
 import { useDocumentTitle } from"@/utils/useDocumentTitle";
-import { APP_VERSION } from"@/utils/version";
+import { APP_VERSION, GIT_SHA } from"@/utils/version";
 
 export function AboutPage() {
  useDocumentTitle("About");
@@ -21,6 +21,10 @@ export function AboutPage() {
  <p className="mt-1 font-mono text-sm text-text-primary">{APP_VERSION}</p>
  </div>
  <div>
+ <p className="font-mono text-[10px] uppercase tracking-widest text-text-muted">Build</p>
+ <p className="mt-1 font-mono text-sm text-text-primary">{GIT_SHA}</p>
+ </div>
+ <div>
  <p className="font-mono text-[10px] uppercase tracking-widest text-text-muted">Model</p>
  <p className="mt-1 font-mono text-sm text-text-primary">google/timesfm-2.5-200m-pytorch</p>
  </div>
@@ -30,7 +34,7 @@ export function AboutPage() {
  </div>
  <div>
  <p className="font-mono text-[10px] uppercase tracking-widest text-text-muted">License</p>
- <p className="mt-1 font-mono text-sm text-text-primary">MIT</p>
+ <p className="mt-1 font-mono text-sm text-text-primary">Apache 2.0</p>
  </div>
  </div>
  </section>

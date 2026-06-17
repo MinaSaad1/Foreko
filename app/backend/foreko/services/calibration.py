@@ -11,10 +11,8 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import pandas as pd
 
 from . import csv_loader
-from .forecaster import _infer_future_dates
 from .model_registry import ModelRegistry
 from ..schemas.forecast import ForecastConfigIn
 
@@ -36,7 +34,6 @@ async def run_calibration(
     if not ids:
         raise ValueError("Dataset has no series.")
     series = values[0]
-    series_dates = dates[0]
     n = len(series)
     min_train = max(horizon * 2, 24)
     if n < min_train + horizon * folds:
@@ -80,13 +77,6 @@ async def run_calibration(
     # Empirical coverage at each symmetric PI
     # PI level p → use quantile p*100 and (1-p)*100 (but we only have p10..p90 at 10% steps)
     reliability: list[dict[str, float]] = []
-    level_to_idx = {
-        0.1: (1, 9),
-        0.2: (2, 8),
-        0.4: (3, 7),
-        0.6: (4, 6),
-        0.8: (1, 9),  # 80% PI = [p10, p90]
-    }
     # Build a simpler map: symmetric PI level `alpha` uses (p_{(1-alpha)/2 * 100}, p_{(1+alpha)/2 * 100})
     # Quantile columns: [mean, p10, p20, p30, p40, p50, p60, p70, p80, p90]
     # Indexes 1..9 map to 10..90.

@@ -44,6 +44,13 @@ class Settings(BaseSettings):
         default=True,
         description="If True, the model starts loading at FastAPI startup (recommended).",
     )
+    inference_timeout_s: int = Field(
+        default=600,
+        description=(
+            "Per-request ceiling (seconds) for a single model inference call. "
+            "A pathological series cannot pin the inference worker forever."
+        ),
+    )
 
     # Database / connection ingestion (PR 3)
     max_sql_rows: int = Field(

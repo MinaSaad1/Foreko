@@ -31,6 +31,7 @@ from .routers import finetune as finetune_router
 from .routers import forecast as forecast_router
 from .routers import system as system_router
 from .services import device as device_service
+from .services import janitor
 from .services import model_download as model_download_svc
 from .services.logging_config import configure_logging
 from .services.model_registry import ModelRegistry
@@ -57,11 +58,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         model_id=settings.model_id,
         device=device_info,
         local_model_dir=local_model_dir,
+        inference_timeout_s=settings.inference_timeout_s,
     )
     app.state.registry = registry
 
     job_manager = JobManager(jobs_dir=settings.jobs_dir)
     app.state.job_manager = job_manager
+
+    # Sweep uploaded datasets past their TTL (no-op when dataset_ttl_hours <= 0).
+    janitor_task = asyncio.create_task(
+        janitor.run_janitor(settings.datasets_dir, settings.dataset_ttl_hours),
+        name="dataset-janitor",
+    )
 
     load_task: asyncio.Task[None] | None = None
     if settings.preload_model:
@@ -77,8 +85,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
                     settings.model_id,
                     local_model_dir,
                 )
-            except Exception:
+            except Exception as exc:
+                # Mark the registry failed so forecast requests fail fast with
+                # the offline instructions instead of waiting on a model that
+                # will never load.
                 logger.exception("Model snapshot download failed")
+                registry.mark_failed(str(exc))
                 return
             try:
                 await registry.load()
@@ -92,6 +104,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     finally:
         if load_task is not None and not load_task.done():
             load_task.cancel()
+        janitor_task.cancel()
         registry.shutdown()
 
 
@@ -145,6 +158,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         detail = f"Missing required field or column: {key!r}" if key else "Missing required field."
         logger.info("KeyError handled: %s", detail)
         return JSONResponse(status_code=422, content={"detail": detail})
+
+    @app.exception_handler(TimeoutError)
+    async def _timeout_handler(_request: Request, exc: TimeoutError) -> JSONResponse:
+        # Inference exceeded its per-request ceiling. 504 is the honest status.
+        logger.warning("Request timed out: %s", exc)
+        return JSONResponse(
+            status_code=504,
+            content={"detail": _truncate(str(exc)) or "The request timed out."},
+        )
 
     @app.exception_handler(FileNotFoundError)
     async def _not_found_handler(_request: Request, exc: FileNotFoundError) -> JSONResponse:

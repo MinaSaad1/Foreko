@@ -274,7 +274,7 @@ forecasting and analysis services. Everything is persisted under `~/.foreko/`.
 | Storage | SQLite (annotations, saved analyses) · local filesystem (datasets, model cache, exports) |
 | Connectors | SQLAlchemy · Postgres · MySQL · SQL Server · OS keyring for secrets |
 | Reports | ReportLab in-process PDF |
-| Tests | pytest (backend, ~120 tests) · Vitest + Testing Library (frontend) |
+| Tests | pytest (backend, ~160 tests) · Vitest + Testing Library (frontend) |
 
 ---
 

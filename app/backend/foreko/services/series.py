@@ -14,14 +14,14 @@ import logging
 import numpy as np
 import pandas as pd
 
-logger = logging.getLogger(__name__)
-
 from ..schemas.dataset import (
     ColumnDType,
     ColumnMapping,
     SeriesExtraction,
     SeriesSummary,
 )
+
+logger = logging.getLogger(__name__)
 
 _DATETIME_COERCION_THRESHOLD: float = 0.90
 _CATEGORICAL_MAX_UNIQUE: int = 20
@@ -215,6 +215,35 @@ def extract_series(
         values.append(vals)
         dates.append(dts)
     return ids, values, dates
+
+
+def ensure_min_length(
+    ids: list[str],
+    values: list[np.ndarray],
+    horizon: int,
+    *,
+    min_multiple: int = 2,
+) -> None:
+    """Raise if any series is too short to forecast *horizon* steps honestly.
+
+    TimesFM silently left-pads a short context with zeros and still returns a
+    confident-looking forecast, so without this guard a stranger who uploads a
+    handful of points and asks for a long horizon gets a chart built on
+    fabricated zeros. We require at least ``min_multiple x horizon`` real
+    points (and never fewer than 2).
+    """
+
+    need = max(min_multiple * horizon, 2)
+    for sid, vals in zip(ids, values, strict=True):
+        n = int(len(vals))
+        if n < need:
+            label = "This series" if sid == "series" else f"Series '{sid}'"
+            point_word = "point" if n == 1 else "points"
+            raise ValueError(
+                f"{label} has only {n} data {point_word}, but a horizon of "
+                f"{horizon} needs at least {need}. Use a longer history or a "
+                f"shorter horizon."
+            )
 
 
 def summarize_series(

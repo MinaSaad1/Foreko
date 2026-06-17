@@ -88,10 +88,16 @@ class ModelRegistry:
         model_id: str,
         device: DeviceInfo,
         local_model_dir: Path | None = None,
+        inference_timeout_s: float | None = 600.0,
     ) -> None:
         self._model_id = model_id
         self._local_model_dir = local_model_dir
         self._device = device
+        # None disables the per-request ceiling; a positive value caps how long
+        # a single inference call may run before the request gives up.
+        self._inference_timeout_s = (
+            inference_timeout_s if inference_timeout_s and inference_timeout_s > 0 else None
+        )
         self._model: TimesFMModel | None = None
         self._current_config_hash: str | None = None
         self._current_config: ForecastConfigIn | None = None
@@ -192,6 +198,17 @@ class ModelRegistry:
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(self._executor, self.load_blocking)
 
+    def mark_failed(self, error: str) -> None:
+        """Flip the registry into the error state.
+
+        Used when the snapshot download fails before ``load`` is ever reached,
+        so the status does not get stuck on ``loading`` forever and forecast
+        requests can fail fast with a useful message.
+        """
+
+        self._status = "error"
+        self._error = error
+
     def _ensure_compiled(self, config: ForecastConfigIn) -> str:
         """Compile if the hash differs from the current compiled config."""
 
@@ -239,7 +256,7 @@ class ModelRegistry:
                     self._queue_depth -= 1
 
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(self._executor, _run)
+        return await self._await_with_timeout(loop.run_in_executor(self._executor, _run))
 
     async def forecast_with_covariates(
         self,
@@ -284,7 +301,25 @@ class ModelRegistry:
                     self._queue_depth -= 1
 
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(self._executor, _run)
+        return await self._await_with_timeout(loop.run_in_executor(self._executor, _run))
+
+    async def _await_with_timeout(self, fut: "asyncio.Future[Any]") -> Any:
+        """Await an inference future, capped at ``inference_timeout_s``.
+
+        On timeout the worker thread cannot be force-killed (it is a blocking
+        native call), so the slot stays busy, but the *request* fails fast with
+        an actionable message instead of hanging the client forever.
+        """
+
+        if self._inference_timeout_s is None:
+            return await fut
+        try:
+            return await asyncio.wait_for(fut, timeout=self._inference_timeout_s)
+        except (asyncio.TimeoutError, TimeoutError) as exc:
+            raise TimeoutError(
+                f"Forecast timed out after {int(self._inference_timeout_s)} seconds. "
+                "Try a shorter history or a shorter horizon."
+            ) from exc
 
     def shutdown(self) -> None:
         self._executor.shutdown(wait=False, cancel_futures=True)

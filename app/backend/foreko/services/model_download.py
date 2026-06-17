@@ -174,7 +174,7 @@ def ensure_model(model_id: str, local_dir: Path) -> Path:
         raise
 
 
-from tqdm import tqdm as _tqdm_base
+from tqdm import tqdm as _tqdm_base  # noqa: E402  (kept beside the subclass below)
 
 
 class _ProgressTqdm(_tqdm_base):

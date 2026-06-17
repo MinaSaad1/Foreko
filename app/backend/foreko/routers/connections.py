@@ -11,8 +11,6 @@ writing plaintext credentials to disk.
 from __future__ import annotations
 
 import logging
-from pathlib import Path
-from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -28,7 +26,7 @@ from ..schemas.connection import (
     TableInfo,
 )
 from ..schemas.dataset import DatasetPreview
-from ..services import connection_store, dataset_store
+from ..services import connection_store
 from ..services import secrets as secrets_service
 from ..settings import Settings
 

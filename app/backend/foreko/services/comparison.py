@@ -115,6 +115,7 @@ async def run_comparison(
     """Backtest TimesFM and LightGBM, pick winner, return full comparison."""
 
     ids, values, dates = csv_loader.extract_series(df, request.mapping)
+    csv_loader.ensure_min_length(ids, values, request.horizon)
 
     # Use only the first series for the comparison page
     series_values = values[0]

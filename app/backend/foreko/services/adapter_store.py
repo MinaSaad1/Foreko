@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 
 from ..schemas.finetune import AdapterMetadata
+from .paths import validate_segment
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ def list_adapters(adapters_dir: Path) -> list[AdapterMetadata]:
 def get_adapter(adapter_id: str, adapters_dir: Path) -> AdapterMetadata | None:
     """Load metadata for a single adapter, or return ``None`` if not found."""
 
+    validate_segment(adapter_id, kind="adapter id")
     meta_file = adapters_dir / adapter_id / "meta.json"
     if not meta_file.exists():
         return None
@@ -42,6 +44,7 @@ def get_adapter(adapter_id: str, adapters_dir: Path) -> AdapterMetadata | None:
 def delete_adapter(adapter_id: str, adapters_dir: Path) -> bool:
     """Delete an adapter directory. Returns ``False`` if it does not exist."""
 
+    validate_segment(adapter_id, kind="adapter id")
     adapter_dir = adapters_dir / adapter_id
     if not adapter_dir.exists():
         return False
@@ -52,5 +55,6 @@ def delete_adapter(adapter_id: str, adapters_dir: Path) -> bool:
 def get_adapter_path(adapter_id: str, adapters_dir: Path) -> Path | None:
     """Return the adapter directory path, or ``None`` if it does not exist."""
 
+    validate_segment(adapter_id, kind="adapter id")
     d = adapters_dir / adapter_id
     return d if d.exists() else None

@@ -31,9 +31,6 @@ datasets/
 results/
 debug.log
 
-# Lock file — keep out of git for uv
-uv.lock
-
 # Claude Code workspace state
 .claude/
 

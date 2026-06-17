@@ -18,7 +18,6 @@ from scipy import stats
 
 from . import csv_loader
 from .classical_baselines import ets_forecast, seasonal_naive
-from .forecaster import _infer_future_dates
 from .model_registry import ModelRegistry
 
 logger = logging.getLogger(__name__)

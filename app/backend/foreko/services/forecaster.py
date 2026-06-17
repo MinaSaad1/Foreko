@@ -11,10 +11,8 @@ import numpy as np
 import pandas as pd
 
 from ..schemas.covariates import CovariateForecastRequest
-from ..schemas.dataset import ColumnMapping
 from ..schemas.finetune import AdapterForecastRequest
 from ..schemas.forecast import (
-    ForecastConfigIn,
     ForecastRequest,
     ForecastResponse,
     SeriesForecast,
@@ -109,6 +107,7 @@ async def zero_shot_forecast(
     """End-to-end forecast for a dataset + mapping + horizon."""
 
     ids, values, dates = csv_loader.extract_series(df, request.mapping)
+    csv_loader.ensure_min_length(ids, values, request.horizon)
 
     point_all, quantiles_all, cfg_hash = await registry.forecast(
         config=request.forecast_config,
@@ -148,6 +147,7 @@ async def with_covariates_forecast(
     """Forecast using external regressors (covariates)."""
 
     ids, values, dates = csv_loader.extract_series(df, request.mapping)
+    csv_loader.ensure_min_length(ids, values, request.horizon)
 
     cov = request.covariate_config
 

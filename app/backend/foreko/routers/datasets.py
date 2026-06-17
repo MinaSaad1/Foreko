@@ -10,7 +10,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 
 from ..deps import get_settings
 from ..schemas.dataset import ColumnMapping, DatasetPreview, DatasetSummary, SeriesExtraction
@@ -31,6 +31,7 @@ _SUPPORTED_EXTENSIONS = (".csv", ".xlsx", ".xls", ".parquet", ".json", ".jsonl",
 
 @router.post("/upload", response_model=DatasetPreview)
 async def upload(
+    request: Request,
     file: UploadFile = File(...),
     sheet: str | None = Query(
         default=None, description="Excel sheet name (optional; defaults to first sheet)."
@@ -57,12 +58,33 @@ async def upload(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail=f"No loader registered for '{ext}'.",
         )
-    content = await file.read()
-    if len(content) > settings.max_upload_bytes:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File exceeds {settings.max_upload_bytes} bytes.",
-        )
+    cap = settings.max_upload_bytes
+    too_large = HTTPException(
+        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+        detail=f"File exceeds the {cap // (1024 * 1024)} MB upload limit.",
+    )
+    # Reject early on the declared size so we never buffer a 2 GB body just to
+    # reject it. The header can be absent or lie, so the streamed read below
+    # enforces the cap for real.
+    declared = request.headers.get("content-length")
+    if declared is not None:
+        try:
+            if int(declared) > cap:
+                raise too_large
+        except ValueError:
+            pass
+
+    # Read in chunks and abort as soon as we cross the cap, so peak memory is
+    # bounded by the cap rather than the (untrusted) request size.
+    buffer = bytearray()
+    while True:
+        chunk = await file.read(1024 * 1024)
+        if not chunk:
+            break
+        buffer.extend(chunk)
+        if len(buffer) > cap:
+            raise too_large
+    content = bytes(buffer)
     if not content:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Empty file."
@@ -102,7 +124,9 @@ def preview(
 ) -> DatasetPreview:
     try:
         df = dataset_store.load_dataset(dataset_id, settings.datasets_dir)
-        meta = dataset_store.read_meta(settings.datasets_dir / dataset_id)
+        meta = dataset_store.read_meta(
+            dataset_store.dataset_dir(settings.datasets_dir, dataset_id)
+        )
     except FileNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
@@ -149,10 +173,10 @@ def list_datasets(settings: Settings = Depends(get_settings)) -> list[DatasetSum
 
 @router.delete("/{dataset_id}", status_code=204)
 def delete_dataset(dataset_id: str, settings: Settings = Depends(get_settings)) -> None:
-    dataset_dir = settings.datasets_dir / dataset_id
-    if not dataset_dir.exists():
+    target = dataset_store.dataset_dir(settings.datasets_dir, dataset_id)
+    if not target.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found.")
-    shutil.rmtree(dataset_dir)
+    shutil.rmtree(target)
 
 
 @router.post("/{dataset_id}/refresh", response_model=DatasetPreview)
@@ -169,7 +193,7 @@ def refresh(
 
     from ..services.loaders.sql import build_engine, materialize
 
-    dataset_dir = settings.datasets_dir / dataset_id
+    dataset_dir = dataset_store.dataset_dir(settings.datasets_dir, dataset_id)
     if not dataset_dir.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found."
@@ -254,7 +278,9 @@ def refresh(
             pass
 
     meta["row_count"] = int(len(df))
-    source["fetched_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+    source["fetched_at"] = (
+        datetime.datetime.now(datetime.timezone.utc).isoformat()
+    )
     meta["source"] = source
     dataset_store.write_meta(dataset_dir, meta)
 
