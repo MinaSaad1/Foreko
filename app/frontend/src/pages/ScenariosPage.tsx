@@ -3,19 +3,16 @@ import { useParams } from"react-router-dom";
 import { ColumnMapper } from"@/components/ColumnMapper";
 import ReactECharts from"echarts-for-react";
 import { useChartTheme } from"@/charts/theme";
-import { PageIntro } from"@/components/common/PageIntro";
 import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
 import { RunError } from"@/components/common/RunError";
 import {
-  LeftRail,
-  PageHeader,
-  RailChoiceGrid,
-  RailRow,
-  RailSection,
-  RightRail,
-  ThreeRailLayout,
-  WhatYoullGet,
-} from "@/components/common/Rails";
+  ChoiceGrid,
+  Depth,
+  Fact,
+  FactGrid,
+  PageHeading,
+  Section,
+} from "@/components/common/Page";
 import { useSyncedDataset } from"@/hooks/useSyncedDataset";
 import { useHealth } from"@/hooks/useHealth";
 import { useScenariosOrchestrator } from"@/hooks/useScenariosOrchestrator";
@@ -66,22 +63,31 @@ export function ScenariosPage() {
  const displayName = preview ? preview.filename.replace(/\.[^.]+$/, "") : "Scenarios";
 
  return (
- <ThreeRailLayout
-   left={
-     <LeftRail ariaLabel="Scenarios configuration">
-       <RailSection label="Dataset">
-         {preview ? (
-           <>
-             <RailRow k="File" v={preview.filename} />
-             <RailRow k="Rows" v={preview.row_count.toLocaleString()} />
-           </>
-         ) : (
-           <p className="font-mono text-[10px] text-text-faint">Loading…</p>
-         )}
-       </RailSection>
+ <div className="flex flex-col gap-6">
+ <PageHeading
+   kicker="Plan"
+   title={displayName}
+   intro="Set future factor values, flat or ramping, then run the forecast to see how your metric responds. Save a scenario under a name and compare two or more side by side."
+ />
 
-       <RailSection label="Horizon">
-         <RailChoiceGrid
+ <FactGrid>
+   <Fact label="File" value={preview ? preview.filename : "Loading..."} />
+   <Fact label="Rows" value={preview ? preview.row_count.toLocaleString() : "..."} />
+   <Fact label="Horizon" value={`${horizon} periods`} />
+   <Fact label="Saved scenarios" value={String(scenarios?.length ?? 0)} />
+ </FactGrid>
+
+ <Section
+   title="Set up"
+   controls={
+     <div className="flex items-center gap-2">
+       {/* Horizon was LeftRail-only, so below lg it did not exist and could
+           not be changed, while the header reported it back to the user. */}
+       <span id="scenario-horizon-label" className="text-[13px] text-text-secondary">
+         Horizon
+       </span>
+       <div role="group" aria-labelledby="scenario-horizon-label" className="w-40">
+         <ChoiceGrid
            options={[
              { value: 4, label: "4" },
              { value: 8, label: "8" },
@@ -92,57 +98,33 @@ export function ScenariosPage() {
            onChange={setHorizon}
            columns={2}
          />
-       </RailSection>
-
-       <RailSection label="Active scenario">
-         <RailRow k="Factors" v={String(numericFactors.length)} />
-         <RailRow k="Counterfactual" v={String(counterfactuals.length)} />
-         <RailRow k="Saved" v={String(scenarios?.length ?? 0)} />
-       </RailSection>
-     </LeftRail>
-   }
-   right={
-     <RightRail ariaLabel="Scenarios insights">
-       <WhatYoullGet
-         summary="Set future factor values (flat or ramp) and run the forecast to see how the metric responds. Save named scenarios and compare two or more side-by-side."
-         reading={[
-           "Flat = factor pinned at a constant for the horizon.",
-           "Ramp = factor linearly moves from start to end.",
-           "Counterfactual = zero the factor out to see its raw contribution.",
-         ]}
-       />
-     </RightRail>
+       </div>
+     </div>
    }
  >
- <PageHeader
-   kicker="Plan"
-   title={displayName}
-   subtitle={preview ? `${preview.row_count.toLocaleString()} rows · horizon ${horizon}` : undefined}
- />
-
- <div className="lg:hidden">
-   <PageIntro pageKey="scenarios" />
- </div>
-
- <div className="rounded-panel border border-border bg-bg-surface p-5 space-y-5">
+ <div className="space-y-5">
  {preview && <ColumnMapper preview={preview} value={mapping} onChange={handleMappingChange} />}
 
  {numericCols.length > 0 && (
  <div>
- <p className="font-mono text-xs uppercase tracking-widest text-text-muted mb-2">
- Factors to manipulate
+ <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">
+ Factors to change
  </p>
- <div className="space-y-3">
+ <p className="mb-2 mt-1 text-[13px] text-text-secondary">
+ Tick a factor to set its future value. Untouched factors keep their own
+ projected path.
+ </p>
+ <div className="divide-y divide-border/60 border-y border-border/60">
  {numericCols.map((c) => {
  const active = numericFactors.includes(c.name);
  const cfActive = counterfactuals.includes(c.name);
  const override = overrides[c.name] ?? { value: 0, mode: "flat"as const };
  return (
- <div
- key={c.name}
- className={`border p-3 ${active ? "border-accent/40 bg-accent-dim/30" : "border-border"}`}
- >
- <div className="flex items-center justify-between">
+ // Was a bordered card inside a bordered card, N times over, with every
+ // factor showing five controls whether or not it was in play. Rows now,
+ // and an untouched factor costs exactly one checkbox.
+ <div key={c.name} className={`px-3 py-2 ${active ? "bg-accent/5" : ""}`}>
+ <div className="flex flex-wrap items-center justify-between gap-3">
  <label className="flex items-center gap-2 font-mono text-sm text-text-primary">
  <input
  type="checkbox"checked={active}
@@ -154,7 +136,8 @@ export function ScenariosPage() {
  />
  {c.name}
  </label>
- <label className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-text-muted">
+ {active && (
+ <label className="flex items-center gap-2 text-[13px] text-text-secondary">
  <input
  type="checkbox"checked={cfActive}
  onChange={() =>
@@ -163,8 +146,9 @@ export function ScenariosPage() {
  )
  }
  />
- Counterfactual (zero out)
+ Zero it out, to see its own contribution
  </label>
+ )}
  </div>
  {active && !cfActive && (
  <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -212,44 +196,53 @@ export function ScenariosPage() {
  </div>
  )}
 
- <div className="flex gap-2">
+ {/* Run used to share a row with a flex-1 label input, which made an
+     optional text field the widest thing on the page and left the eye
+     landing on it instead of on the primary action. */}
  <button
  onClick={() => runMutation.mutate()}
  disabled={!mapping || runMutation.isPending || !modelReady}
- className="btn-terminal-primary"
+ className="w-full btn-terminal-primary"
  >
  {runMutation.isPending ? "Running..." : "Run scenario"}
  </button>
+ {!modelReady && (
+ <p className="text-[13px] text-text-secondary">
+ Model still loading, the Run button will enable when it's ready.
+ </p>
+ )}
+
+ <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-4">
+ <label htmlFor="scenario-label" className="text-[13px] text-text-secondary">
+ Keep this scenario as
+ </label>
  <input
+ id="scenario-label"
  type="text"value={label}
  onChange={(e) => setLabel(e.target.value)}
- placeholder="Scenario label"className="flex-1 border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
+ placeholder="e.g. Q3 price rise"className="min-w-[200px] flex-1 border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent"
  />
  <button
  onClick={() => saveMutation.mutate()}
  disabled={!label || !mapping || saveMutation.isPending}
  className="btn-terminal"
  >
- Save
+ {saveMutation.isPending ? "Saving..." : "Save"}
  </button>
  </div>
- {!modelReady && (
- <p className="text-xs text-text-muted">Model still loading, the Run button will enable when it's ready.</p>
- )}
 
  <RunError error={runMutation.error} label="Scenario run" />
  <RunError error={saveMutation.error} label="Save" />
  <RunError error={compareMutation.error} label="Compare" />
  </div>
+ </Section>
 
  {runMutation.data && <ScenarioResultChart data={runMutation.data} />}
 
  {scenarios && scenarios.length > 0 && (
- <div className="rounded-panel border border-border bg-bg-surface p-5 space-y-3">
- <div className="flex items-center justify-between">
- <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
- Saved scenarios ({scenarios.length})
- </h3>
+ <Section
+ title={`Saved scenarios (${scenarios.length})`}
+ controls={
  <button
  onClick={() => compareMutation.mutate()}
  disabled={selectedForCompare.length < 2 || compareMutation.isPending}
@@ -257,7 +250,13 @@ export function ScenariosPage() {
  >
  Compare selected ({selectedForCompare.length})
  </button>
- </div>
+ }
+ >
+ {selectedForCompare.length < 2 && (
+ <p className="mb-3 text-[13px] text-text-secondary">
+ Tick two or more scenarios to compare them side by side.
+ </p>
+ )}
  <div className="space-y-1">
  {scenarios.map((s) => (
  <div
@@ -309,11 +308,38 @@ export function ScenariosPage() {
  </div>
  ))}
  </div>
- </div>
+ </Section>
  )}
 
  {compareMutation.data && <ScenarioCompareChart data={compareMutation.data} />}
- </ThreeRailLayout>
+
+ <Depth label="Reading the result">
+ <ul className="space-y-2 text-[13px] leading-relaxed text-text-secondary">
+ <li className="flex gap-2">
+ <span className="text-accent" aria-hidden>
+ ▸
+ </span>
+ <span>Flat pins the factor at one value for the whole horizon.</span>
+ </li>
+ <li className="flex gap-2">
+ <span className="text-accent" aria-hidden>
+ ▸
+ </span>
+ <span>Ramp moves the factor from the start value to the end value in a straight line.</span>
+ </li>
+ <li className="flex gap-2">
+ <span className="text-accent" aria-hidden>
+ ▸
+ </span>
+ <span>
+ Zeroing a factor out shows what the forecast looks like without its
+ contribution. It is a comparison, not a prediction that the factor will
+ be zero.
+ </span>
+ </li>
+ </ul>
+ </Depth>
+ </div>
  );
 }
 

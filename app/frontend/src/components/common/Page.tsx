@@ -78,14 +78,30 @@ export function FactGrid({
   );
 }
 
+/**
+ * Emphasis only. The value's own text always carries the meaning, so a fact
+ * still reads correctly with colour ignored, unavailable, or indistinguishable.
+ */
+export type FactTone = "ok" | "warn" | "err" | "accent" | "muted";
+
+const FACT_TONE: Record<FactTone, string> = {
+  ok: "text-positive",
+  warn: "text-warning",
+  err: "text-anomaly",
+  accent: "text-accent",
+  muted: "text-text-muted",
+};
+
 export function Fact({
   label,
   value,
   title,
+  tone,
 }: {
   label: string;
   value: string;
   title?: string;
+  tone?: FactTone;
 }) {
   return (
     <div className="border-r border-b border-border-strong/70 bg-bg-surface/40 px-4 py-3">
@@ -93,7 +109,7 @@ export function Fact({
         {label}
       </dt>
       <dd
-        className="mt-1 truncate font-mono text-[12px] text-text-primary"
+        className={`mt-1 truncate font-mono text-[12px] ${tone ? FACT_TONE[tone] : "text-text-primary"}`}
         title={title ?? value}
       >
         {value}
@@ -142,6 +158,54 @@ export function Depth({ label, children }: { label: string; children: ReactNode 
       </summary>
       <div className="mt-3">{children}</div>
     </details>
+  );
+}
+
+/**
+ * Compact pill-style choice grid for horizon / fold / top-N pickers.
+ *
+ * Moved here from Rails.tsx, which is gone. It was always a generic control
+ * rather than a rail thing; the rail just happened to be where it was parked.
+ * Place it on the region it configures, never in a column that can hide.
+ */
+export function ChoiceGrid<T extends string | number>({
+  options,
+  value,
+  onChange,
+  disabled,
+  disabledTitle,
+  columns = 2,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+  disabled?: boolean;
+  disabledTitle?: string;
+  columns?: 2 | 3 | 4;
+}) {
+  const cols =
+    columns === 4 ? "grid-cols-4" : columns === 3 ? "grid-cols-3" : "grid-cols-2";
+  return (
+    <div className={`grid gap-1 ${cols}`}>
+      {options.map((opt) => (
+        <button
+          // Without this, a picker dropped inside a <form> submits it.
+          type="button"
+          key={String(opt.value)}
+          onClick={() => onChange(opt.value)}
+          disabled={disabled}
+          aria-pressed={value === opt.value}
+          className={`border px-2 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors ${
+            value === opt.value
+              ? "border-accent bg-accent/10 text-accent"
+              : "border-border-strong/60 text-text-secondary hover:border-text-primary hover:text-text-primary"
+          } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+          title={disabled ? disabledTitle : undefined}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
   );
 }
 

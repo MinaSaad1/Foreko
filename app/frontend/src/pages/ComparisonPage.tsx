@@ -4,22 +4,20 @@ import { useBacktestStore } from "@/stores/backtestStore";
 import { ColumnMapper } from "@/components/ColumnMapper";
 import { WinnerCard } from "@/components/WinnerCard";
 import { AlternativeCard } from "@/components/AlternativeCard";
-import { PageIntro } from "@/components/common/PageIntro";
 import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
 import { HelpHint } from "@/components/common/HelpHint";
+import { RunError } from "@/components/common/RunError";
 import { Term } from "@/components/common/Term";
 import { DownloadPdfButton, type PdfSection } from "@/components/common/DownloadPdfButton";
 import {
-  LeftRail,
-  PageHeader,
-  RailChoiceGrid,
-  RailResetButton,
-  RailRow,
-  RailSection,
-  RightRail,
-  ThreeRailLayout,
-  WhatYoullGet,
-} from "@/components/common/Rails";
+  ChoiceGrid,
+  Depth,
+  Fact,
+  FactGrid,
+  PageHeading,
+  SecondaryActions,
+  Section,
+} from "@/components/common/Page";
 import { useDocumentTitle } from "@/utils/useDocumentTitle";
 import { useSyncedDataset } from "@/hooks/useSyncedDataset";
 import { useHealth } from "@/hooks/useHealth";
@@ -146,127 +144,61 @@ function buildForecastReport(
   return sections;
 }
 
-interface ForecastLeftRailProps {
-  preview: { filename: string; row_count: number } | undefined;
-  horizon: number;
-  setHorizon: (h: number) => void;
-  result: ComparisonResponse | null;
-  isRunning: boolean;
-  onReset: () => void;
-}
-
-function ForecastLeftRail({ preview, horizon, setHorizon, result, isRunning, onReset }: ForecastLeftRailProps) {
-  const horizonLocked = !!result || isRunning;
-  return (
-    <LeftRail ariaLabel="Forecast configuration">
-      <RailSection label="Dataset">
-        {preview ? (
-          <>
-            <RailRow k="File" v={preview.filename} />
-            <RailRow k="Rows" v={preview.row_count.toLocaleString()} />
-          </>
-        ) : (
-          <p className="font-mono text-[10px] text-text-faint">Loading…</p>
-        )}
-      </RailSection>
-
-      <RailSection label="Horizon">
-        <RailChoiceGrid
-          options={HORIZON_OPTIONS}
-          value={horizon}
-          onChange={setHorizon}
-          disabled={horizonLocked}
-          disabledTitle="Use ← Change settings to adjust"
-        />
-      </RailSection>
-
-      <RailSection label="Models">
-        <RailRow k="Primary" v="TimesFM 2.5" tone="accent" />
-        <RailRow k="Challenger" v="LightGBM" />
-      </RailSection>
-
-      {result && <RailResetButton onClick={onReset} />}
-    </LeftRail>
-  );
-}
-
-interface NextStepsRailItem {
+interface NextStepItem {
   to: string;
-  eyebrow: string;
   title: string;
+  description: string;
 }
 
-function NextStepsCompact({ datasetId }: { datasetId: string }) {
-  const items: NextStepsRailItem[] = [
-    { to: `/backtest/${datasetId}`, eyebrow: "Validate", title: "Backtest" },
-    { to: `/anomaly/${datasetId}`, eyebrow: "Investigate", title: "Anomalies" },
-    { to: `/explain/${datasetId}`, eyebrow: "Understand", title: "Explain" },
+/**
+ * Where to go once there is a forecast to defend. These were three stacked mono
+ * eyebrows in the right rail; inside a labelled region they only added noise, so
+ * the destinations now carry a sentence a user can actually read.
+ */
+function NextSteps({ datasetId }: { datasetId: string }) {
+  const items: NextStepItem[] = [
+    {
+      to: `/backtest/${datasetId}`,
+      title: "Backtest",
+      description:
+        "Validate the recommendation across several folds instead of one holdout window.",
+    },
+    {
+      to: `/anomaly/${datasetId}`,
+      title: "Anomalies",
+      description: "Investigate the points in the history that the models had to fit around.",
+    },
+    {
+      to: `/explain/${datasetId}`,
+      title: "Explain",
+      description: "Understand which factors are associated with the movements in this series.",
+    },
   ];
   return (
-    <div className="border border-border-strong/70 divide-y divide-border-strong/70">
+    <div className="border-t border-border-strong/70">
       {items.map((it) => (
         <Link
           key={it.to}
           to={it.to}
-          className="group flex items-center justify-between px-3 py-3 hover:bg-accent/10 transition-colors"
+          className="group flex items-center justify-between gap-4 border-b border-border-strong/70 px-3 py-3 transition-colors hover:bg-accent/10"
         >
-          <div>
-            <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-accent">{it.eyebrow}</p>
-            <p className="mt-0.5 font-display text-sm text-text-primary group-hover:text-accent transition-colors">{it.title}</p>
+          <div className="min-w-0">
+            <p className="font-display text-sm text-text-primary transition-colors group-hover:text-accent">
+              {it.title}
+            </p>
+            <p className="mt-0.5 text-[13px] leading-relaxed text-text-secondary">
+              {it.description}
+            </p>
           </div>
-          <span className="font-mono text-text-muted group-hover:text-accent transition-colors">→</span>
+          <span
+            aria-hidden
+            className="shrink-0 font-mono text-text-muted transition-colors group-hover:text-accent"
+          >
+            →
+          </span>
         </Link>
       ))}
     </div>
-  );
-}
-
-interface ForecastRightRailProps {
-  result: ComparisonResponse | null;
-  datasetId: string;
-  horizon: number;
-}
-
-function ForecastRightRail({ result, datasetId, horizon }: ForecastRightRailProps) {
-  return (
-    <RightRail ariaLabel="Forecast insights">
-      {!result && (
-        <WhatYoullGet
-          summary="A calibrated point forecast plus a P10/P90 uncertainty band, the recommended model with its confidence rating, and an alternative for comparison."
-          reading={[
-            "Cyan band = uncertainty; wider = less certain.",
-            "Recommended model is opinionated. Flip to the alternative inline.",
-            "Defend the forecast by following the next-step links after running.",
-          ]}
-        />
-      )}
-
-      {result && (
-        <>
-          <RailSection label="Backtest metrics">
-            <RailRow k="Winner" v={result.winner.display_name} tone="accent" />
-            <RailRow k="Accuracy" v={formatPct(result.winner.accuracy)} tone="ok" />
-            <RailRow k="MAPE" v={formatPct(result.winner.mape)} />
-            <RailRow
-              k="Confidence"
-              v={result.winner.confidence}
-              tone={result.winner.confidence === "High" ? "ok" : result.winner.confidence === "Low" ? "warn" : undefined}
-            />
-            <RailRow k="Horizon" v={`${horizon} periods`} />
-          </RailSection>
-
-          <RailSection label="Alternative">
-            <RailRow k="Model" v={result.alternative.display_name} />
-            <RailRow k="Accuracy" v={formatPct(result.alternative.accuracy)} />
-            <RailRow k="MAPE" v={formatPct(result.alternative.mape)} tone="muted" />
-          </RailSection>
-
-          <RailSection label="Next steps">
-            <NextStepsCompact datasetId={datasetId} />
-          </RailSection>
-        </>
-      )}
-    </RightRail>
   );
 }
 
@@ -311,29 +243,11 @@ export function ComparisonPage() {
   const displayName = preview ? preview.filename.replace(/\.[^.]+$/, "") : "Model Comparison";
 
   return (
-    <ThreeRailLayout
-      left={
-        <ForecastLeftRail
-          preview={preview}
-          horizon={horizon}
-          setHorizon={setHorizon}
-          result={resolved?.data ?? null}
-          isRunning={isRunning}
-          onReset={reset}
-        />
-      }
-      right={
-        <ForecastRightRail
-          result={resolved?.data ?? null}
-          datasetId={activeId}
-          horizon={horizon}
-        />
-      }
-    >
-      <PageHeader
+    <div className="flex flex-col gap-6">
+      <PageHeading
         kicker="Model Comparison"
         title={displayName}
-        subtitle={preview ? `${preview.row_count.toLocaleString()} rows · horizon ${horizon}` : undefined}
+        intro="A calibrated point forecast plus a P10/P90 uncertainty band, the recommended model with its confidence rating, and an alternative for comparison."
         actions={
           resolved && (
             <DownloadPdfButton
@@ -350,56 +264,83 @@ export function ComparisonPage() {
         }
       />
 
-      <div className="lg:hidden">
-        <PageIntro pageKey="compare" />
-      </div>
+      <FactGrid>
+        <Fact label="File" value={preview ? preview.filename : "Loading..."} />
+        <Fact label="Rows" value={preview ? preview.row_count.toLocaleString() : "-"} />
+        <Fact label="Primary model" value="TimesFM 2.5" />
+        <Fact label="Challenger" value="LightGBM" />
+      </FactGrid>
+
+      {resolved && (
+        <FactGrid>
+          <Fact label="Winner" value={resolved.data.winner.display_name} />
+          <Fact label="Accuracy" value={formatPct(resolved.data.winner.accuracy)} />
+          <Fact label="MAPE" value={formatPct(resolved.data.winner.mape)} />
+          <Fact label="Confidence" value={resolved.data.winner.confidence} />
+          <Fact label="Horizon" value={`${horizon} periods`} />
+          <Fact label="Alternative" value={resolved.data.alternative.display_name} />
+          <Fact
+            label="Alternative accuracy"
+            value={formatPct(resolved.data.alternative.accuracy)}
+          />
+          <Fact label="Alternative MAPE" value={formatPct(resolved.data.alternative.mape)} />
+        </FactGrid>
+      )}
 
       {preview && !resolved && !isRunning && (
-        <div className="border border-border-strong/70 bg-bg-surface px-6 py-6 space-y-5 shadow-[var(--shadow-elev-1)]">
-          <div className="flex items-center gap-2">
-            <span className="text-accent leading-none" aria-hidden>▣</span>
-            <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
-              Set up your forecast
-            </h2>
+        <Section title="Set up your forecast">
+          <div className="flex flex-col gap-5">
+            <ColumnMapper
+              preview={preview}
+              value={mapping}
+              onChange={handleMappingChange}
+            />
+
+            {/* The horizon picker used to live 260px away in a rail that did not
+                exist below 1024px, and this block used to apologise for that in
+                mono uppercase. It now sits on the run button it configures. */}
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[13px] font-medium text-text-primary">
+                  Forecast <Term k="horizon">horizon</Term>
+                </span>
+                <HelpHint termKey="horizon" />
+              </div>
+              <p className="mt-1 text-[13px] leading-relaxed text-text-secondary">
+                How many periods ahead to forecast. Currently {horizon} periods.
+              </p>
+              <div className="mt-2 max-w-md">
+                <ChoiceGrid
+                  options={HORIZON_OPTIONS}
+                  value={horizon}
+                  onChange={setHorizon}
+                  columns={3}
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={() => startComparison()}
+              disabled={!mapping || isRunning || !modelReady}
+              className="w-full btn-terminal-primary"
+            >
+              {isRunning ? "Running comparison..." : "Run Forecast Comparison"}
+            </button>
+
+            {!modelReady && (
+              <p className="text-[13px] leading-relaxed text-text-secondary">
+                Model still loading, the Run button enables when it's ready.
+              </p>
+            )}
           </div>
+        </Section>
+      )}
 
-          <ColumnMapper
-            preview={preview}
-            value={mapping}
-            onChange={handleMappingChange}
-          />
-
-          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">
-            <span>Horizon (<Term k="horizon">horizon</Term>)</span>
-            <HelpHint termKey="horizon" />
-            <span className="text-text-faint">|</span>
-            <span className="text-accent">{horizon} periods</span>
-            <span className="text-text-faint">·</span>
-            <span className="text-text-faint">change in the left rail</span>
-          </div>
-
-          {isError && (
-            <p className="border border-anomaly/40 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
-              {error instanceof Error
-                ? error.message
-                : "Comparison failed. Check that the model is loaded."}
-            </p>
-          )}
-
-          <button
-            onClick={() => startComparison()}
-            disabled={!mapping || isRunning || !modelReady}
-            className="w-full btn-terminal-primary"
-          >
-            {isRunning ? "Running comparison..." : "Run Forecast Comparison"}
-          </button>
-
-          {!modelReady && (
-            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-text-muted text-center">
-              Model still loading; the Run button enables when it's ready.
-            </p>
-          )}
-        </div>
+      {isError && (
+        <RunError
+          error={error ?? "Check that the model is loaded."}
+          label="Comparison"
+        />
       )}
 
       {isRunning && (
@@ -426,8 +367,47 @@ export function ComparisonPage() {
             model={resolved.data.alternative}
             winnerAccuracy={resolved.data.winner.accuracy}
           />
+
+          <Section title="Next steps">
+            <NextSteps datasetId={activeId} />
+          </Section>
         </>
       )}
-    </ThreeRailLayout>
+
+      <Depth label="Reading the result">
+        <ul className="space-y-2 text-[13px] leading-relaxed text-text-secondary">
+          <li className="flex gap-2">
+            <span className="text-accent" aria-hidden>
+              ▸
+            </span>
+            <span>The cyan band is uncertainty. Wider means less certain.</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent" aria-hidden>
+              ▸
+            </span>
+            <span>
+              The recommended model is opinionated. Flip to the alternative inline.
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent" aria-hidden>
+              ▸
+            </span>
+            <span>
+              Defend the forecast by following the next-step links after running.
+            </span>
+          </li>
+        </ul>
+      </Depth>
+
+      {resolved && (
+        <SecondaryActions>
+          <button type="button" onClick={reset} className="btn-terminal">
+            Change settings
+          </button>
+        </SecondaryActions>
+      )}
+    </div>
   );
 }

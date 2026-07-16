@@ -1,33 +1,46 @@
-import { useRef } from"react";
-import { useParams } from"react-router-dom";
-import { api } from"@/api/endpoints";
-import { ColumnMapper } from"@/components/ColumnMapper";
-import { JobProgress } from"@/components/common/JobProgress";
-import { FoldResultsTable } from"@/components/backtest/FoldResultsTable";
-import { PerHorizonMAPE, type PerHorizonMAPEHandle } from"@/components/backtest/PerHorizonMAPE";
-import { CalibrationPlot, type CalibrationPlotHandle } from"@/components/backtest/CalibrationPlot";
-import { PageIntro } from"@/components/common/PageIntro";
-import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
-import { HelpHint } from"@/components/common/HelpHint";
-import { DownloadPdfButton, type PdfSection } from"@/components/common/DownloadPdfButton";
+import { useRef } from "react";
+import { useParams } from "react-router-dom";
+import { api } from "@/api/endpoints";
+import { ColumnMapper } from "@/components/ColumnMapper";
+import { JobProgress } from "@/components/common/JobProgress";
+import { FoldResultsTable } from "@/components/backtest/FoldResultsTable";
+import { PerHorizonMAPE, type PerHorizonMAPEHandle } from "@/components/backtest/PerHorizonMAPE";
+import { CalibrationPlot, type CalibrationPlotHandle } from "@/components/backtest/CalibrationPlot";
+import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
+import { HelpHint } from "@/components/common/HelpHint";
+import { RunError } from "@/components/common/RunError";
+import { DownloadPdfButton, type PdfSection } from "@/components/common/DownloadPdfButton";
 import {
-  LeftRail,
-  PageHeader,
-  RailChoiceGrid,
-  RailResetButton,
-  RailRow,
-  RailSection,
-  RightRail,
-  ThreeRailLayout,
-  WhatYoullGet,
-} from "@/components/common/Rails";
-import { useDocumentTitle } from"@/utils/useDocumentTitle";
-import { useSyncedDataset } from"@/hooks/useSyncedDataset";
-import { useHealth } from"@/hooks/useHealth";
-import { useBacktestOrchestrator } from"@/hooks/useBacktestOrchestrator";
-import type { BacktestResult, CalibrationResult } from"@/types/phases";
+  ChoiceGrid,
+  Depth,
+  Fact,
+  FactGrid,
+  PageHeading,
+  SecondaryActions,
+  Section,
+} from "@/components/common/Page";
+import { useDocumentTitle } from "@/utils/useDocumentTitle";
+import { useSyncedDataset } from "@/hooks/useSyncedDataset";
+import { useHealth } from "@/hooks/useHealth";
+import { useBacktestOrchestrator } from "@/hooks/useBacktestOrchestrator";
+import type { BacktestResult, CalibrationResult } from "@/types/phases";
 
 const ALL_MODELS = ["timesfm", "lightgbm", "seasonal_naive", "ets"];
+
+const HORIZON_OPTIONS = [
+  { value: 4, label: "4" },
+  { value: 8, label: "8" },
+  { value: 12, label: "12" },
+  { value: 24, label: "24" },
+  { value: 52, label: "52" },
+];
+
+const FOLD_OPTIONS = [
+  { value: 3, label: "3" },
+  { value: 5, label: "5" },
+  { value: 7, label: "7" },
+  { value: 10, label: "10" },
+];
 
 function formatPct(v: number): string {
  if (!Number.isFinite(v)) return"-";
@@ -277,110 +290,15 @@ export function BacktestPage() {
  const displayName = preview ? preview.filename.replace(/\.[^.]+$/, "") : "Backtest";
  const winnerName = result?.winner ?? null;
  const winnerAgg = winnerName ? result?.aggregate[winnerName] : null;
+ const configLocked = !!result || !!jobId;
+ const noModels = models.length === 0;
 
  return (
-   <ThreeRailLayout
-     left={
-       <LeftRail ariaLabel="Backtest configuration">
-         <RailSection label="Dataset">
-           {preview ? (
-             <>
-               <RailRow k="File" v={preview.filename} />
-               <RailRow k="Rows" v={preview.row_count.toLocaleString()} />
-             </>
-           ) : (
-             <p className="font-mono text-[10px] text-text-faint">Loading…</p>
-           )}
-         </RailSection>
-
-         <RailSection label="Horizon">
-           <RailChoiceGrid
-             options={[
-               { value: 4, label: "4" },
-               { value: 8, label: "8" },
-               { value: 12, label: "12" },
-               { value: 24, label: "24" },
-               { value: 52, label: "52" },
-             ]}
-             value={horizon}
-             onChange={setHorizon}
-             disabled={!!result || !!jobId}
-             columns={3}
-           />
-         </RailSection>
-
-         <RailSection label="Folds">
-           <RailChoiceGrid
-             options={[
-               { value: 3, label: "3" },
-               { value: 5, label: "5" },
-               { value: 7, label: "7" },
-               { value: 10, label: "10" },
-             ]}
-             value={folds}
-             onChange={setFolds}
-             disabled={!!result || !!jobId}
-             columns={2}
-           />
-         </RailSection>
-
-         <RailSection label="Models">
-           <div className="flex flex-wrap gap-1">
-             {ALL_MODELS.map((m) => (
-               <button
-                 key={m}
-                 onClick={() => toggleModel(m)}
-                 disabled={!!result || !!jobId}
-                 className={`border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em] transition-colors ${
-                   models.includes(m)
-                     ? "border-accent bg-accent/10 text-accent"
-                     : "border-border-strong/60 text-text-secondary hover:border-text-primary hover:text-text-primary"
-                 } ${result || jobId ? "opacity-50 cursor-not-allowed" : ""}`}
-               >
-                 {m}
-               </button>
-             ))}
-           </div>
-         </RailSection>
-
-         {result && <RailResetButton onClick={reset} />}
-       </LeftRail>
-     }
-     right={
-       <RightRail ariaLabel="Backtest insights">
-         {!result && (
-           <WhatYoullGet
-             summary="Walk-forward evaluation across multiple expanding-window folds. Surfaces MAPE, RMSE, MASE, pinball loss, per-horizon accuracy, and prediction-interval calibration."
-             reading={[
-               "Lower MAPE / RMSE / MASE is better. Pinball measures P10/P50/P90 sharpness.",
-               "Flat per-horizon line = the model holds up across the full horizon.",
-               "Calibration dots on the diagonal = honest uncertainty bands.",
-             ]}
-           />
-         )}
-         {result && (
-           <>
-             <RailSection label="Winner">
-               <RailRow k="Model" v={winnerName ?? "-"} tone="accent" />
-               <RailRow k="MAPE (mean)" v={winnerAgg ? formatPct(winnerAgg.mape_mean) : "-"} tone="ok" />
-               <RailRow k="MAPE (std)" v={winnerAgg ? formatPct(winnerAgg.mape_std) : "-"} />
-               <RailRow k="RMSE" v={winnerAgg ? formatNumber(winnerAgg.rmse_mean) : "-"} />
-               <RailRow k="MASE" v={winnerAgg ? formatNumber(winnerAgg.mase_mean) : "-"} />
-             </RailSection>
-             <RailSection label="Run">
-               <RailRow k="Folds" v={String(folds)} />
-               <RailRow k="Horizon" v={`${horizon} periods`} />
-               <RailRow k="Models" v={String(models.length)} />
-             </RailSection>
-           </>
-         )}
-       </RightRail>
-     }
-   >
-     <PageHeader
+   <div className="flex flex-col gap-6">
+     <PageHeading
        kicker="Validate"
        title={displayName}
-       subtitle={preview ? `${preview.row_count.toLocaleString()} rows · ${folds} folds · horizon ${horizon}` : undefined}
+       intro="Walk-forward evaluation across multiple expanding-window folds. Surfaces MAPE, RMSE, MASE, pinball loss, per-horizon accuracy, and prediction-interval calibration."
        actions={
          result && (
            <DownloadPdfButton
@@ -400,41 +318,118 @@ export function BacktestPage() {
        }
      />
 
-     <div className="lg:hidden">
-       <PageIntro pageKey="backtest" />
-     </div>
+     <FactGrid>
+       <Fact label="File" value={preview ? preview.filename : "Loading..."} />
+       <Fact label="Rows" value={preview ? preview.row_count.toLocaleString() : "-"} />
+       <Fact label="Folds" value={String(folds)} />
+       <Fact label="Horizon" value={`${horizon} periods`} />
+     </FactGrid>
+
+     {result && (
+       <FactGrid columns={3}>
+         <Fact label="Winner" value={winnerName ?? "None, no model completed every fold"} />
+         <Fact label="MAPE (mean)" value={winnerAgg ? formatPct(winnerAgg.mape_mean) : "-"} />
+         <Fact label="MAPE (std)" value={winnerAgg ? formatPct(winnerAgg.mape_std) : "-"} />
+         <Fact label="RMSE" value={winnerAgg ? formatNumber(winnerAgg.rmse_mean) : "-"} />
+         <Fact label="MASE" value={winnerAgg ? formatNumber(winnerAgg.mase_mean) : "-"} />
+         <Fact label="Models evaluated" value={String(models.length)} />
+       </FactGrid>
+     )}
 
      {!result && !jobId && (
-       <div className="border border-border-strong/70 bg-bg-surface px-6 py-6 space-y-5 shadow-[var(--shadow-elev-1)]">
-         <div className="flex items-center gap-2">
-           <span className="text-accent leading-none" aria-hidden>▣</span>
-           <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
-             Set up the backtest
-           </h2>
+       <Section title="Set up the backtest">
+         <div className="flex flex-col gap-5">
+           {preview && <ColumnMapper preview={preview} value={mapping} onChange={handleMappingChange} />}
+
+           {/* Horizon, folds, and models all lived in a rail that did not exist
+               below 1024px, so on a laptop-width window the run button was the
+               only control on the page. They configure this run, so they sit on
+               it. */}
+           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+             <div>
+               <div className="flex items-center gap-1.5">
+                 <span className="text-[13px] font-medium text-text-primary">Horizon</span>
+                 <HelpHint termKey="horizon" />
+               </div>
+               <p className="mt-1 text-[13px] leading-relaxed text-text-secondary">
+                 How many periods each fold forecasts ahead.
+               </p>
+               <div className="mt-2">
+                 <ChoiceGrid
+                   options={HORIZON_OPTIONS}
+                   value={horizon}
+                   onChange={setHorizon}
+                   disabled={configLocked}
+                   columns={3}
+                 />
+               </div>
+             </div>
+
+             <div>
+               <span className="text-[13px] font-medium text-text-primary">Folds</span>
+               <p className="mt-1 text-[13px] leading-relaxed text-text-secondary">
+                 How many expanding windows to test across. More folds, more evidence.
+               </p>
+               <div className="mt-2">
+                 <ChoiceGrid
+                   options={FOLD_OPTIONS}
+                   value={folds}
+                   onChange={setFolds}
+                   disabled={configLocked}
+                   columns={2}
+                 />
+               </div>
+             </div>
+
+             <div>
+               <span className="text-[13px] font-medium text-text-primary">Models</span>
+               {/* The run button's gate includes models.length === 0. Without
+                   this line the primary just goes dead and says nothing. */}
+               <p className="mt-1 text-[13px] leading-relaxed text-text-secondary">
+                 {noModels
+                   ? "Select at least one model. The Run button enables once one is on."
+                   : "Every selected model is evaluated on every fold."}
+               </p>
+               <div className="mt-2 flex flex-wrap gap-1">
+                 {ALL_MODELS.map((m) => (
+                   <button
+                     key={m}
+                     onClick={() => toggleModel(m)}
+                     disabled={configLocked}
+                     aria-pressed={models.includes(m)}
+                     className={`border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em] transition-colors ${
+                       models.includes(m)
+                         ? "border-accent bg-accent/10 text-accent"
+                         : "border-border-strong/60 text-text-secondary hover:border-text-primary hover:text-text-primary"
+                     } ${configLocked ? "opacity-50 cursor-not-allowed" : ""}`}
+                   >
+                     {m}
+                   </button>
+                 ))}
+               </div>
+             </div>
+           </div>
+
+           <button
+             onClick={startBacktest}
+             disabled={!mapping || noModels || isStartPending || !!jobId || !modelReady}
+             className="w-full btn-terminal-primary"
+           >
+             {isStartPending ? "Starting..." : "Run walk-forward backtest"}
+           </button>
+
+           {!modelReady && (
+             <p className="text-[13px] leading-relaxed text-text-secondary">
+               Model still loading, the Run button enables when it's ready.
+             </p>
+           )}
+
+           {jobError && <RunError error={jobError} label="Backtest" />}
+           {isStartError && (
+             <RunError error={startError ?? "Could not start the run."} label="Backtest" />
+           )}
          </div>
-
-         {preview && <ColumnMapper preview={preview} value={mapping} onChange={handleMappingChange} />}
-
-         <button
-           onClick={startBacktest}
-           disabled={!mapping || models.length === 0 || isStartPending || !!jobId || !modelReady}
-           className="w-full btn-terminal-primary"
-         >
-           {isStartPending ? "Starting..." : "Run walk-forward backtest"}
-         </button>
-
-         {!modelReady && (
-           <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-text-muted text-center">
-             Model still loading; the Run button enables when it's ready.
-           </p>
-         )}
-
-         {(jobError || isStartError) && (
-           <p className="border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
-             {jobError ?? String(startError)}
-           </p>
-         )}
-       </div>
+       </Section>
      )}
 
      {jobId && !result && (
@@ -449,43 +444,90 @@ export function BacktestPage() {
      )}
 
      {result && (
-       <div className="space-y-6">
+       <>
          <FoldResultsTable result={result} />
 
-         <div className="rounded-panel border border-border bg-bg-surface p-5 space-y-3">
-           <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary flex items-center">
-             Accuracy by forecast horizon <HelpHint termKey="horizon" />
-           </h3>
-           <p className="text-xs text-text-muted">
-             How does forecast error grow with horizon depth? A flat line means stable long-range forecasts.
-           </p>
-           <PerHorizonMAPE ref={perHorizonRef} perHorizon={result.per_horizon_mape} />
-         </div>
-
-         <div className="rounded-panel border border-border bg-bg-surface p-5 space-y-3">
-           <div className="flex items-center justify-between">
-             <div>
-               <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary flex items-center">
-                 Prediction-interval calibration <HelpHint termKey="calibration" />
-               </h3>
-               <p className="text-xs text-text-muted">
-                 If dots sit on the dashed diagonal, stated confidence intervals are trustworthy.
-               </p>
+         {/* Shared-border seam grid, not three stacked cards around a table that
+             already draws its own border. */}
+         <div className="grid grid-cols-1 border-l border-t border-border-strong/70">
+           <section className="border-r border-b border-border-strong/70 p-5">
+             <h3 className="flex items-center font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
+               Accuracy by forecast horizon <HelpHint termKey="horizon" />
+             </h3>
+             <p className="mt-2 text-[13px] leading-relaxed text-text-secondary">
+               How does forecast error grow with horizon depth? A flat line means stable
+               long-range forecasts.
+             </p>
+             <div className="mt-3">
+               <PerHorizonMAPE ref={perHorizonRef} perHorizon={result.per_horizon_mape} />
              </div>
-             {!calibration && (
-               <button
-                 onClick={runCalibration}
-                 disabled={isCalibrationPending}
-                 className="border border-accent/30 bg-accent-dim px-3 py-1.5 font-mono text-xs text-accent hover:opacity-80 disabled:opacity-40"
-               >
-                 {isCalibrationPending ? "Running…" : "Compute calibration"}
-               </button>
+           </section>
+
+           <section className="border-r border-b border-border-strong/70 p-5">
+             <div className="flex flex-wrap items-start justify-between gap-3">
+               <div className="min-w-0">
+                 <h3 className="flex items-center font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
+                   Prediction-interval calibration <HelpHint termKey="calibration" />
+                 </h3>
+                 <p className="mt-2 text-[13px] leading-relaxed text-text-secondary">
+                   If dots sit on the dashed diagonal, stated confidence intervals are
+                   trustworthy.
+                 </p>
+               </div>
+               {!calibration && (
+                 <button
+                   onClick={runCalibration}
+                   disabled={isCalibrationPending}
+                   className="shrink-0 border border-accent/30 bg-accent-dim px-3 py-1.5 font-mono text-xs text-accent hover:opacity-80 disabled:opacity-40"
+                 >
+                   {isCalibrationPending ? "Running…" : "Compute calibration"}
+                 </button>
+               )}
+             </div>
+             {calibration && (
+               <div className="mt-3">
+                 <CalibrationPlot ref={calibrationRef} data={calibration} />
+               </div>
              )}
-           </div>
-           {calibration && <CalibrationPlot ref={calibrationRef} data={calibration} />}
+           </section>
          </div>
-       </div>
+       </>
      )}
-   </ThreeRailLayout>
+
+     <Depth label="Reading the result">
+       <ul className="space-y-2 text-[13px] leading-relaxed text-text-secondary">
+         <li className="flex gap-2">
+           <span className="text-accent" aria-hidden>
+             ▸
+           </span>
+           <span>
+             Lower MAPE / RMSE / MASE is better. Pinball measures P10/P50/P90 sharpness.
+           </span>
+         </li>
+         <li className="flex gap-2">
+           <span className="text-accent" aria-hidden>
+             ▸
+           </span>
+           <span>
+             A flat per-horizon line means the model holds up across the full horizon.
+           </span>
+         </li>
+         <li className="flex gap-2">
+           <span className="text-accent" aria-hidden>
+             ▸
+           </span>
+           <span>Calibration dots on the diagonal mean honest uncertainty bands.</span>
+         </li>
+       </ul>
+     </Depth>
+
+     {result && (
+       <SecondaryActions>
+         <button type="button" onClick={reset} className="btn-terminal">
+           Change settings
+         </button>
+       </SecondaryActions>
+     )}
+   </div>
  );
 }
