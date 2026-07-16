@@ -250,7 +250,7 @@ touching its rows is the whole point.
 - [ ] **Step 2: Implement the version primitive**
 
 ```python
-SCHEMA_VERSION = 2   # 1 = pre-V2 baseline, 2 = project domain
+SCHEMA_VERSION = 1   # 1 = the current four-table baseline; Task 1 adds 2
 
 @dataclass(frozen=True)
 class Migration:
@@ -281,9 +281,11 @@ Migration 2 is added by Task 1.
 
 - [ ] **Step 4: Run tests**
 
-Run: `uv run pytest app/backend/tests/unit/test_migrations.py app/backend/tests/unit/test_store.py -q`
+Run: `uv run pytest app/backend/tests -q -m "not integration"`
 
-Expected: new tests pass and every existing store test stays green.
+Expected: new tests pass and the whole unit suite stays green. There is no
+`test_store.py`; `Store` is covered indirectly, so the full suite is the real
+regression gate here.
 
 - [ ] **Commit:** `feat(store): add versioned sqlite migrations`
 
