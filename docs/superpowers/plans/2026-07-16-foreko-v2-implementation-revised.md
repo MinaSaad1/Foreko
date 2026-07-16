@@ -140,14 +140,19 @@ cannot read.
 These are product decisions, not implementation details. Confirm or override each before work
 starts. The recommendation is what this plan assumes.
 
-**D1. The nav item labelled "Forecast" at `/compare`.**
+**D1 (DECIDED 2026-07-16, relabelled). The nav item labelled "Forecast" at `/compare`.**
 Design §4 keeps V1 routes alive, and design §14 requires the headline champion to come from
 rolling validation. Both hold today only because `/compare` is called "Forecast" in the sidebar
 while doing single-holdout MAPE selection. Shipping V2 unchanged means two destinations named
 Forecast giving two different champions.
-*Recommendation:* relabel `/compare` to "Model Comparison" in `App.tsx:145,214` and move it into
-Advanced Analysis. Keep the route and the service unchanged. Cheap, and it removes the collision.
-Handled in Task 9.
+*Decided:* relabelled to "Model Comparison" and moved into Advanced Analysis. Route and service
+unchanged. Taken on the standing "go on till the full plan is implemented" directive after the
+question went unanswered; reversible in one commit if you disagree.
+
+The rename touched more than the two lines this recommendation named. `ComparisonPage.tsx` also
+hardcoded `useDocumentTitle("Forecast")`, an `EmptyDatasetState title`, a `PageHeader kicker`, and a
+display-name fallback. A grep of `App.tsx` alone would have left the page still calling itself
+Forecast, which is why this was verified in the browser rather than in the source.
 
 **D2. `services/ensembles.py` and `POST /api/ensemble/combine`.**
 The V2 `ensemble_policy.py` fits out-of-fold weights under promotion guardrails. The V1 module

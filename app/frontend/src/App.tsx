@@ -99,6 +99,56 @@ function SideNavItem({ to, label, icon, isOpen, alsoActiveOn }: SideNavItemProps
   );
 }
 
+function AdvancedAnalysis({ isOpen }: { isOpen: boolean }) {
+  const location = useLocation();
+  const paths = [
+    "/preflight",
+    "/compare",
+    "/backtest",
+    "/anomaly",
+    "/explain",
+    "/diagnostics",
+    "/covariates",
+    "/segments",
+    "/scenarios",
+    "/ops",
+  ];
+  // Open when the user is already inside one of these, so a bookmarked V1 route
+  // does not land them in a collapsed sidebar with no idea where they are.
+  const inside = paths.some((p) => location.pathname.startsWith(p));
+  const [expanded, setExpanded] = useState(inside);
+
+  return (
+    <div className="space-y-1">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        className={`flex w-full items-center justify-between px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-text-muted hover:text-text-secondary ${
+          isOpen ? "" : "sr-only"
+        }`}
+      >
+        Advanced analysis
+        <span aria-hidden>{expanded ? "−" : "+"}</span>
+      </button>
+      {expanded || !isOpen ? (
+        <nav className="flex flex-col gap-1" aria-label="Advanced analysis">
+          <SideNavItem to="/preflight" label="Data Quality" icon="⚑" isOpen={isOpen} />
+          <SideNavItem to="/compare" label="Model Comparison" icon="∿" isOpen={isOpen} />
+          <SideNavItem to="/backtest" label="Backtest" icon="◈" isOpen={isOpen} />
+          <SideNavItem to="/anomaly" label="Anomalies" icon="◉" isOpen={isOpen} />
+          <SideNavItem to="/explain" label="Explain" icon="◈" isOpen={isOpen} />
+          <SideNavItem to="/diagnostics" label="Diagnostics" icon="◇" isOpen={isOpen} />
+          <SideNavItem to="/covariates" label="Factors" icon="+" isOpen={isOpen} />
+          <SideNavItem to="/segments" label="Segments" icon="⊟" isOpen={isOpen} />
+          <SideNavItem to="/scenarios" label="What-if" icon="⇆" isOpen={isOpen} />
+          <SideNavItem to="/ops" label="Annotations & Export" icon="⚙" isOpen={isOpen} />
+        </nav>
+      ) : null}
+    </div>
+  );
+}
+
 function ActiveDatasetBadge({ isOpen }: { isOpen: boolean }) {
   const activeDatasetId = useDatasetStore((s) => s.activeDatasetId);
   const { data: preview } = useQuery({
@@ -143,10 +193,10 @@ function DocumentTitleSync() {
   const PAGE_TITLES: Record<string, string | undefined> = {
     "/": undefined,
     "/projects": "Projects",
-    "/data": "Data",
-    "/upload": "Data",
-    "/datasets": "Data",
-    "/compare": "Forecast",
+    "/data": "Data Sources",
+    "/upload": "Data Sources",
+    "/datasets": "Data Sources",
+    "/compare": "Model Comparison",
     "/backtest": "Backtest",
     "/diagnostics": "Diagnostics",
     "/anomaly": "Anomalies",
@@ -211,32 +261,15 @@ export default function App() {
             <div className={`flex flex-col gap-4 py-6 ${isSidebarOpen ? "px-2" : "px-1"}`}>
               <ActiveDatasetBadge isOpen={isSidebarOpen} />
 
-              <NavSection label="Projects" isOpen={isSidebarOpen}>
+              <NavSection label="Forecasting" isOpen={isSidebarOpen}>
                 <SideNavItem to="/projects" label="Projects" icon="▣" isOpen={isSidebarOpen} />
+                <SideNavItem to="/data" label="Data Sources" icon="⊞" isOpen={isSidebarOpen} alsoActiveOn={["/upload", "/datasets"]} />
               </NavSection>
-              <NavSection label="Data" isOpen={isSidebarOpen}>
-                <SideNavItem to="/data" label="Ingest" icon="⊞" isOpen={isSidebarOpen} alsoActiveOn={["/upload", "/datasets"]} />
-                <SideNavItem to="/preflight" label="Data Quality" icon="⚑" isOpen={isSidebarOpen} />
-              </NavSection>
-              <NavSection label="Models" isOpen={isSidebarOpen}>
-                <SideNavItem to="/compare" label="Forecast" icon="∿" isOpen={isSidebarOpen} />
-                <SideNavItem to="/backtest" label="Backtest" icon="◈" isOpen={isSidebarOpen} />
-              </NavSection>
-              <NavSection label="Findings" isOpen={isSidebarOpen}>
-                <SideNavItem to="/anomaly" label="Anomalies" icon="◉" isOpen={isSidebarOpen} />
-                <SideNavItem to="/explain" label="Explain" icon="◈" isOpen={isSidebarOpen} />
-                <SideNavItem to="/diagnostics" label="Diagnostics" icon="◇" isOpen={isSidebarOpen} />
-              </NavSection>
-              <NavSection label="Factors" isOpen={isSidebarOpen}>
-                <SideNavItem to="/covariates" label="Factors" icon="+" isOpen={isSidebarOpen} />
-                <SideNavItem to="/segments" label="Segments" icon="⊟" isOpen={isSidebarOpen} />
-              </NavSection>
-              <NavSection label="Scenarios" isOpen={isSidebarOpen}>
-                <SideNavItem to="/scenarios" label="What-if" icon="⇆" isOpen={isSidebarOpen} />
-              </NavSection>
-              <NavSection label="Operations" isOpen={isSidebarOpen}>
-                <SideNavItem to="/ops" label="Annotations & Export" icon="⚙" isOpen={isSidebarOpen} />
-              </NavSection>
+
+              {/* The specialist analyses. They stay reachable, but they no
+                  longer compete with the project workflow for the user's
+                  attention (design 5.1). */}
+              <AdvancedAnalysis isOpen={isSidebarOpen} />
 
               <div
                 className={`mt-2 border-t border-border/30 px-3 pt-4 space-y-1 transition-opacity duration-300 ${

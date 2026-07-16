@@ -74,11 +74,11 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
  relatedTerms: ["preflight", "stationarity", "seasonality"],
  },
  compare: {
- title: "Forecast, which model should I trust?",
+ title: "Model comparison, a quick look at two approaches",
  summary:
- "Foreko runs two forecasting approaches on your data, backtests both, and highlights the winner.",
+ "Runs two forecasting approaches on your data and picks a winner from one recent holdout. A Forecast Project is the stronger answer: it scores every candidate across rolling folds, per series, and can disagree with this page.",
  whenToUse:
- "When you want a forward look with a recommended best-fit model, plus an uncertainty range.",
+ "For a fast one-off look at a dataset. When the number matters, use a Forecast Project, whose champion comes from rolling validation rather than a single window.",
  businessQuestions: [
  "What do my numbers look like next quarter / month / week?",
  "Which forecasting approach fits my data best?",

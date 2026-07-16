@@ -271,7 +271,10 @@ function ForecastRightRail({ result, datasetId, horizon }: ForecastRightRailProp
 }
 
 export function ComparisonPage() {
-  useDocumentTitle("Forecast");
+  // Not "Forecast": that name belongs to Forecast Studio, whose champion comes
+  // from rolling validation. This page picks a winner from one holdout, and the
+  // two can disagree.
+  useDocumentTitle("Model Comparison");
   const { datasetId } = useParams<{ datasetId?: string }>();
   const { activeId, preview } = useSyncedDataset(datasetId);
   const { data: health } = useHealth();
@@ -297,7 +300,7 @@ export function ComparisonPage() {
   if (!activeId) {
     return (
       <EmptyDatasetState
-        title="Forecast"
+        title="Model Comparison"
         pageKey="compare"
         basePath="/compare"
       />
@@ -305,7 +308,7 @@ export function ComparisonPage() {
   }
 
   const resolved = result ? resolveRecommendation(result, backtestSummary) : null;
-  const displayName = preview ? preview.filename.replace(/\.[^.]+$/, "") : "Forecast";
+  const displayName = preview ? preview.filename.replace(/\.[^.]+$/, "") : "Model Comparison";
 
   return (
     <ThreeRailLayout
@@ -328,7 +331,7 @@ export function ComparisonPage() {
       }
     >
       <PageHeader
-        kicker="Forecast"
+        kicker="Model Comparison"
         title={displayName}
         subtitle={preview ? `${preview.row_count.toLocaleString()} rows · horizon ${horizon}` : undefined}
         actions={
