@@ -62,6 +62,10 @@ class FoldPrediction:
     p10: float
     p90: float
     train_end: int
+    # In-sample seasonal-naive MAE of this fold's training history. MASE cannot
+    # be recomputed from these rows alone, and the scale differs per fold, so it
+    # travels with the row that it scales.
+    mase_scale: float
 
 
 @dataclass
@@ -82,6 +86,7 @@ class FoldMetrics:
     actuals: list[float]
     p10: list[float]
     p90: list[float]
+    mase_scale: float = float("nan")
 
 
 def _mape(a: np.ndarray, f: np.ndarray) -> float:
@@ -107,12 +112,22 @@ def _mae(a: np.ndarray, f: np.ndarray) -> float:
     return float(np.mean(np.abs(a - f)))
 
 
-def _mase(actual: np.ndarray, forecast: np.ndarray, history: np.ndarray, m: int = 1) -> float:
-    """Mean Absolute Scaled Error, scale = in-sample seasonal naive MAE."""
+def _mase_scale(history: np.ndarray, m: int = 1) -> float:
+    """In-sample seasonal naive MAE: the denominator MASE scales by.
+
+    NaN when the history is too short or flat, which makes MASE undefined rather
+    than infinite.
+    """
     if len(history) <= m:
         return float("nan")
     scale = float(np.mean(np.abs(history[m:] - history[:-m])))
-    if scale < 1e-9:
+    return scale if scale >= 1e-9 else float("nan")
+
+
+def _mase(actual: np.ndarray, forecast: np.ndarray, history: np.ndarray, m: int = 1) -> float:
+    """Mean Absolute Scaled Error, scale = in-sample seasonal naive MAE."""
+    scale = _mase_scale(history, m=m)
+    if not np.isfinite(scale):
         return float("nan")
     return float(np.mean(np.abs(actual - forecast)) / scale)
 
@@ -272,6 +287,7 @@ async def _run_series_folds(
             m = _detect_period(freq, len(history))
             results[model].append(
                 FoldMetrics(
+                    mase_scale=_mase_scale(history, m=m),
                     fold=fold_idx + 1,
                     train_end=train_end,
                     test_start=train_end,
@@ -490,6 +506,7 @@ async def run_multi_series_folds(
                             p10=fold.p10[step_index],
                             p90=fold.p90[step_index],
                             train_end=fold.train_end,
+                            mase_scale=fold.mase_scale,
                         )
                     )
 
