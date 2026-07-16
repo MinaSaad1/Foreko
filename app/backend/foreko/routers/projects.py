@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-from ..deps import get_project_db
+from ..deps import get_project_db, get_settings
 from ..schemas.project import (
     ProjectCreate,
     ProjectDetail,
@@ -18,6 +18,7 @@ from ..schemas.project import (
     ProjectRun,
     ProjectSummary,
 )
+from ..services import project_artifacts
 from ..services.project_store import ProjectNotFoundError, ProjectStore
 from ..services.project_workflow import (
     STAGE_ORDER,
@@ -76,8 +77,9 @@ def delete_project(
     project_id: str,
     confirm: bool = False,
     store: ProjectStore = Depends(get_project_db),
+    settings=Depends(get_settings),
 ) -> Response:
-    """Permanently delete a project and its artifacts.
+    """Permanently delete a project, its metadata, and its artifacts.
 
     Requires ``?confirm=true``. Without it nothing is read or written, so a
     DELETE issued by mistake cannot destroy a project. The source dataset is
@@ -90,6 +92,10 @@ def delete_project(
             detail="Deleting a project is permanent. Retry with confirm=true.",
         )
     store.delete_project(project_id)
+    # SQLite rows cascade, but the derived data, run artifacts, and exports are
+    # files. Dropping only the rows would leave the user's data on disk after
+    # they explicitly deleted it.
+    project_artifacts.remove_project_dir(settings.storage_dir, project_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

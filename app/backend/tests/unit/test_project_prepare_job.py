@@ -169,6 +169,24 @@ def test_a_new_revision_makes_the_previous_prepare_stale_without_deleting_it(
 
 
 @pytest.mark.unit
+def test_deleting_a_project_removes_its_artifacts_from_disk(client, settings) -> None:
+    dataset_id = _upload(client)
+    project_id = _project_with_recipe(client, dataset_id, [{"kind": "log"}])
+    _await_job(client, client.post(f"/api/projects/{project_id}/prepare").json()["job_id"])
+
+    artifacts = settings.projects_dir / project_id
+    assert artifacts.is_dir(), "prepare should have written a derived artifact"
+
+    assert client.delete(f"/api/projects/{project_id}?confirm=true").status_code == 204
+
+    # Cascading the SQLite rows is not enough: the derived data is a file, and
+    # leaving it behind keeps the user's data after they deleted the project.
+    assert not artifacts.exists()
+    # The source dataset is deliberately kept.
+    assert (settings.datasets_dir / dataset_id).exists()
+
+
+@pytest.mark.unit
 def test_job_events_endpoint_reports_a_finished_job(client) -> None:
     dataset_id = _upload(client)
     project_id = _project_with_recipe(client, dataset_id, [{"kind": "log"}])
