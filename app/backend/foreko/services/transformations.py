@@ -49,6 +49,32 @@ class Transformer:
             return np.asarray(transformed, dtype=float)
         raise TransformError(f"unknown transform {self.kind!r}")
 
+    def apply_fitted(self, values: np.ndarray) -> np.ndarray:
+        """Apply the forward transform reusing state already fitted by ``forward``.
+
+        ``forward`` refits: it recomputes the Box-Cox lambda and the log shift
+        from whatever it is handed. Chaining transforms means pushing a history
+        through the earlier ones to build the context the later ones anchor on,
+        and doing that with ``forward`` would refit lambda on that slice and
+        invert with the wrong parameter. This applies the fitted parameters.
+        """
+        if self.kind == "none":
+            return values.astype(float)
+        if self.kind == "log":
+            return np.log(values + self._shift)
+        if self.kind == "box_cox":
+            lam = self._boxcox_lambda
+            if lam is None:
+                raise TransformError("box_cox has not been fitted yet")
+            return np.asarray(
+                stats.boxcox(values + self._shift, lmbda=lam), dtype=float
+            )
+        if self.kind == "diff":
+            return np.diff(values, n=1)
+        if self.kind == "seasonal_diff":
+            return values[self.period :] - values[: -self.period]
+        raise TransformError(f"unknown transform {self.kind!r}")
+
     def history_offset(self) -> int:
         """Rows this transform consumes from the front of the series.
 
