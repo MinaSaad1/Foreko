@@ -4,6 +4,49 @@ All notable changes to Foreko are documented here. Format follows [Keep a Change
 
 ## [Unreleased]
 
+### Added
+
+- **Forecast Projects.** A project is now the unit of work: it holds the data recipe, the model evidence, the assumptions, the forecast you issued, and its accuracy. Reopening one restores all of it without rerunning anything. Five stages (Prepare, Validate, Forecast, Plan, Review) each report whether they are ready, need attention, or are blocked and why.
+- Reversible preparation recipes. Aggregate duplicates, insert missing periods, impute, winsorize, log, Box-Cox, differencing, seasonal differencing. The source dataset is never modified, and a recipe that cannot return forecasts to the original scale within tolerance is refused rather than warned about.
+- Rolling validation as the selection engine. Every candidate is scored across folds for every series, and selection runs independently per series, so a model that loses on one series can still win on another. The portfolio score weights each series equally, so one high-volume series cannot decide the headline number.
+- MASE as the default selection metric, with WAPE, sMAPE, RMSE, signed bias, pinball loss, and P10-P90 coverage as supporting evidence. MAPE is informational only.
+- Ensembles, promoted only when they beat the best individual model by at least 2 percent without worsening bias by more than 0.5 points or moving coverage more than 5 points from 0.80.
+- Known-future factor plans. A factor the selected model reads must have a value for every future period, or an explicit fill policy; every filled value is recorded with the run. Foreko never invents one.
+- Issued forecasts, immutable by construction, and post-issue accuracy scored against them rather than against a later rerun. Backtest evidence and post-issue accuracy are kept impossible to confuse.
+- Forecast export packages: a zip with the manifest, machine-readable forecast, assumptions, validation summary, and accuracy, carrying no credentials.
+- Run history with per-run manifests recording dataset fingerprint, recipe, policy, and assumptions.
+- Versioned SQLite migrations. An existing database is adopted and migrated additively; V1 data opens untouched.
+- An end-to-end browser journey covering the whole cycle, now running in CI on Windows and Linux.
+
+### Changed
+
+- Navigation is project-first. Projects and Data Sources are top-level; the specialist analyses moved into Advanced analysis, still fully available.
+- **The home page shows your projects.** It previously opened on a marketing hero for a product you have already installed, with no mention of projects and no route to them. Projects now sit directly under the hero, with the copy corrected: the hero and the "How it works" steps described the V1 lens collection and the Model Comparison page rather than the actual workflow.
+- **The three-rail page layout is gone.** Eleven pages put configuration in a left column, content in the middle, and interpretation in a right column, all at the same volume, so no column was primary. The left column was hidden below 1024px, which meant the horizon, folds, model choice, sort order, and the additive/multiplicative policy did not exist on a narrow window while the page header still reported their values back to you. Every page is now one column ordered by rank, with each control sitting on the thing it changes. One page had shipped a label reading "change in the left rail"; it is deleted along with the rail. The visual identity is unchanged.
+- Explain no longer offers five equally weighted buttons with an unstated dependency between them. They are grouped by what they read, and a blocked analysis says why in plain words instead of only greying out.
+- Scenarios showed five controls for every factor whether or not it was in play. An untouched factor is now one checkbox, and ticking it reveals the rest.
+- Datasets no longer says "Fetching binary log format..." while loading a CSV preview, and a failed preview no longer reports `ERR_NO_TARGET_BUFFER_FOUND`, which was not a real code and named no cause or next step. It now names the file, gives the real error, and says the file is still stored. Deleting a dataset confirms inline rather than through a native browser dialog, matching the rest of the app.
+- The page at `/compare` is now labelled **Model Comparison**, not Forecast. It selects a winner from one holdout using MAPE, while a Forecast Project uses rolling validation with MASE, and the two can disagree. Two destinations named Forecast would have given conflicting champions with no way to tell which to trust. The route and its behaviour are unchanged.
+- Frontend lint now runs. `npm run lint` was declared but eslint was never installed and no config existed, so the script had never run once.
+
+### Fixed
+
+- **The whole Forecast Projects surface had no semantic colour.** V2 used `danger` and `warn` in 36 places across 18 files, and neither token was ever defined, so Tailwind emitted nothing for them. Every error message rendered as ordinary body text, Confirm delete had no danger styling, and a stage needing attention looked identical to one not started. Renamed to the tokens the rest of the app already uses correctly.
+- **The data quality score was scaled twice and always read green.** The backend returns 0 to 100; the rail multiplied by 100 again and banded against 0.8, so it displayed "8700 / 100" and called every real score healthy, including a catastrophic one, while the card beside it read the same number correctly. Both now share one reader.
+- **Explain and Scenarios never reported a failed run.** Eight mutations between them had no error branch, so a failure left the previous chart on screen and read as success.
+- Deleting a saved scenario also toggled it into the comparison, because the delete button sat inside the label wrapping the selection checkbox. Delete now confirms first, and destroys nothing on a stray click.
+- Annotation and analysis deletes on Operations were fire-and-forget, so a failure removed nothing and said nothing. The PDF export was equally silent on failure.
+- Em dashes in user-facing backend copy, which the frontend-only convention never covered.
+- The column dropdown on every page carried a blur behind an opaque surface, a radius class contradicting the zero-radius identity, and a coloured side stripe on the selected option. It is also a proper listbox to assistive tech now.
+- **ETS never worked.** It called `.fit(disp=False)`, which statsmodels' `ExponentialSmoothing` does not accept, so it raised on every call and silently returned seasonal naive's forecast under the ETS name. Every "ETS" number Foreko has shown was seasonal naive.
+- **Backtest laundered model failures.** A candidate that raised had its forecast replaced with a flat last-value series, which was then scored like a real result, so a broken model looked merely mediocre. Failures are now recorded, and a model that failed any fold cannot be champion.
+- **Fonts were fetched from Google on every page load**, sending your IP and user-agent to a third party, which contradicted this project's claim that the only outbound request is the model download. Fonts are now bundled.
+- **Deleting a project left its data on disk.** The database rows cascaded but the derived data, run artifacts, and exports remained, so user data survived an explicit delete.
+- `diff` and `seasonal_diff` were reported as not invertible by `POST /api/transforms/roundtrip`. Both invert exactly; the check anchored the inverse on the wrong rows.
+- `get_store` ignored its `db_path` after the first call, so a caller pointing at a different database silently received the first one.
+- The Backtest PDF export named a "Winner model" even when no candidate completed every fold, stating a champion the evidence did not support.
+- `ensure_dirs()` and the storage-wipe list were maintained separately, so a new storage directory could be created but survive an explicit wipe.
+
 ## [1.0.0] - 2026-06-17
 
 ### Added

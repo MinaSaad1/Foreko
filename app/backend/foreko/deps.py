@@ -7,6 +7,7 @@ from fastapi import Depends, HTTPException, Request, status
 from .jobs.generic import GenericJobManager, get_job_manager as _get_generic_job_manager
 from .jobs.manager import JobManager
 from .services.model_registry import ModelRegistry
+from .services.project_store import ProjectStore, get_project_store
 from .services.store import Store, get_store
 from .settings import Settings
 
@@ -51,6 +52,12 @@ def get_db(request: Request) -> Store:
     return get_store(settings.db_path)
 
 
+def get_project_db(request: Request) -> ProjectStore:
+    settings = get_settings(request)
+    settings.ensure_dirs()
+    return get_project_store(settings.db_path)
+
+
 __all__ = [
     "Depends",
     "get_settings",
@@ -58,4 +65,5 @@ __all__ = [
     "get_job_manager",
     "get_generic_jobs",
     "get_db",
+    "get_project_db",
 ]

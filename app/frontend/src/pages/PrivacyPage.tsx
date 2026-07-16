@@ -13,7 +13,8 @@ interface StorageRow {
 const STORAGE_INVENTORY: StorageRow[] = [
  { path:"~/.foreko/datasets/", what:"Your uploaded CSVs. Kept for 30 days, then auto-purged." },
  { path:"~/.foreko/models/", what:"The TimesFM model weights (around 1.2 GB), downloaded on first run. If HuggingFace is unreachable, you can pre-populate this folder from another machine." },
- { path:"~/.foreko/data/foreko.db", what:"Cached forecasts, backtests, anomaly results, saved scenarios." },
+ { path:"~/.foreko/data/foreko.db", what:"Cached forecasts, backtests, anomaly results, saved scenarios, and your forecast projects: project metadata, every configuration revision, every run, the forecasts you issued, and the actuals you imported." },
+ { path:"~/.foreko/projects/", what:"One folder per forecast project, holding its prepared data, run results, and export packages. Deleting a project removes its folder; the source dataset is kept." },
  { path:"~/.foreko/adapters/", what:"Any fine-tuned adapters you create." },
  { path:"~/.foreko/jobs/", what:"Background job state for long-running operations." },
  { path:"~/.foreko/exports/", what:"PDFs and CSVs you export from reports." },
@@ -137,7 +138,7 @@ export function PrivacyPage() {
  <div>
  <p className="text-sm text-text-primary">Delete uploaded data</p>
  <p className="text-xs text-text-muted">
- Removes datasets, jobs, cached results, logs, adapters, and exports. The model weights stay so you don't have to redownload 1.2 GB. Cannot be undone.
+ Removes datasets, forecast projects, jobs, cached results, logs, adapters, and exports. The model weights stay so you don't have to redownload 1.2 GB. Cannot be undone.
  </p>
  </div>
  {confirming ? (

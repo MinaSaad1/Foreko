@@ -4,22 +4,20 @@ import { ColumnMapper } from"@/components/ColumnMapper";
 import { AnomalyChart, type AnomalyChartHandle } from"@/components/AnomalyChart";
 import { AnomalyInsights } from"@/components/AnomalyInsights";
 import { AnomalyTable } from"@/components/AnomalyTable";
-import { PageIntro } from"@/components/common/PageIntro";
 import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
 import { Term } from"@/components/common/Term";
 import { HelpHint } from"@/components/common/HelpHint";
+import { RunError } from"@/components/common/RunError";
 import { DownloadPdfButton, type PdfSection } from"@/components/common/DownloadPdfButton";
 import {
-  LeftRail,
-  PageHeader,
-  RailChoiceGrid,
-  RailResetButton,
-  RailRow,
-  RailSection,
-  RightRail,
-  ThreeRailLayout,
-  WhatYoullGet,
-} from "@/components/common/Rails";
+  ChoiceGrid,
+  Depth,
+  Fact,
+  FactGrid,
+  PageHeading,
+  SecondaryActions,
+  Section,
+} from "@/components/common/Page";
 import { useDocumentTitle } from"@/utils/useDocumentTitle";
 import { useSyncedDataset } from"@/hooks/useSyncedDataset";
 import { useHealth } from"@/hooks/useHealth";
@@ -232,87 +230,17 @@ export function AnomalyPage() {
  const summary = result ? buildSummary(result) : null;
  const displayName = preview ? preview.filename.replace(/\.[^.]+$/, "") : "Anomalies";
 
+ const criticalRate = summary && summary.total ? ((summary.critical / summary.total) * 100).toFixed(1) : "0";
+ const warningRate = summary && summary.total ? ((summary.warning / summary.total) * 100).toFixed(1) : "0";
+
  return (
-   <ThreeRailLayout
-     left={
-       <LeftRail ariaLabel="Anomaly detection configuration">
-         <RailSection label="Dataset">
-           {preview ? (
-             <>
-               <RailRow k="File" v={preview.filename} />
-               <RailRow k="Rows" v={preview.row_count.toLocaleString()} />
-             </>
-           ) : (
-             <p className="font-mono text-[10px] text-text-faint">Loading…</p>
-           )}
-         </RailSection>
-
-         <RailSection label="Look-ahead">
-           <RailChoiceGrid
-             options={[
-               { value: 4, label: "4" },
-               { value: 8, label: "8" },
-               { value: 12, label: "12" },
-               { value: 24, label: "24" },
-             ]}
-             value={horizon}
-             onChange={setHorizon}
-             disabled={!!result}
-             columns={2}
-           />
-         </RailSection>
-
-         <RailSection label="Thresholds">
-           <RailRow k="Warning" v="|z| ≥ 2" />
-           <RailRow k="Critical" v="|z| ≥ 3" />
-         </RailSection>
-
-         {result && <RailResetButton onClick={() => reset()} />}
-       </LeftRail>
-     }
-     right={
-       <RightRail ariaLabel="Anomaly insights">
-         {!summary && (
-           <WhatYoullGet
-             summary="Flags unusual points by comparing each observation to the underlying trend. Warning (|z| ≥ 2), Critical (|z| ≥ 3). A table, a chart, and severity-coloured markers."
-             reading={[
-               "Red dots = critical (under 0.3% probability under the residual fit).",
-               "Orange dots = warning. Investigate clusters in the same month.",
-               "Use the table to copy specific dates into other pages.",
-             ]}
-           />
-         )}
-         {summary && (
-           <>
-             <RailSection label="Counts">
-               <RailRow k="Critical" v={String(summary.critical)} tone={summary.critical > 0 ? "err" : "ok"} />
-               <RailRow k="Warning" v={String(summary.warning)} tone={summary.warning > 0 ? "warn" : "ok"} />
-               <RailRow k="Normal" v={String(summary.normal)} tone="ok" />
-               <RailRow k="Total" v={String(summary.total)} />
-             </RailSection>
-             <RailSection label="Rate">
-               <RailRow
-                 k="Critical %"
-                 v={`${summary.total ? ((summary.critical / summary.total) * 100).toFixed(1) : "0"}%`}
-                 tone={summary.critical > 0 ? "err" : "ok"}
-               />
-               <RailRow
-                 k="Warning %"
-                 v={`${summary.total ? ((summary.warning / summary.total) * 100).toFixed(1) : "0"}%`}
-                 tone={summary.warning > 0 ? "warn" : "ok"}
-               />
-             </RailSection>
-           </>
-         )}
-       </RightRail>
-     }
-   >
-     <PageHeader
+   <div className="flex flex-col gap-6">
+     <PageHeading
        kicker="Investigate"
        title={displayName}
-       subtitle={preview ? `${preview.row_count.toLocaleString()} rows · look-ahead ${horizon}` : undefined}
+       intro="Flags unusual points by comparing each observation to the underlying trend. Warning (|z| ≥ 2), Critical (|z| ≥ 3). A table, a chart, and severity-coloured markers."
        actions={
-         summary && seriesResult && (
+         summary && seriesResult ? (
            <DownloadPdfButton
              title="Foreko, Anomaly report"
              filename="foreko-anomalies.pdf"
@@ -323,13 +251,66 @@ export function AnomalyPage() {
                chartPng: chartHandleRef.current?.getPng({ backgroundColor: "#ffffff", pixelRatio: 3 }) ?? null,
              })}
            />
-         )
+         ) : undefined
        }
      />
 
-     <div className="lg:hidden">
-       <PageIntro pageKey="anomaly" />
-     </div>
+     {/* Counts are not repeated here: the pills below already carry them, and
+         saying a number twice is not the same as saying it once well. */}
+     <FactGrid columns={3}>
+       <Fact label="File" value={preview ? preview.filename : "Loading"} />
+       <Fact label="Rows" value={preview ? preview.row_count.toLocaleString() : "Loading"} />
+       <Fact label="Thresholds" value="|z| ≥ 2 warn, ≥ 3 critical" />
+       {summary && <Fact label="Look-ahead" value={`${horizon} periods`} />}
+       {summary && <Fact label="Critical rate" value={`${criticalRate}%`} />}
+       {summary && <Fact label="Warning rate" value={`${warningRate}%`} />}
+     </FactGrid>
+
+     {preview && !result && (
+       <Section
+         title="Set up detection"
+         controls={
+           // Look-ahead was left-rail only, so it did not exist below 1024px
+           // even though the run reports it back. It sits on the run now.
+           <div className="flex items-center gap-2">
+             <span className="text-[12px] text-text-secondary">Look-ahead</span>
+             <div className="w-[120px]">
+               <ChoiceGrid
+                 options={[
+                   { value: 4, label: "4" },
+                   { value: 8, label: "8" },
+                   { value: 12, label: "12" },
+                   { value: 24, label: "24" },
+                 ]}
+                 value={horizon}
+                 onChange={setHorizon}
+                 disabled={!!result}
+                 columns={2}
+               />
+             </div>
+           </div>
+         }
+       >
+         <div className="space-y-5">
+           <ColumnMapper preview={preview} value={mapping} onChange={handleMappingChange} />
+
+           {isError && <RunError error={error} label="Anomaly detection" />}
+
+           <button
+             onClick={() => mutate()}
+             disabled={!mapping || isPending || !modelReady}
+             className="w-full btn-terminal-primary"
+           >
+             {isPending ? "Detecting..." : "Detect Anomalies"}
+           </button>
+           {!modelReady && (
+             <p className="text-[13px] text-text-secondary">
+               Model still loading, the Run button enables when it&apos;s ready.
+             </p>
+           )}
+         </div>
+       </Section>
+     )}
 
      {summary && seriesResult && (
        <div className="flex flex-wrap gap-3">
@@ -341,55 +322,46 @@ export function AnomalyPage() {
 
      {seriesResult && <AnomalyInsights records={seriesResult.context_records} />}
 
+     {/* The HelpHint stays on the heading it explains, in the controls slot. */}
      {seriesResult && (
-       <div className="rounded-panel border border-border bg-bg-surface p-5">
-         <h2 className="mb-4 flex items-center font-display text-sm font-medium text-text-secondary uppercase tracking-widest">
-           Unusual activity in your data <HelpHint termKey="z-score" />
-         </h2>
+       <Section title="Unusual activity in your data" controls={<HelpHint termKey="z-score" />}>
          <AnomalyChart ref={chartHandleRef} records={seriesResult.context_records} />
          <p className="mt-3 text-xs text-text-muted">
            Red pulsing dots = <Term k="severity">anomalies</Term> (outside 3-sigma).
            Orange dots = warnings (2-sigma). The dashed line is the underlying{" "}
            <Term k="trend">trend</Term>.
          </p>
-       </div>
+       </Section>
      )}
 
      {seriesResult && preview && (
        <AnomalyTable records={seriesResult.context_records} filename={preview.filename} />
      )}
 
-     {preview && !result && (
-       <div className="border border-border-strong/70 bg-bg-surface px-6 py-6 space-y-5 shadow-[var(--shadow-elev-1)]">
-         <div className="flex items-center gap-2">
-           <span className="text-accent leading-none" aria-hidden>▣</span>
-           <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
-             Set up detection
-           </h2>
-         </div>
+     <Depth label="Reading the result">
+       <ul className="space-y-2 text-[13px] leading-relaxed text-text-secondary">
+         {[
+           "Red dots = critical (under 0.3% probability under the residual fit).",
+           "Orange dots = warning. Investigate clusters in the same month.",
+           "Use the table to copy specific dates into other pages.",
+         ].map((item) => (
+           <li key={item} className="flex gap-2">
+             <span className="text-accent" aria-hidden>
+               ▸
+             </span>
+             <span>{item}</span>
+           </li>
+         ))}
+       </ul>
+     </Depth>
 
-         <ColumnMapper preview={preview} value={mapping} onChange={handleMappingChange} />
-
-         {isError && (
-           <p className="border border-anomaly/30 bg-anomaly/10 px-4 py-2 text-sm text-anomaly">
-             {error?.message}
-           </p>
-         )}
-
-         <button
-           onClick={() => mutate()}
-           disabled={!mapping || isPending || !modelReady}
-           className="w-full btn-terminal-primary"
-         >
-           {isPending ? "Detecting..." : "Detect Anomalies"}
+     {result && (
+       <SecondaryActions>
+         <button type="button" onClick={() => reset()} className="btn-terminal">
+           Change settings
          </button>
-         {!modelReady && (
-           <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-text-muted text-center">
-             Model still loading; the Run button enables when it's ready.
-           </p>
-         )}
-       </div>
+       </SecondaryActions>
      )}
-   </ThreeRailLayout>
+   </div>
  );
 }

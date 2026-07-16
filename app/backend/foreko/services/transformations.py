@@ -49,9 +49,55 @@ class Transformer:
             return np.asarray(transformed, dtype=float)
         raise TransformError(f"unknown transform {self.kind!r}")
 
+    def apply_fitted(self, values: np.ndarray) -> np.ndarray:
+        """Apply the forward transform reusing state already fitted by ``forward``.
+
+        ``forward`` refits: it recomputes the Box-Cox lambda and the log shift
+        from whatever it is handed. Chaining transforms means pushing a history
+        through the earlier ones to build the context the later ones anchor on,
+        and doing that with ``forward`` would refit lambda on that slice and
+        invert with the wrong parameter. This applies the fitted parameters.
+        """
+        if self.kind == "none":
+            return values.astype(float)
+        if self.kind == "log":
+            return np.log(values + self._shift)
+        if self.kind == "box_cox":
+            lam = self._boxcox_lambda
+            if lam is None:
+                raise TransformError("box_cox has not been fitted yet")
+            return np.asarray(
+                stats.boxcox(values + self._shift, lmbda=lam), dtype=float
+            )
+        if self.kind == "diff":
+            return np.diff(values, n=1)
+        if self.kind == "seasonal_diff":
+            return values[self.period :] - values[: -self.period]
+        raise TransformError(f"unknown transform {self.kind!r}")
+
+    def history_offset(self) -> int:
+        """Rows this transform consumes from the front of the series.
+
+        ``diff`` drops one row and ``seasonal_diff`` drops ``period`` rows, so
+        the transformed series is shorter and starts later. Callers need this to
+        line the result back up with the original.
+        """
+        if self.kind == "diff":
+            return 1
+        if self.kind == "seasonal_diff":
+            return self.period
+        return 0
+
     def inverse(self, transformed: np.ndarray, context: np.ndarray | None = None) -> np.ndarray:
-        """Inverse-transform a forecast. `context` is the last known value(s) of
-        the original series (for diff/seasonal_diff).
+        """Inverse-transform a segment.
+
+        ``context`` is the original-scale history immediately preceding
+        ``transformed``; diff and seasonal_diff anchor on its tail. Forecasting
+        passes the whole history, so the anchor is the last known value.
+        Round-tripping training data passes only the rows the transform consumed
+        (``values[:history_offset()]``), so the anchor is the value just before
+        the transformed segment. Passing the wrong slice silently shifts every
+        result by a constant.
         """
         if self.kind == "none":
             return transformed.astype(float)
@@ -84,10 +130,15 @@ def roundtrip_ok(values: np.ndarray, kind: str, period: int = 1, tol: float = 1e
     try:
         t = Transformer(kind, period=period)
         fwd = t.forward(values)
-        if kind in ("diff", "seasonal_diff"):
-            rec = t.inverse(fwd, context=values)
-            orig = values[t.period if kind == "seasonal_diff" else 1:]
-            return bool(np.allclose(rec, orig, atol=tol))
+        offset = t.history_offset()
+        if offset:
+            # Anchor on the rows the transform consumed, which are the values
+            # immediately preceding the transformed segment. Passing the whole
+            # series here anchors on its last value instead, which offsets every
+            # result by a constant and reports an exactly invertible transform
+            # as not invertible.
+            rec = t.inverse(fwd, context=values[:offset])
+            return bool(np.allclose(rec, values[offset:], atol=tol))
         rec = t.inverse(fwd)
         return bool(np.allclose(rec, values, atol=tol))
     except Exception:

@@ -65,6 +65,81 @@ export const TERM_CATEGORIES: Record<TermCategory, { label: string; blurb: strin
 };
 
 export const TERMS: Record<string, TermDefinition> = {
+ "forecast-project": {
+ key: "forecast-project",
+ label: "Forecast Project",
+ aliases: ["project"],
+ category: "ops",
+ shortDefinition:
+ "A forecast you keep, rather than a chart you make once. It holds the data recipe, the model evidence, your assumptions, the forecast you issued, and how accurate it turned out.",
+ businessAngle:
+ "Next quarter you reopen it instead of rebuilding it, and you can show exactly why last quarter's number was what it was.",
+ example:
+ "A monthly demand plan across Egypt and UAE, with its evidence and accuracy history in one place.",
+ relatedTerms: ["issued-forecast", "post-issue-accuracy"],
+ },
+ "issued-forecast": {
+ key: "issued-forecast",
+ label: "Issued Forecast",
+ aliases: ["published forecast"],
+ category: "ops",
+ shortDefinition:
+ "The forecast you committed to, frozen. Its values cannot change afterwards, even if you rerun or reconfigure the project.",
+ businessAngle:
+ "The difference between 'here is a number' and 'here is the number I gave you in March, and here is how it did'.",
+ example:
+ "You issue the March forecast. In June the actuals score it, not a rerun you did in May.",
+ relatedTerms: ["forecast-project", "post-issue-accuracy"],
+ },
+ "post-issue-accuracy": {
+ key: "post-issue-accuracy",
+ label: "Post-issue accuracy",
+ aliases: ["issued accuracy"],
+ category: "accuracy",
+ shortDefinition:
+ "How the forecast you issued compared with what actually happened. This is not the backtest.",
+ businessAngle:
+ "A backtest says how a model would have done on history it never saw. This says how your actual commitment turned out. A good backtest does not excuse a bad outcome.",
+ example:
+ "Backtest MASE 1.50, post-issue MASE 0.65: it did better in reality than in rehearsal.",
+ relatedTerms: ["issued-forecast", "mase", "backtest"],
+ },
+ wape: {
+ key: "wape",
+ label: "WAPE",
+ aliases: ["weighted absolute percentage error"],
+ category: "accuracy",
+ shortDefinition:
+ "Total error divided by total actuals: a percentage error weighted by size.",
+ businessAngle:
+ "Reflects the volume you actually missed, rather than treating a small series and a large one as equally important.",
+ example: "WAPE of 5.4% means you were off by 5.4% of total demand.",
+ relatedTerms: ["mape", "mase"],
+ },
+ "signed-bias": {
+ key: "signed-bias",
+ label: "Signed bias",
+ aliases: ["bias"],
+ category: "accuracy",
+ shortDefinition:
+ "Whether you consistently forecast too high or too low, keeping the direction.",
+ businessAngle:
+ "Direction matters: persistent over-forecasting means excess stock, under-forecasting means stockouts. An absolute error hides which one you have.",
+ example: "Signed bias of +4.7% means you forecast 4.7% above what happened.",
+ relatedTerms: ["mape", "wape"],
+ },
+ coverage: {
+ key: "coverage",
+ label: "Coverage",
+ aliases: ["interval coverage", "empirical coverage"],
+ category: "uncertainty",
+ shortDefinition:
+ "How often the actual landed inside the P10 to P90 band. Around 80% is right.",
+ businessAngle:
+ "Far below 80% means the range is too narrow to plan with. Well above means it is too wide to be useful.",
+ example: "Coverage of 45% means reality fell outside the band more than half the time.",
+ relatedTerms: ["p10", "p90"],
+ },
  mape: {
  key: "mape",
  label: "MAPE",

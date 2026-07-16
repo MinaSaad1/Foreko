@@ -29,6 +29,46 @@ MODEL_IDS = ["timesfm", "lightgbm", "seasonal_naive", "ets", "arima", "prophet"]
 
 
 @dataclass
+class FoldFailure:
+    """A candidate that raised on a fold.
+
+    Recorded rather than scored. Substituting a fallback forecast and scoring it
+    reports a broken model as a merely mediocre one, and makes the eligibility
+    rule ("a model with any failed fold cannot be champion") unimplementable,
+    because by then the failure looks like a number.
+    """
+
+    model: str
+    fold: int
+    reason: str
+    series_id: str | None = None
+
+
+@dataclass
+class FoldPrediction:
+    """One out-of-fold point: what a model predicted for one period.
+
+    The unit model selection works from. FoldMetrics already carried these
+    arrays but the serializer dropped them, so nothing downstream could compare
+    candidates on identical rows.
+    """
+
+    series_id: str
+    model: str
+    fold: int
+    horizon_step: int
+    actual: float
+    point: float
+    p10: float
+    p90: float
+    train_end: int
+    # In-sample seasonal-naive MAE of this fold's training history. MASE cannot
+    # be recomputed from these rows alone, and the scale differs per fold, so it
+    # travels with the row that it scales.
+    mase_scale: float
+
+
+@dataclass
 class FoldMetrics:
     fold: int
     train_end: int
@@ -46,6 +86,7 @@ class FoldMetrics:
     actuals: list[float]
     p10: list[float]
     p90: list[float]
+    mase_scale: float = float("nan")
 
 
 def _mape(a: np.ndarray, f: np.ndarray) -> float:
@@ -71,12 +112,22 @@ def _mae(a: np.ndarray, f: np.ndarray) -> float:
     return float(np.mean(np.abs(a - f)))
 
 
-def _mase(actual: np.ndarray, forecast: np.ndarray, history: np.ndarray, m: int = 1) -> float:
-    """Mean Absolute Scaled Error, scale = in-sample seasonal naive MAE."""
+def _mase_scale(history: np.ndarray, m: int = 1) -> float:
+    """In-sample seasonal naive MAE: the denominator MASE scales by.
+
+    NaN when the history is too short or flat, which makes MASE undefined rather
+    than infinite.
+    """
     if len(history) <= m:
         return float("nan")
     scale = float(np.mean(np.abs(history[m:] - history[:-m])))
-    if scale < 1e-9:
+    return scale if scale >= 1e-9 else float("nan")
+
+
+def _mase(actual: np.ndarray, forecast: np.ndarray, history: np.ndarray, m: int = 1) -> float:
+    """Mean Absolute Scaled Error, scale = in-sample seasonal naive MAE."""
+    scale = _mase_scale(history, m=m)
+    if not np.isfinite(scale):
         return float("nan")
     return float(np.mean(np.abs(actual - forecast)) / scale)
 
@@ -150,6 +201,115 @@ async def _forecast_one_model(
     raise ValueError(f"unknown model {model!r}")
 
 
+def _plan_for(series_values: np.ndarray, horizon: int, folds: int) -> list[tuple[int, int]]:
+    n = len(series_values)
+    min_train = max(horizon, 12)
+    plan = _split_plan(n, horizon, folds, min_train)
+    if not plan:
+        raise ValueError(
+            f"Not enough data for {folds} folds at horizon {horizon}. "
+            f"Need at least {min_train + horizon} points, have {n}. "
+            f"Try reducing the horizon or using a larger dataset."
+        )
+    return plan
+
+
+async def _run_series_folds(
+    *,
+    series_id: str | None,
+    series_values: np.ndarray,
+    series_dates: pd.DatetimeIndex,
+    horizon: int,
+    folds: int,
+    models: list[str],
+    registry: ModelRegistry,
+    progress_cb: Any = None,
+    stop_event: Any = None,
+    progress_offset: int = 0,
+    progress_total: int | None = None,
+) -> tuple[dict[str, list[FoldMetrics]], list[FoldFailure], list[tuple[int, int]]]:
+    """Run every fold of every model for one series.
+
+    Shared by the single-series V1 backtest and the multi-series project
+    validation, so both score folds through exactly the same path.
+    """
+    freq = None
+    try:
+        freq = pd.infer_freq(series_dates)
+    except Exception:
+        pass
+
+    plan = _plan_for(series_values, horizon, folds)
+    total_steps = progress_total or (len(plan) * len(models))
+    step = progress_offset
+
+    results: dict[str, list[FoldMetrics]] = {m: [] for m in models}
+    failures: list[FoldFailure] = []
+    label = f"{series_id}: " if series_id else ""
+
+    for fold_idx, (train_end, test_end) in enumerate(plan):
+        if stop_event is not None and stop_event.is_set():
+            break
+        history = series_values[:train_end].astype(float)
+        history_dates = series_dates[:train_end]
+        actuals = series_values[train_end:test_end].astype(float)
+
+        for model in models:
+            if stop_event is not None and stop_event.is_set():
+                break
+            step += 1
+            if progress_cb:
+                await progress_cb(
+                    step, total_steps, f"{label}fold {fold_idx + 1}/{len(plan)}: {model}"
+                )
+
+            try:
+                point, p10, p90 = await _forecast_one_model(
+                    model=model,
+                    history_values=history,
+                    history_dates=history_dates,
+                    horizon=len(actuals),
+                    registry=registry,
+                    freq=freq,
+                )
+            except Exception as exc:
+                logger.warning("Model %s failed on fold %d: %s", model, fold_idx, exc)
+                failures.append(
+                    FoldFailure(
+                        model=model,
+                        fold=fold_idx + 1,
+                        reason=str(exc),
+                        series_id=series_id,
+                    )
+                )
+                continue
+
+            m = _detect_period(freq, len(history))
+            results[model].append(
+                FoldMetrics(
+                    mase_scale=_mase_scale(history, m=m),
+                    fold=fold_idx + 1,
+                    train_end=train_end,
+                    test_start=train_end,
+                    test_end=test_end,
+                    mape=_mape(actuals, point),
+                    smape=_smape(actuals, point),
+                    rmse=_rmse(actuals, point),
+                    mae=_mae(actuals, point),
+                    mase=_mase(actuals, point, history, m=m),
+                    pinball_10=_pinball(actuals, p10, 0.1),
+                    pinball_50=_pinball(actuals, point, 0.5),
+                    pinball_90=_pinball(actuals, p90, 0.9),
+                    point_forecast=[float(v) for v in point],
+                    actuals=[float(v) for v in actuals],
+                    p10=[float(v) for v in p10],
+                    p90=[float(v) for v in p90],
+                )
+            )
+
+    return results, failures, plan
+
+
 async def run_walk_forward(
     *,
     dataset_id: str,
@@ -164,6 +324,10 @@ async def run_walk_forward(
 ) -> dict[str, Any]:
     """Run an expanding-window walk-forward backtest for the given models.
 
+    Single-series by design: this is the V1 Backtest contract, which the
+    Backtest page, the Comparison page's recommendation, and the analyses cache
+    all read. Multi-series validation uses :func:`run_multi_series_folds`.
+
     ``progress_cb(current, total, stage)`` is awaited on each step.
     ``stop_event`` is a threading.Event checked between folds for cancellation.
     """
@@ -173,78 +337,17 @@ async def run_walk_forward(
     if not ids:
         raise ValueError("Dataset has no series after mapping.")
 
-    series_values = values[0]
-    series_dates = dates[0]
-    n = len(series_values)
-    freq = None
-    try:
-        freq = pd.infer_freq(series_dates)
-    except Exception:
-        pass
-
-    min_train = max(horizon, 12)
-    plan = _split_plan(n, horizon, folds, min_train)
-    if not plan:
-        raise ValueError(
-            f"Not enough data for {folds} folds at horizon {horizon}. "
-            f"Need at least {min_train + horizon} points, have {n}. "
-            f"Try reducing the horizon or using a larger dataset."
-        )
-
-    total_steps = len(plan) * len(models)
-    step = 0
-
-    results: dict[str, list[FoldMetrics]] = {m: [] for m in models}
-
-    for fold_idx, (train_end, test_end) in enumerate(plan):
-        if stop_event is not None and stop_event.is_set():
-            break
-        history = series_values[:train_end].astype(float)
-        history_dates = series_dates[:train_end]
-        actuals = series_values[train_end:test_end].astype(float)
-
-        for model in models:
-            if stop_event is not None and stop_event.is_set():
-                break
-            step += 1
-            if progress_cb:
-                await progress_cb(step, total_steps, f"fold {fold_idx + 1}/{len(plan)}: {model}")
-
-            try:
-                point, p10, p90 = await _forecast_one_model(
-                    model=model,
-                    history_values=history,
-                    history_dates=history_dates,
-                    horizon=len(actuals),
-                    registry=registry,
-                    freq=freq,
-                )
-            except Exception as exc:
-                logger.warning("Model %s failed on fold %d: %s", model, fold_idx, exc)
-                point = np.full(len(actuals), history[-1] if len(history) else 0.0)
-                p10 = point
-                p90 = point
-
-            m = _detect_period(freq, len(history))
-            metrics = FoldMetrics(
-                fold=fold_idx + 1,
-                train_end=train_end,
-                test_start=train_end,
-                test_end=test_end,
-                mape=_mape(actuals, point),
-                smape=_smape(actuals, point),
-                rmse=_rmse(actuals, point),
-                mae=_mae(actuals, point),
-                mase=_mase(actuals, point, history, m=m),
-                pinball_10=_pinball(actuals, p10, 0.1),
-                pinball_50=_pinball(actuals, point, 0.5),
-                pinball_90=_pinball(actuals, p90, 0.9),
-                point_forecast=[float(v) for v in point],
-                actuals=[float(v) for v in actuals],
-                p10=[float(v) for v in p10],
-                p90=[float(v) for v in p90],
-            )
-            results[model].append(metrics)
+    results, failures, plan = await _run_series_folds(
+        series_id=None,
+        series_values=values[0],
+        series_dates=dates[0],
+        horizon=horizon,
+        folds=folds,
+        models=models,
+        registry=registry,
+        progress_cb=progress_cb,
+        stop_event=stop_event,
+    )
 
     # Aggregate
     aggregate: dict[str, dict[str, float]] = {}
@@ -278,9 +381,13 @@ async def run_walk_forward(
             errs.append(float(np.mean(vals)) if vals else 0.0)
         per_horizon[model] = errs
 
+    # A model that failed any fold cannot win: its remaining folds are a biased
+    # sample of the ones it happened to survive.
+    failed_models = {f.model for f in failures}
+    eligible = {m: agg for m, agg in aggregate.items() if m not in failed_models}
     winner = None
-    if aggregate:
-        winner = min(aggregate.items(), key=lambda kv: kv[1]["mape_mean"])[0]
+    if eligible:
+        winner = min(eligible.items(), key=lambda kv: kv[1]["mape_mean"])[0]
 
     return {
         "horizon": horizon,
@@ -308,8 +415,102 @@ async def run_walk_forward(
             ]
             for model, folds_list in results.items()
         },
+        "failures": [
+            {
+                "model": f.model,
+                "fold": f.fold,
+                "reason": f.reason,
+                "series_id": f.series_id,
+            }
+            for f in failures
+        ],
         "winner": winner,
     }
+
+
+async def run_multi_series_folds(
+    *,
+    dataset_id: str,
+    mapping: Any,
+    horizon: int,
+    folds: int,
+    models: list[str],
+    datasets_dir: Path,
+    registry: ModelRegistry,
+    progress_cb: Any = None,
+    stop_event: Any = None,
+) -> tuple[list[FoldPrediction], list[FoldFailure]]:
+    """Score every fold of every model for every mapped series.
+
+    Returns the raw out-of-fold rows rather than aggregates, because model
+    selection is per series and the aggregation rule belongs to the caller
+    (design 6.3). A series whose history is too short for the requested folds is
+    a failure row, not a raised error, so one short series cannot sink the
+    portfolio.
+    """
+    df = csv_loader.load_dataset(dataset_id, datasets_dir)
+    ids, values, dates = csv_loader.extract_series(df, mapping)
+    if not ids:
+        raise ValueError("Dataset has no series after mapping.")
+
+    predictions: list[FoldPrediction] = []
+    failures: list[FoldFailure] = []
+    total = len(ids) * folds * len(models)
+    done = 0
+
+    for series_id, series_values, series_dates in zip(ids, values, dates):
+        if stop_event is not None and stop_event.is_set():
+            break
+        try:
+            results, series_failures, _plan = await _run_series_folds(
+                series_id=series_id,
+                series_values=series_values,
+                series_dates=series_dates,
+                horizon=horizon,
+                folds=folds,
+                models=models,
+                registry=registry,
+                progress_cb=progress_cb,
+                stop_event=stop_event,
+                progress_offset=done,
+                progress_total=total,
+            )
+        except ValueError as exc:
+            for model in models:
+                for fold in range(1, folds + 1):
+                    failures.append(
+                        FoldFailure(
+                            model=model,
+                            fold=fold,
+                            reason=str(exc),
+                            series_id=series_id,
+                        )
+                    )
+            done += folds * len(models)
+            continue
+
+        failures.extend(series_failures)
+        done += folds * len(models)
+
+        for model, fold_list in results.items():
+            for fold in fold_list:
+                for step_index in range(len(fold.actuals)):
+                    predictions.append(
+                        FoldPrediction(
+                            series_id=series_id,
+                            model=model,
+                            fold=fold.fold,
+                            horizon_step=step_index + 1,
+                            actual=fold.actuals[step_index],
+                            point=fold.point_forecast[step_index],
+                            p10=fold.p10[step_index],
+                            p90=fold.p90[step_index],
+                            train_end=fold.train_end,
+                            mase_scale=fold.mase_scale,
+                        )
+                    )
+
+    return predictions, failures
 
 
 def _detect_period(freq: str | None, n: int) -> int:

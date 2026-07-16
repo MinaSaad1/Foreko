@@ -87,6 +87,27 @@ export async function apiPut<T>(
  return handle<T>(res);
 }
 
+export async function apiPatch<T>(
+ path: string,
+ body: unknown,
+ signal?: AbortSignal,
+): Promise<T> {
+ const res = await fetch(`/api${path}`, {
+ method: "PATCH",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify(body),
+ signal,
+ });
+ return handle<T>(res);
+}
+
+export async function apiDelete<T>(path: string, signal?: AbortSignal): Promise<T> {
+ const res = await fetch(`/api${path}`, { method: "DELETE", signal });
+ // 204 carries no body, so handle<T>'s res.json() would throw on success.
+ if (res.status === 204) return undefined as T;
+ return handle<T>(res);
+}
+
 export async function apiUpload<T>(
  path: string,
  file: File,

@@ -21,6 +21,8 @@ from .routers import factors as factors_router
 from .routers import backtest as backtest_router
 from .routers import diagnostics as diagnostics_router_mod
 from .routers import model as model_router
+from .routers import project_jobs as project_jobs_router
+from .routers import projects as projects_router
 from .routers import phase2 as phase2_routers
 from .routers import scenarios as scenarios_router
 from .routers import phase4 as phase4_routers
@@ -54,12 +56,24 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     safe_model_id = settings.model_id.replace("/", "--")
     local_model_dir = settings.storage_dir / "models" / safe_model_id
 
-    registry = ModelRegistry(
-        model_id=settings.model_id,
-        device=device_info,
-        local_model_dir=local_model_dir,
-        inference_timeout_s=settings.inference_timeout_s,
-    )
+    if settings.fake_models:
+        # Test-only path, off unless FOREKO_FAKE_MODELS is set. The browser
+        # journey needs the same numbers every run and cannot wait on a 1.2 GB
+        # download. Loud on purpose: a real install must never reach this.
+        from .services.fake_registry import FakeModelRegistry
+
+        logger.warning(
+            "FOREKO_FAKE_MODELS is set: forecasts are deterministic stand-ins, "
+            "not predictions. This must only ever be a test run."
+        )
+        registry: ModelRegistry = FakeModelRegistry()
+    else:
+        registry = ModelRegistry(
+            model_id=settings.model_id,
+            device=device_info,
+            local_model_dir=local_model_dir,
+            inference_timeout_s=settings.inference_timeout_s,
+        )
     app.state.registry = registry
 
     job_manager = JobManager(jobs_dir=settings.jobs_dir)
@@ -72,7 +86,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     )
 
     load_task: asyncio.Task[None] | None = None
-    if settings.preload_model:
+    if settings.preload_model and not settings.fake_models:
         # Predownload the snapshot with progress reporting, then hand off to
         # the registry's loader. If the snapshot is already cached, download
         # is effectively a no-op.
@@ -130,7 +144,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),
         allow_credentials=False,
-        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
 
@@ -210,6 +224,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(finetune_router.router, prefix="/api")
     app.include_router(adapters_router.router, prefix="/api")
     app.include_router(model_router.router, prefix="/api")
+    app.include_router(projects_router.router, prefix="/api")
+    app.include_router(project_jobs_router.router, prefix="/api")
+    app.include_router(project_jobs_router.jobs_router, prefix="/api")
 
     # Serve pre-built frontend SPA.
     # Search order:

@@ -43,6 +43,48 @@ class FakeTimesFMModel:
             quantiles[i, :, 0] = mean_val  # column 0 = mean
         return points, quantiles
 
+    def forecast_with_covariates(
+        self,
+        *,
+        inputs: list[np.ndarray],
+        dynamic_numerical_covariates: dict | None = None,
+        dynamic_categorical_covariates: dict | None = None,
+        static_numerical_covariates: dict | None = None,
+        static_categorical_covariates: dict | None = None,
+        xreg_mode: str = "xreg + timesfm",
+    ) -> tuple[list, list]:
+        """Deterministic stand-in that actually responds to its covariates.
+
+        The real model's output changes when a covariate changes. A fake that
+        ignored them would let a covariate be disconnected from the model while
+        every test still passed, which is exactly how blocker B1 survived.
+        """
+        horizon = 0
+        for values in (dynamic_numerical_covariates or {}).values():
+            horizon = max(horizon, len(values[0]) - len(inputs[0]))
+        horizon = horizon or 1
+
+        points: list[list[float]] = []
+        quantiles: list[np.ndarray] = []
+        for i, series in enumerate(inputs):
+            arr = np.asarray(series, dtype=float)
+            base = float(arr.mean()) if arr.size else 0.0
+            # Shift the level by the planned future covariate, so a different
+            # assumption produces a different forecast.
+            shift = 0.0
+            for values in (dynamic_numerical_covariates or {}).values():
+                future = np.asarray(values[i][len(arr) :], dtype=float)
+                if future.size:
+                    shift += float(future.mean())
+            point = np.full(horizon, base + shift, dtype=float)
+            q = np.zeros((horizon, 10), dtype=float)
+            for col in range(10):
+                q[:, col] = point + (col - 5) * 0.1 * (abs(base) + 1.0)
+            q[:, 0] = point
+            points.append(point.tolist())
+            quantiles.append(q)
+        return points, quantiles
+
 
 class FakeModelRegistry(ModelRegistry):
     """Registry that installs a :class:`FakeTimesFMModel` without loading torch."""

@@ -1,4 +1,5 @@
 import type { PreflightResult } from"@/types/phases";
+import { qualityBand } from"@/utils/qualityScore";
 
 interface Props {
  data: PreflightResult;
@@ -6,19 +7,23 @@ interface Props {
 
 export function DataQualityCard({ data }: Props) {
  const score = data.quality_score;
+ const band = qualityBand(score);
  const scoreTone =
- score >= 85
+ band ==="ok"
  ?"text-positive border-positive/40"
- : score >= 60
+ : band ==="warn"
  ?"text-warning border-warning/40"
  :"text-anomaly border-anomaly/40";
- const stripe =
- score >= 85 ?"bg-positive" : score >= 60 ?"bg-warning" :"bg-anomaly";
+ // The band in words. The 4px colour stripe that used to carry this was
+ // aria-hidden, so it said nothing to assistive tech, and it was the banned
+ // side-stripe accent. The badge already reports the number; now it reports
+ // the verdict too, so nothing depends on hue.
+ const bandLabel =
+ band ==="ok" ?"forecast-ready" : band ==="warn" ?"use caution" :"fix the data";
 
  return (
- <div className="rounded-panel border border-border bg-bg-surface overflow-hidden">
+ <div className="border border-border bg-bg-surface overflow-hidden">
  <div className="flex">
- <span className={`w-1 shrink-0 ${stripe}`} aria-hidden />
  <div className="flex-1 p-5 space-y-4">
  <div className="flex items-start justify-between gap-4">
  <div>
@@ -30,9 +35,9 @@ export function DataQualityCard({ data }: Props) {
  {data.first_date && data.last_date ? ` · ${data.first_date} → ${data.last_date}` :""}
  </p>
  </div>
- <div className={`border px-3 py-1.5 text-right ${scoreTone}`}>
+ <div className={`shrink-0 border px-3 py-1.5 text-right ${scoreTone}`}>
  <p className="font-display text-2xl font-semibold">{score}</p>
- <p className="font-mono text-[9px] uppercase tracking-widest">score</p>
+ <p className="font-mono text-[9px] uppercase tracking-[0.15em]">{bandLabel}</p>
  </div>
  </div>
 

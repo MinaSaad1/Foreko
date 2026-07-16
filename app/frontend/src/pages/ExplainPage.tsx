@@ -2,18 +2,16 @@ import { useParams } from"react-router-dom";
 import { ColumnMapper } from"@/components/ColumnMapper";
 import { MethodAgreementMatrix } from"@/components/anomaly/MethodAgreementMatrix";
 import { RootCauseHints } from"@/components/anomaly/RootCauseHints";
-import { PageIntro } from"@/components/common/PageIntro";
 import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
+import { RunError } from"@/components/common/RunError";
 import {
-  LeftRail,
-  PageHeader,
-  RailResetButton,
-  RailRow,
-  RailSection,
-  RightRail,
-  ThreeRailLayout,
-  WhatYoullGet,
-} from "@/components/common/Rails";
+  Depth,
+  Fact,
+  FactGrid,
+  PageHeading,
+  SecondaryActions,
+  Section,
+} from "@/components/common/Page";
 import { useSyncedDataset } from"@/hooks/useSyncedDataset";
 import { useExplainOrchestrator } from"@/hooks/useExplainOrchestrator";
 import type { ColumnInfo } from"@/types/dataset";
@@ -77,66 +75,37 @@ export function ExplainPage() {
  const displayName = preview ? preview.filename.replace(/\.[^.]+$/, "") : "Explain";
 
  return (
- <ThreeRailLayout
-   left={
-     <LeftRail ariaLabel="Explain configuration">
-       <RailSection label="Dataset">
-         {preview ? (
-           <>
-             <RailRow k="File" v={preview.filename} />
-             <RailRow k="Rows" v={preview.row_count.toLocaleString()} />
-           </>
-         ) : (
-           <p className="font-mono text-[10px] text-text-faint">Loading…</p>
-         )}
-       </RailSection>
-
-       <RailSection label="Factors">
-         <RailRow k="Numeric" v={String(numericFactors.length)} />
-         <RailRow k="Categorical" v={String(categoricalFactors.length)} />
-         <RailRow k="Available" v={String(numericCols.length + categoricalCols.length)} tone="muted" />
-       </RailSection>
-
-       <RailSection label="Tools">
-         <RailRow k="Anomalies" v="5 methods" />
-         <RailRow k="Changepoints" v="rupture" />
-         <RailRow k="Lag" v="cross-corr" />
-         <RailRow k="Causality" v="Granger" />
-       </RailSection>
-
-       {hasResult && <RailResetButton onClick={resetAll} />}
-     </LeftRail>
-   }
-   right={
-     <RightRail ariaLabel="Explain insights">
-       <WhatYoullGet
-         summary="Five-method anomaly vote, changepoint detection, lag analysis, and Granger causality between selected factors and the target. Each tool runs independently."
-         reading={[
-           "Anomalies + root-cause: pick factors first, then run methods, then 'Find root cause'.",
-           "Lag: positive lag means the factor leads the target.",
-           "Granger p < 0.05 = factor predicts the target beyond its own history.",
-         ]}
-       />
-     </RightRail>
-   }
- >
- <PageHeader
+ <div className="flex flex-col gap-6">
+ <PageHeading
    kicker="Understand"
    title={displayName}
-   subtitle={preview ? `${preview.row_count.toLocaleString()} rows` : undefined}
+   intro="Four independent tools for asking why the numbers moved: a five-method anomaly vote, changepoint detection, lag analysis, and Granger causality against the factors you pick. Each runs on its own, so run only what you need."
  />
 
- <div className="lg:hidden">
-   <PageIntro pageKey="explain" />
- </div>
+ <FactGrid>
+   <Fact label="File" value={preview ? preview.filename : "Loading..."} />
+   <Fact label="Rows" value={preview ? preview.row_count.toLocaleString() : "..."} />
+   <Fact
+     label="Numeric factors"
+     value={`${numericFactors.length} of ${numericCols.length} selected`}
+   />
+   <Fact
+     label="Category factors"
+     value={`${categoricalFactors.length} of ${categoricalCols.length} selected`}
+   />
+ </FactGrid>
 
- <div className="rounded-panel border border-border bg-bg-surface p-5 space-y-4">
+ <Section title="Set up">
+ <div className="space-y-4">
  {preview && <ColumnMapper preview={preview} value={mapping} onChange={handleMappingChange} />}
 
  {numericCols.length > 0 && (
  <div>
- <p className="font-mono text-xs uppercase tracking-widest text-text-muted mb-2">
- Numeric factors (for root-cause, lag, Granger)
+ <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">
+ Numeric factors
+ </p>
+ <p className="mb-2 mt-1 text-[13px] text-text-secondary">
+ Used by lag, Granger, and root cause. The other tools read your target column only.
  </p>
  <div className="flex flex-wrap gap-2">
  {numericCols.map((c) => (
@@ -157,8 +126,11 @@ export function ExplainPage() {
  )}
  {categoricalCols.length > 0 && (
  <div>
- <p className="font-mono text-xs uppercase tracking-widest text-text-muted mb-2">
+ <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">
  Category factors
+ </p>
+ <p className="mb-2 mt-1 text-[13px] text-text-secondary">
+ Used by root cause, for example promotion, holiday, or segment.
  </p>
  <div className="flex flex-wrap gap-2">
  {categoricalCols.map((c) => (
@@ -178,7 +150,22 @@ export function ExplainPage() {
  </div>
  )}
 
- <div className="flex flex-wrap gap-2">
+ </div>
+ </Section>
+
+ {/* Five actions used to sit in one flat wrapping row, three of them dead on
+     arrival, with the run order documented only in a rail that hides below
+     lg. The grouping is now the explanation: each group says what it reads,
+     and a blocked group says so in plain words instead of just greying out. */}
+ <Section title="Analyses">
+ <div className="space-y-5">
+ <div>
+ <h3 className="text-[13px] font-medium text-text-primary">On the series</h3>
+ <p className="mt-1 text-[13px] text-text-secondary">
+ These read your target column on its own, so they run as soon as the columns
+ are mapped.
+ </p>
+ <div className="mt-2 flex flex-wrap gap-2">
  <button
  onClick={() => anomalyMethodsMutation.mutate()}
  disabled={!mapping || anomalyMethodsMutation.isPending}
@@ -193,6 +180,27 @@ export function ExplainPage() {
  >
  {changepointsMutation.isPending ? "Running…" : "Detect changepoints"}
  </button>
+ </div>
+ </div>
+
+ <div>
+ <h3 className="text-[13px] font-medium text-text-primary">Against your factors</h3>
+ <p className="mt-1 text-[13px] text-text-secondary">
+ These weigh a factor against the target, so they need at least one factor
+ selected above.
+ </p>
+ {!numericFactors.length && (
+ <p className="mt-2 text-[13px] text-text-secondary">
+ Select at least one numeric factor above to run lag or Granger causality.
+ </p>
+ )}
+ {!anomalyMethodsMutation.data && (
+ <p className="mt-2 text-[13px] text-text-secondary">
+ Root cause explains the anomalies that detection finds, so run Detect
+ anomalies first.
+ </p>
+ )}
+ <div className="mt-2 flex flex-wrap gap-2">
  <button
  onClick={() => lagMutation.mutate()}
  disabled={!mapping || !numericFactors.length || lagMutation.isPending}
@@ -221,6 +229,16 @@ export function ExplainPage() {
  </button>
  </div>
  </div>
+
+ {/* Each analysis runs independently, so each reports its own failure.
+     Without these a failed run leaves the previous panel on screen. */}
+ <RunError error={anomalyMethodsMutation.error} label="Anomaly detection" />
+ <RunError error={changepointsMutation.error} label="Changepoint detection" />
+ <RunError error={lagMutation.error} label="Lag analysis" />
+ <RunError error={grangerMutation.error} label="Granger causality" />
+ <RunError error={rootCauseMutation.error} label="Root cause" />
+ </div>
+ </Section>
 
  {anomalyMethodsMutation.data && (
  <>
@@ -336,7 +354,44 @@ export function ExplainPage() {
  </table>
  </div>
  )}
- </ThreeRailLayout>
+
+ <Depth label="Reading the result">
+ <ul className="space-y-2 text-[13px] leading-relaxed text-text-secondary">
+ <li className="flex gap-2">
+ <span className="text-accent" aria-hidden>
+ ▸
+ </span>
+ <span>
+ Root cause explains anomalies, so pick factors, run Detect anomalies, then
+ Find root cause.
+ </span>
+ </li>
+ <li className="flex gap-2">
+ <span className="text-accent" aria-hidden>
+ ▸
+ </span>
+ <span>Lag: a positive lag means the factor leads the target.</span>
+ </li>
+ <li className="flex gap-2">
+ <span className="text-accent" aria-hidden>
+ ▸
+ </span>
+ <span>
+ Granger p &lt; 0.05 means the factor predicts the target beyond the target's
+ own history. That is predictive evidence, not proof of cause.
+ </span>
+ </li>
+ </ul>
+ </Depth>
+
+ {hasResult && (
+ <SecondaryActions>
+ <button type="button" onClick={resetAll} className="btn-terminal">
+ Clear results
+ </button>
+ </SecondaryActions>
+ )}
+ </div>
  );
 }
 

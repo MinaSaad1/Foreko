@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useProjects } from "@/hooks/useProject";
 import { useDatasetStore } from "@/stores/datasetStore";
 import { loadDemoDataset } from "@/utils/loadDemoDataset";
 import { toast } from "@/utils/toast";
@@ -25,10 +26,13 @@ interface FeatureTile {
 
 const FEATURES: FeatureTile[] = [
   {
-    title: "Forecast",
-    benefit: "Best-fit forecast with upper and lower ranges, and a recommended model.",
+    // Named to match the sidebar and the page itself. This tile said
+    // "Forecast" while pointing at a destination titled Model Comparison,
+    // and in V2 the forecast you keep is a project, not this page.
+    title: "Model Comparison",
+    benefit: "Run two models on one holdout and see which fits your series better.",
     to: "/compare",
-    cta: "Open forecast",
+    cta: "Compare models",
     illustration: <ForecastIllustration />,
   },
   {
@@ -92,7 +96,7 @@ const FEATURES: FeatureTile[] = [
 const TRUST_POINTS: { title: string; body: string }[] = [
   {
     title: "Free and open source",
-    body: "MIT-licensed. No upsell, no paid tier, no telemetry. The whole app is on GitHub.",
+    body: "Apache-2.0 licensed. No upsell, no paid tier, no telemetry. The whole app is on GitHub.",
   },
   {
     title: "Stays on your machine",
@@ -103,6 +107,94 @@ const TRUST_POINTS: { title: string; body: string }[] = [
     body: "Google's TimesFM foundation model and a LightGBM baseline. Backtested on your data so you can see which fits.",
   },
 ];
+
+/** How many projects the home page shows before deferring to /projects. */
+const HOME_PROJECT_LIMIT = 4;
+
+/**
+ * The V2 workflow, surfaced on the home page.
+ *
+ * A project is the thing a user comes back to, so it belongs above the
+ * feature tiles: the tiles are destinations, this is the work. It stays quiet
+ * when there is nothing to resume, because an empty list should invite rather
+ * than nag.
+ */
+function ProjectsSection() {
+  const { data: projects, isPending, isError } = useProjects(false);
+
+  return (
+    <section className="mt-12">
+      <div className="mb-4 flex items-baseline justify-between border-b border-border-strong/70 pb-3">
+        <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-text-primary">
+          Your projects
+        </h2>
+        <Link
+          to="/projects"
+          className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted transition-colors hover:text-accent"
+        >
+          All projects →
+        </Link>
+      </div>
+
+      {isPending ? (
+        <p className="text-[13px] text-text-muted">Loading projects...</p>
+      ) : isError ? (
+        // Honest failure. The rest of the page still works, so say what is
+        // missing and let the user carry on rather than blanking the section.
+        <p role="alert" className="text-[13px] text-anomaly">
+          Could not load your projects. The forecasting pages below still work.
+        </p>
+      ) : projects && projects.length > 0 ? (
+        <>
+          <ul className="grid gap-2">
+            {projects.slice(0, HOME_PROJECT_LIMIT).map((project) => (
+              <li key={project.id}>
+                <Link
+                  to={`/projects/${project.id}`}
+                  className="flex items-center justify-between gap-4 border border-border-strong/70 bg-bg-surface/40 px-4 py-3 transition-colors hover:border-accent"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-[14px] text-text-primary">
+                      {project.name}
+                    </span>
+                    <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.14em] text-text-faint">
+                      Revision {project.current_revision} · updated{" "}
+                      {new Date(project.updated_at).toLocaleDateString()}
+                    </span>
+                  </span>
+                  <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-text-secondary">
+                    {project.status}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {projects.length > HOME_PROJECT_LIMIT && (
+            <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-text-faint">
+              {projects.length - HOME_PROJECT_LIMIT} more on the projects page
+            </p>
+          )}
+        </>
+      ) : (
+        <div className="border border-border-strong/70 bg-bg-surface/40 px-6 py-8">
+          <p className="text-[14px] text-text-primary">No projects yet</p>
+          <p className="mt-2 max-w-[60ch] text-[13px] leading-relaxed text-text-secondary">
+            A project keeps a forecast together over time: the data recipe, the
+            model evidence, the assumptions you entered, the forecast you
+            issued, and how accurate it turned out. Start one when you have a
+            number you need to produce again.
+          </p>
+          <Link
+            to="/projects"
+            className="mt-4 inline-block border border-accent/70 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-accent transition-colors hover:bg-accent/10"
+          >
+            New project
+          </Link>
+        </div>
+      )}
+    </section>
+  );
+}
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -137,9 +229,10 @@ export function LandingPage() {
             </h1>
             <p className="text-base text-text-secondary leading-relaxed max-w-[60ch]">
               Foreko wraps Google's TimesFM and a LightGBM baseline in a
-              workbench you run locally. Backtests, diagnostics, factor
-              analysis, anomaly detection, and what-if scenarios, all on
-              your own data. Free and open source.
+              workbench you run locally. Keep a recurring forecast as a
+              project: the data recipe, the model evidence, your assumptions,
+              and how accurate it turned out, all reproducible later. Free and
+              open source.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <Link to="/data" className="btn-terminal-primary">
@@ -175,6 +268,8 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+
+      <ProjectsSection />
 
       <section className="pt-4">
         <div className="mb-4 flex items-baseline justify-between border-b border-border-strong/70 pb-3">
@@ -221,8 +316,8 @@ export function LandingPage() {
         <ol className="grid md:grid-cols-3 divide-x divide-border-strong/70">
           {[
             { n: "01", title: "Bring your data", body: "Upload a CSV, an Excel workbook, or connect a database. Foreko reads the schema." },
-            { n: "02", title: "Forecast", body: "Pick a target and a date column. Two models run side by side and Foreko picks the winner." },
-            { n: "03", title: "Drill in", body: "Backtest, diagnostics, anomalies, factors, scenarios. Annotate the timeline and export the briefing." },
+            { n: "02", title: "Open a project", body: "Prepare the series, validate the model on your own history, enter your assumptions, then issue the forecast." },
+            { n: "03", title: "Score it later", body: "Load actuals when they arrive to measure accuracy and bias. Reproduce any past decision without rebuilding it." },
           ].map((step) => (
             <li key={step.n} className="p-6">
               <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-accent">{step.n}</span>
@@ -245,7 +340,7 @@ export function LandingPage() {
       </section>
 
       <footer className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-border-strong/70 pt-5 font-mono text-[10px] uppercase tracking-[0.18em] text-text-faint">
-        <span>Foreko · Free and open source · MIT licensed</span>
+        <span>Foreko · Free and open source · Apache-2.0 licensed</span>
         <div className="flex gap-5">
           <Link to="/glossary" className="hover:text-accent transition-colors">Glossary</Link>
           <Link to="/data" className="hover:text-accent transition-colors">Datasets</Link>

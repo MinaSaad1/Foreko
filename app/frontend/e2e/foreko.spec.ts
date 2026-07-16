@@ -1,4 +1,4 @@
-import { test, expect, Page, APIRequestContext } from "@playwright/test";
+import { test, expect, APIRequestContext } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,12 +9,17 @@ const SAMPLE_PATH = path.resolve(
   "../public/samples/monthly_revenue_demo.csv",
 );
 
+// The backend this run starts, never a developer's on 8000. Hardcoding 8000
+// makes the spec seed one backend while the app reads another, and writes test
+// data into real storage.
+const API = process.env.FOREKO_E2E_API ?? "http://localhost:8001";
+
 // Shared dataset id across tests in this file.
 let datasetId: string | null = null;
 
 async function uploadSampleViaApi(request: APIRequestContext): Promise<string> {
   const buffer = fs.readFileSync(SAMPLE_PATH);
-  const res = await request.post("http://localhost:8000/api/datasets/upload", {
+  const res = await request.post(`${API}/api/datasets/upload`, {
     multipart: {
       file: {
         name: "monthly_revenue_demo.csv",
@@ -26,12 +31,6 @@ async function uploadSampleViaApi(request: APIRequestContext): Promise<string> {
   expect(res.ok(), `upload failed: ${res.status()} ${await res.text()}`).toBeTruthy();
   const body = await res.json();
   return body.id as string;
-}
-
-async function seedDatasetInApp(page: Page, id: string) {
-  // Navigate directly to a route including the dataset id; the sync hook will hydrate.
-  await page.goto(`/datasets`);
-  await page.waitForLoadState("networkidle");
 }
 
 test.describe.configure({ mode: "default" });
@@ -49,7 +48,7 @@ test.beforeEach(async ({ context }) => {
 
 test.beforeAll(async ({ request }) => {
   // Ensure backend is ready.
-  const health = await request.get("http://localhost:8000/api/health");
+  const health = await request.get(`${API}/api/health`);
   expect(health.ok()).toBeTruthy();
   const body = await health.json();
   expect(body.model_status).toBe("ready");
@@ -67,7 +66,10 @@ test("landing page renders", async ({ page }) => {
 test("upload page renders and samples pick works", async ({ page }) => {
   await page.goto("/upload");
   await page.waitForLoadState("networkidle");
-  await expect(page.getByRole("heading", { name: /upload your data/i })).toBeVisible();
+  // "Upload your data" has not existed for some time; the page renders
+  // "Datasets". The assertion went stale unnoticed because this suite never ran
+  // in CI, which is the gap the e2e job now closes.
+  await expect(page.getByRole("heading", { name: /^datasets$/i })).toBeVisible();
   // Click first sample -> should land on /compare/:id
   const samples = page.getByRole("button", { name: /use this sample/i });
   if (await samples.count()) {
@@ -120,7 +122,6 @@ for (const route of DATASET_ROUTES) {
 
 test("covariates multi-series bug: series_col=none should surface descriptive error, not Internal Server Error", async ({
   page,
-  request,
 }) => {
   expect(datasetId).toBeTruthy();
   await page.goto(`/covariates/${datasetId}`);
@@ -142,11 +143,6 @@ test("covariates multi-series bug: series_col=none should surface descriptive er
   const analyzeBtn = page.getByRole("button", { name: /analyze factor impact/i });
   await expect(analyzeBtn).toBeEnabled({ timeout: 30_000 });
   await analyzeBtn.click();
-
-  // Wait for an error to surface. The backend should now send a descriptive `detail`.
-  const errorBanner = page
-    .locator('p:has-text("Internal Server Error"), .text-anomaly, [role="alert"]')
-    .first();
 
   // Give the request up to 60s to complete and surface.
   const errorText = await page
@@ -175,7 +171,7 @@ test("covariates direct API probe: duplicate timestamps -> descriptive detail", 
   request,
 }) => {
   expect(datasetId).toBeTruthy();
-  const res = await request.post("http://localhost:8000/api/factors/analyze", {
+  const res = await request.post(`${API}/api/factors/analyze`, {
     data: {
       dataset_id: datasetId,
       mapping: {
