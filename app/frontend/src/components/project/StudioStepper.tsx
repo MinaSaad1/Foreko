@@ -25,7 +25,7 @@ const STATUS_MARK: Record<StageStatus, string> = {
 const STATUS_CLASS: Record<StageStatus, string> = {
  complete: "border-accent/70 text-accent",
  ready: "border-accent/40 text-text-primary",
- needs_attention: "border-warn/60 text-warn",
+ needs_attention: "border-warning/60 text-warning",
  blocked: "border-border/40 text-text-faint",
  not_started: "border-border-strong/70 text-text-secondary",
 };

@@ -81,7 +81,7 @@ export function IssueForecast({ projectId, runId }: Props) {
  </button>
  )}
  {error ? (
- <p role="alert" className="text-[12px] text-danger">
+ <p role="alert" className="text-[12px] text-anomaly">
  {error}
  </p>
  ) : null}

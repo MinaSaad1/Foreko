@@ -110,12 +110,12 @@ export function PlanStage({ project, workflow }: Props) {
  </div>
 
  {error ? (
- <p role="alert" className="text-[12px] text-warn">
+ <p role="alert" className="text-[12px] text-warning">
  {error}
  </p>
  ) : null}
  {job.status === "error" ? (
- <p role="alert" className="text-[12px] text-danger">
+ <p role="alert" className="text-[12px] text-anomaly">
  {job.error}
  </p>
  ) : null}
@@ -165,7 +165,7 @@ function ScenarioComparison({ scenarios }: { scenarios: ScenarioSummary[] }) {
  <Td>{p ? p.scenario_total.toFixed(1) : "not available"}</Td>
  <Td>
  {p ? (
- <span className={p.absolute >= 0 ? "text-accent" : "text-warn"}>
+ <span className={p.absolute >= 0 ? "text-accent" : "text-warning"}>
  {p.absolute >= 0 ? "+" : ""}
  {p.absolute.toFixed(1)}
  </span>

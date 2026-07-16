@@ -4,6 +4,7 @@ import { MethodAgreementMatrix } from"@/components/anomaly/MethodAgreementMatrix
 import { RootCauseHints } from"@/components/anomaly/RootCauseHints";
 import { PageIntro } from"@/components/common/PageIntro";
 import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
+import { RunError } from"@/components/common/RunError";
 import {
   LeftRail,
   PageHeader,
@@ -220,6 +221,14 @@ export function ExplainPage() {
  {rootCauseMutation.isPending ? "Running…" : "Find root cause"}
  </button>
  </div>
+
+ {/* Each analysis runs independently, so each reports its own failure.
+     Without these a failed run leaves the previous panel on screen. */}
+ <RunError error={anomalyMethodsMutation.error} label="Anomaly detection" />
+ <RunError error={changepointsMutation.error} label="Changepoint detection" />
+ <RunError error={lagMutation.error} label="Lag analysis" />
+ <RunError error={grangerMutation.error} label="Granger causality" />
+ <RunError error={rootCauseMutation.error} label="Root cause" />
  </div>
 
  {anomalyMethodsMutation.data && (

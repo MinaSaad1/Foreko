@@ -1,10 +1,11 @@
-import { useMemo } from"react";
+import { useMemo, useState } from"react";
 import { useParams } from"react-router-dom";
 import { ColumnMapper } from"@/components/ColumnMapper";
 import ReactECharts from"echarts-for-react";
 import { useChartTheme } from"@/charts/theme";
 import { PageIntro } from"@/components/common/PageIntro";
 import { EmptyDatasetState } from"@/components/common/EmptyDatasetState";
+import { RunError } from"@/components/common/RunError";
 import {
   LeftRail,
   PageHeader,
@@ -48,6 +49,7 @@ export function ScenariosPage() {
  compareMutation,
  deleteScenario,
  } = useScenariosOrchestrator(activeId);
+ const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
  if (!activeId) {
  return (
@@ -234,6 +236,10 @@ export function ScenariosPage() {
  {!modelReady && (
  <p className="text-xs text-text-muted">Model still loading, the Run button will enable when it's ready.</p>
  )}
+
+ <RunError error={runMutation.error} label="Scenario run" />
+ <RunError error={saveMutation.error} label="Save" />
+ <RunError error={compareMutation.error} label="Compare" />
  </div>
 
  {runMutation.data && <ScenarioResultChart data={runMutation.data} />}
@@ -254,25 +260,53 @@ export function ScenariosPage() {
  </div>
  <div className="space-y-1">
  {scenarios.map((s) => (
- <label
+ <div
  key={s.id}
  className="flex items-center justify-between border border-border bg-bg-elevated px-3 py-2 hover:border-border-strong"
  >
- <div className="flex items-center gap-2">
+ {/* Only the checkbox and the scenario name belong inside the label.
+     Delete used to sit inside it too, so every delete click also
+     bubbled up and toggled this scenario into the comparison. */}
+ <label className="flex items-center gap-2">
  <input
  type="checkbox"checked={selectedForCompare.includes(s.id)}
  onChange={() => toggleSelectedForCompare(s.id)}
  />
- <p className="font-mono text-sm text-text-primary">{s.label}</p>
- <p className="font-mono text-xs text-text-muted">{s.created_at}</p>
- </div>
+ <span className="font-mono text-sm text-text-primary">{s.label}</span>
+ </label>
+ <div className="flex items-center gap-3">
+ <span className="font-mono text-xs text-text-muted">
+ {new Date(s.created_at).toLocaleString()}
+ </span>
+ {confirmingDelete === s.id ? (
+ <>
+ <span className="text-xs text-text-secondary">Delete permanently?</span>
  <button
- onClick={() => deleteScenario(s.id)}
+ onClick={() => {
+ deleteScenario(s.id);
+ setConfirmingDelete(null);
+ }}
+ className="font-mono text-xs text-anomaly"
+ >
+ confirm
+ </button>
+ <button
+ onClick={() => setConfirmingDelete(null)}
+ className="font-mono text-xs text-text-muted hover:text-text-primary"
+ >
+ cancel
+ </button>
+ </>
+ ) : (
+ <button
+ onClick={() => setConfirmingDelete(s.id)}
  className="font-mono text-xs text-text-muted hover:text-anomaly"
  >
  delete
  </button>
- </label>
+ )}
+ </div>
+ </div>
  ))}
  </div>
  </div>

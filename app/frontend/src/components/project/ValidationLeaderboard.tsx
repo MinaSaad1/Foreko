@@ -34,7 +34,7 @@ export function ValidationLeaderboard({ result }: Props) {
  <Fact label="P10 to P90 coverage" value={pct(result.portfolio_metrics.coverage_p10_p90)} />
  </dl>
  {result.portfolio_metrics.warnings.map((w) => (
- <p key={w} role="note" className="mt-2 text-[12px] text-warn">
+ <p key={w} role="note" className="mt-2 text-[12px] text-warning">
  {w}
  </p>
  ))}
@@ -83,7 +83,7 @@ function SeriesRow({ policy }: { policy: SeriesPolicy }) {
  {champion ? (
  <span className="text-accent">{champion}</span>
  ) : (
- <span className="text-warn">No eligible champion</span>
+ <span className="text-warning">No eligible champion</span>
  )}
  <span className="mt-1 block text-[11px] text-text-muted">{policy.reason}</span>
  </Td>

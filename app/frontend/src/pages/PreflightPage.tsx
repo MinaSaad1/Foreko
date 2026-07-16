@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { ColumnMapper } from "@/components/ColumnMapper";
 import { DataQualityCard } from "@/components/preflight/DataQualityCard";
+import { qualityBand } from "@/utils/qualityScore";
 import { PageIntro } from "@/components/common/PageIntro";
 import { EmptyDatasetState } from "@/components/common/EmptyDatasetState";
 import {
@@ -76,8 +77,8 @@ export function PreflightPage() {
               <RailSection label="Summary">
                 <RailRow
                   k="Quality"
-                  v={`${Math.round(data.quality_score * 100)} / 100`}
-                  tone={data.quality_score >= 0.8 ? "ok" : data.quality_score >= 0.5 ? "warn" : "err"}
+                  v={`${Math.round(data.quality_score)} / 100`}
+                  tone={qualityBand(data.quality_score)}
                 />
                 <RailRow k="Length" v={`${data.n_points} points`} />
                 <RailRow k="Freq" v={data.freq || "unknown"} />

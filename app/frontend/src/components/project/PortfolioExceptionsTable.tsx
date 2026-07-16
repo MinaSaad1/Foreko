@@ -38,8 +38,8 @@ export function PortfolioExceptionsTable({ result }: Props) {
  </h2>
 
  {unscored.length ? (
- <div role="alert" className="border border-warn/50 bg-bg-surface/40 p-3">
- <p className="text-[12px] text-warn">
+ <div role="alert" className="border border-warning/50 bg-bg-surface/40 p-3">
+ <p className="text-[12px] text-warning">
  {unscored.length} of {Object.keys(result.series_policies).length} series
  have no eligible champion and are excluded from the portfolio score.
  </p>

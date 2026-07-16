@@ -104,7 +104,7 @@ export function ReviewStage({ project, workflow }: Props) {
  </label>
 
  {error ? (
- <p role="alert" className="text-[12px] text-danger">
+ <p role="alert" className="text-[12px] text-anomaly">
  {error}
  </p>
  ) : null}

@@ -51,7 +51,7 @@ export function ProjectsPage() {
  {isPending ? (
  <p className="text-[13px] text-text-muted">Loading projects…</p>
  ) : isError ? (
- <p role="alert" className="text-[13px] text-danger">
+ <p role="alert" className="text-[13px] text-anomaly">
  {(error as Error).message}
  </p>
  ) : projects && projects.length > 0 ? (
@@ -151,7 +151,7 @@ function CreateProjectForm({ onDone }: { onDone: () => void }) {
  />
  </label>
  {create.isError ? (
- <p role="alert" className="text-[12px] text-danger">
+ <p role="alert" className="text-[12px] text-anomaly">
  {(create.error as Error).message}
  </p>
  ) : null}

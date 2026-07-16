@@ -23,7 +23,7 @@ export function ProjectOverviewPage() {
  if (isPending) return <p className="text-[13px] text-text-muted">Loading project…</p>;
  if (isError || !project) {
  return (
- <p role="alert" className="text-[13px] text-danger">
+ <p role="alert" className="text-[13px] text-anomaly">
  {(error as Error)?.message ?? "Project not found."}
  </p>
  );
@@ -104,7 +104,7 @@ export function ProjectOverviewPage() {
  onClick={() =>
  remove.mutate(project.id, { onSuccess: () => navigate("/projects") })
  }
- className="border border-danger/70 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-danger"
+ className="border border-anomaly/70 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-anomaly"
  >
  Confirm delete
  </button>
@@ -120,7 +120,7 @@ export function ProjectOverviewPage() {
  <button
  type="button"
  onClick={() => setConfirmingDelete(true)}
- className="border border-border-strong/70 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-text-faint hover:border-danger hover:text-danger"
+ className="border border-border-strong/70 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-text-faint hover:border-anomaly hover:text-anomaly"
  >
  Delete project
  </button>

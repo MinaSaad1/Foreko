@@ -21,14 +21,14 @@ export function ForecastStudioPage() {
  if (isPending) return <p className="text-[13px] text-text-muted">Loading project…</p>;
  if (isError || !project) {
  return (
- <p role="alert" className="text-[13px] text-danger">
+ <p role="alert" className="text-[13px] text-anomaly">
  {(error as Error)?.message ?? "Project not found."}
  </p>
  );
  }
  if (!isStage(stage)) {
  return (
- <p role="alert" className="text-[13px] text-danger">
+ <p role="alert" className="text-[13px] text-anomaly">
  Unknown studio stage.
  </p>
  );

@@ -82,20 +82,20 @@ def _recommend_transforms(
     if not adf_stationary:
         if trend_strength > 0.3:
             recs.append(
-                {"transform": "diff", "reason": "series has a trend — first difference to make stationary"}
+                {"transform": "diff", "reason": "series has a trend, first difference to make stationary"}
             )
         if seasonal_strength > 0.3:
             recs.append(
-                {"transform": "seasonal_diff", "reason": "seasonal pattern detected — seasonal difference"}
+                {"transform": "seasonal_diff", "reason": "seasonal pattern detected, use a seasonal difference"}
             )
     if (values > 0).all() and abs(skewness) > 1.0:
         if skewness > 1.0:
             recs.append(
-                {"transform": "log", "reason": "right-skewed positive values — log transform compresses tail"}
+                {"transform": "log", "reason": "right-skewed positive values, log transform compresses tail"}
             )
         if abs(skewness) > 2.0:
             recs.append(
-                {"transform": "box_cox", "reason": "strong skew — Box-Cox chooses an optimal power"}
+                {"transform": "box_cox", "reason": "strong skew, Box-Cox chooses an optimal power"}
             )
     return recs
 
@@ -160,9 +160,9 @@ async def run_preflight(
     if missing_rate > 0.05:
         warnings_list.append(f"{missing_rate * 100:.1f}% of rows have missing target values")
     if n < 50:
-        warnings_list.append(f"Only {n} observations — forecasts will be low-confidence")
+        warnings_list.append(f"Only {n} observations, forecasts will be low-confidence")
     if outliers > 0.05 * n:
-        warnings_list.append(f"{outliers} outliers detected ({outliers * 100 / n:.1f}%) — consider robust methods")
+        warnings_list.append(f"{outliers} outliers detected ({outliers * 100 / n:.1f}%), consider robust methods")
 
     return {
         "n_points": int(n),

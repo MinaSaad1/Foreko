@@ -1,4 +1,5 @@
 import type { PreflightResult } from"@/types/phases";
+import { qualityBand } from"@/utils/qualityScore";
 
 interface Props {
  data: PreflightResult;
@@ -6,14 +7,15 @@ interface Props {
 
 export function DataQualityCard({ data }: Props) {
  const score = data.quality_score;
+ const band = qualityBand(score);
  const scoreTone =
- score >= 85
+ band ==="ok"
  ?"text-positive border-positive/40"
- : score >= 60
+ : band ==="warn"
  ?"text-warning border-warning/40"
  :"text-anomaly border-anomaly/40";
  const stripe =
- score >= 85 ?"bg-positive" : score >= 60 ?"bg-warning" :"bg-anomaly";
+ band ==="ok" ?"bg-positive" : band ==="warn" ?"bg-warning" :"bg-anomaly";
 
  return (
  <div className="rounded-panel border border-border bg-bg-surface overflow-hidden">

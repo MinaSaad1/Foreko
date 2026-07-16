@@ -38,7 +38,7 @@ function Badge({
 }) {
  const toneClass = {
  accent: "border-accent/60 text-accent",
- warn: "border-warn/60 text-warn",
+ warn: "border-warning/60 text-warning",
  muted: "border-border/50 text-text-faint",
  plain: "border-border-strong/70 text-text-secondary",
  }[tone];

@@ -35,8 +35,8 @@ export function AccuracySummary({ accuracy }: Props) {
 
  if (accuracy.matched_points === 0) {
  return (
- <div role="alert" className="border border-warn/50 bg-bg-surface/40 p-4">
- <p className="text-[13px] text-warn">
+ <div role="alert" className="border border-warning/50 bg-bg-surface/40 p-4">
+ <p className="text-[13px] text-warning">
  {accuracy.metric_warnings[0] ??
  "No actuals matched the issued forecast yet."}
  </p>
@@ -75,7 +75,7 @@ export function AccuracySummary({ accuracy }: Props) {
  {accuracy.metric_warnings.length ? (
  <ul className="grid gap-1">
  {accuracy.metric_warnings.map((w) => (
- <li key={w} role="note" className="text-[12px] text-warn">
+ <li key={w} role="note" className="text-[12px] text-warning">
  {w}
  </li>
  ))}

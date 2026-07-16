@@ -133,7 +133,7 @@ export function FutureFactorGrid({
  disabled={disabled}
  onChange={(e) => setCell(covariate, period, e.target.value)}
  className={`w-24 border bg-transparent px-2 py-1 text-[12px] text-text-primary ${
- isMissing ? "border-warn/70" : "border-border-strong/70"
+ isMissing ? "border-warning/70" : "border-border-strong/70"
  }`}
  />
  </td>
@@ -167,7 +167,7 @@ export function FutureFactorGrid({
  </div>
 
  {missing.length ? (
- <p role="alert" className="text-[12px] text-warn">
+ <p role="alert" className="text-[12px] text-warning">
  {missing.length} value{missing.length === 1 ? "" : "s"} still needed:{" "}
  {missing
  .slice(0, 4)

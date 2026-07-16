@@ -145,13 +145,13 @@ export function ForecastStage({ project, workflow }: Props) {
  ) : null}
 
  {blocked ? (
- <p role="alert" className="text-[13px] text-warn">
+ <p role="alert" className="text-[13px] text-warning">
  {blocked}
  </p>
  ) : null}
 
  {job.status === "error" ? (
- <p role="alert" className="text-[13px] text-danger">
+ <p role="alert" className="text-[13px] text-anomaly">
  {job.error}
  </p>
  ) : null}
@@ -230,8 +230,8 @@ function ForecastResult({
  {runId ? <IssueForecast projectId={projectId} runId={runId} /> : null}
 
  {result.exceptions.length ? (
- <div role="alert" className="border border-warn/50 bg-bg-surface/40 p-3">
- <p className="text-[12px] text-warn">
+ <div role="alert" className="border border-warning/50 bg-bg-surface/40 p-3">
+ <p className="text-[12px] text-warning">
  {result.exceptions.length} series could not be forecast. They are listed
  rather than filled in with another model.
  </p>

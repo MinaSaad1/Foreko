@@ -91,7 +91,7 @@ export function PreparationRecipeEditor({ steps, onChange, disabled }: Props) {
  type="button"
  disabled={disabled}
  onClick={() => onChange(steps.filter((_, i) => i !== index))}
- className="border border-border-strong/70 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-text-faint hover:border-danger hover:text-danger disabled:opacity-40"
+ className="border border-border-strong/70 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-text-faint hover:border-anomaly hover:text-anomaly disabled:opacity-40"
  aria-label={`Remove ${STEP_LABELS[step.kind]}`}
  >
  Remove
@@ -102,7 +102,7 @@ export function PreparationRecipeEditor({ steps, onChange, disabled }: Props) {
  )}
 
  {error ? (
- <p role="alert" className="text-[12px] text-danger">
+ <p role="alert" className="text-[12px] text-anomaly">
  {error}
  </p>
  ) : null}

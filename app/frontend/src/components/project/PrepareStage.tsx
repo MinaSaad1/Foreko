@@ -93,7 +93,7 @@ export function PrepareStage({ project, workflow }: Props) {
  ) : null}
 
  {job.status === "error" ? (
- <p role="alert" className="text-[13px] text-danger">
+ <p role="alert" className="text-[13px] text-anomaly">
  {job.error}
  </p>
  ) : null}

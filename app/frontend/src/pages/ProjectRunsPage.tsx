@@ -13,7 +13,7 @@ export function ProjectRunsPage() {
  if (isPending) return <p className="text-[13px] text-text-muted">Loading runs…</p>;
  if (isError) {
  return (
- <p role="alert" className="text-[13px] text-danger">
+ <p role="alert" className="text-[13px] text-anomaly">
  {(error as Error).message}
  </p>
  );
@@ -117,7 +117,7 @@ function RunRow({
  {run.status}
  </span>
  {run.error ? (
- <span className="mt-1 block text-[11px] text-danger">{run.error}</span>
+ <span className="mt-1 block text-[11px] text-anomaly">{run.error}</span>
  ) : null}
  </Td>
  <Td>
@@ -145,8 +145,8 @@ function RunRow({
 
 const STATUS_CLASS: Record<string, string> = {
  done: "text-accent",
- error: "text-danger",
- cancelled: "text-warn",
+ error: "text-anomaly",
+ cancelled: "text-warning",
  running: "text-text-primary",
  queued: "text-text-muted",
 };

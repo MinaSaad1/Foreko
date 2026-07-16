@@ -45,7 +45,7 @@ export function RunManifestDrawer({ projectId, runId, onClose }: Props) {
  {isPending ? (
  <p className="mt-2 text-[12px] text-text-muted">Loading manifest…</p>
  ) : isError ? (
- <p role="alert" className="mt-2 text-[12px] text-danger">
+ <p role="alert" className="mt-2 text-[12px] text-anomaly">
  {(error as Error).message}
  </p>
  ) : (
