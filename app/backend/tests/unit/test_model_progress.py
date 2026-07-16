@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import socket
 from pathlib import Path
 
 import pytest
@@ -93,6 +94,42 @@ def test_progress_tqdm_credits_resumed_bytes_on_open() -> None:
 def test_pick_free_port_returns_usable_port() -> None:
     port = runtime.pick_free_port(preferred=50000)
     assert 1 <= port <= 65535
+
+
+@pytest.mark.unit
+def test_pick_free_port_skips_a_port_someone_is_listening_on() -> None:
+    """The only thing this function exists to do.
+
+    The old probe set SO_REUSEADDR, which on Windows permits binding a port
+    another socket is actively listening on, so it reported every occupied
+    port as free. The packaged backend then announced the taken port in
+    runtime.json and died on bind. The previous test only asserted the result
+    was a number between 1 and 65535, which stayed green throughout.
+
+    The occupied socket sets SO_REUSEADDR because uvicorn does. That detail is
+    the whole bug: Windows only lets a second SO_REUSEADDR socket steal a bound
+    address when the first socket set it too, so a fake listener without it
+    does not reproduce the failure and the test would pass against the broken
+    probe.
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as occupied:
+        occupied.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        occupied.bind(("127.0.0.1", 0))
+        occupied.listen(1)
+        taken = int(occupied.getsockname()[1])
+
+        assert runtime._is_port_free(taken) is False
+        assert runtime.pick_free_port(preferred=taken) != taken
+
+
+@pytest.mark.unit
+def test_pick_free_port_accepts_a_genuinely_free_port() -> None:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.bind(("127.0.0.1", 0))
+        free = int(probe.getsockname()[1])
+    # Socket closed, so the port is free again and must be offered back.
+    assert runtime._is_port_free(free) is True
+    assert runtime.pick_free_port(preferred=free) == free
 
 
 @pytest.mark.unit

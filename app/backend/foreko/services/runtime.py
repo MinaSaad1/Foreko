@@ -40,10 +40,30 @@ def pick_free_port(preferred: int = PREFERRED_PORT) -> int:
 
 
 def _is_port_free(port: int) -> bool:
+    """Whether a loopback port can actually be listened on.
+
+    Deliberately does not set SO_REUSEADDR. On Windows that option does not
+    mean what it means on POSIX: it permits binding a port another socket is
+    *actively listening on*, so this probe answered True for every occupied
+    port. The packaged desktop backend then wrote the taken port into
+    runtime.json, uvicorn failed to bind it (WinError 10048), the process
+    died, and the Tauri shell pointed its webview at whatever other server
+    owned that port. Serving a stranger's localhost server inside the app
+    window is a worse failure than not starting.
+
+    SO_EXCLUSIVEADDRUSE is Windows' strict opposite, and is what makes the
+    answer mean something there.
+    """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        if sys.platform == "win32":
+            exclusive = getattr(socket, "SO_EXCLUSIVEADDRUSE", None)
+            if exclusive is not None:
+                sock.setsockopt(socket.SOL_SOCKET, exclusive, 1)
         try:
             sock.bind(("127.0.0.1", port))
+            # Binding proves the address is assignable; listening proves nobody
+            # else already holds the queue for it.
+            sock.listen(1)
             return True
         except OSError:
             return False
