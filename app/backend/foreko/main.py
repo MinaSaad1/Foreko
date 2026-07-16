@@ -21,6 +21,7 @@ from .routers import factors as factors_router
 from .routers import backtest as backtest_router
 from .routers import diagnostics as diagnostics_router_mod
 from .routers import model as model_router
+from .routers import projects as projects_router
 from .routers import phase2 as phase2_routers
 from .routers import scenarios as scenarios_router
 from .routers import phase4 as phase4_routers
@@ -130,7 +131,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),
         allow_credentials=False,
-        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
 
@@ -210,6 +211,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(finetune_router.router, prefix="/api")
     app.include_router(adapters_router.router, prefix="/api")
     app.include_router(model_router.router, prefix="/api")
+    app.include_router(projects_router.router, prefix="/api")
 
     # Serve pre-built frontend SPA.
     # Search order:
