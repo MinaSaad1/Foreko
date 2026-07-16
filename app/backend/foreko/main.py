@@ -21,6 +21,7 @@ from .routers import factors as factors_router
 from .routers import backtest as backtest_router
 from .routers import diagnostics as diagnostics_router_mod
 from .routers import model as model_router
+from .routers import project_jobs as project_jobs_router
 from .routers import projects as projects_router
 from .routers import phase2 as phase2_routers
 from .routers import scenarios as scenarios_router
@@ -212,6 +213,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(adapters_router.router, prefix="/api")
     app.include_router(model_router.router, prefix="/api")
     app.include_router(projects_router.router, prefix="/api")
+    app.include_router(project_jobs_router.router, prefix="/api")
+    app.include_router(project_jobs_router.jobs_router, prefix="/api")
 
     # Serve pre-built frontend SPA.
     # Search order:
