@@ -27,6 +27,8 @@ const ExplainPage = lazy(() => import("@/pages/ExplainPage").then((m) => ({ defa
 const ScenariosPage = lazy(() => import("@/pages/ScenariosPage").then((m) => ({ default: m.ScenariosPage })));
 const SegmentsPage = lazy(() => import("@/pages/SegmentsPage").then((m) => ({ default: m.SegmentsPage })));
 const OperationsPage = lazy(() => import("@/pages/OperationsPage").then((m) => ({ default: m.OperationsPage })));
+const ProjectsPage = lazy(() => import("@/pages/ProjectsPage").then((m) => ({ default: m.ProjectsPage })));
+const ProjectOverviewPage = lazy(() => import("@/pages/ProjectOverviewPage").then((m) => ({ default: m.ProjectOverviewPage })));
 
 interface SideNavItemProps {
   to: string;
@@ -138,6 +140,7 @@ function DocumentTitleSync() {
   const location = useLocation();
   const PAGE_TITLES: Record<string, string | undefined> = {
     "/": undefined,
+    "/projects": "Projects",
     "/data": "Data",
     "/upload": "Data",
     "/datasets": "Data",
@@ -206,6 +209,9 @@ export default function App() {
             <div className={`flex flex-col gap-4 py-6 ${isSidebarOpen ? "px-2" : "px-1"}`}>
               <ActiveDatasetBadge isOpen={isSidebarOpen} />
 
+              <NavSection label="Projects" isOpen={isSidebarOpen}>
+                <SideNavItem to="/projects" label="Projects" icon="▣" isOpen={isSidebarOpen} />
+              </NavSection>
               <NavSection label="Data" isOpen={isSidebarOpen}>
                 <SideNavItem to="/data" label="Ingest" icon="⊞" isOpen={isSidebarOpen} alsoActiveOn={["/upload", "/datasets"]} />
                 <SideNavItem to="/preflight" label="Data Quality" icon="⚑" isOpen={isSidebarOpen} />
@@ -262,6 +268,8 @@ export default function App() {
             <Suspense fallback={<RouteFallback />}>
               <Routes>
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/projects/:projectId" element={<ProjectOverviewPage />} />
                 <Route path="/data" element={<DataPage />} />
                 <Route path="/upload" element={<DataPage />} />
                 <Route path="/datasets" element={<DataPage />} />

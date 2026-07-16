@@ -1293,8 +1293,17 @@ Add an `e2e` job to `.github/workflows/main.yml` running on `ubuntu-latest` and 
 installing uv and Node, running `npx playwright install --with-deps chromium`, and executing the
 suite with a temp `FOREKO_E2E_STORAGE_DIR`. Upload `e2e/artifacts` on failure.
 
-Add `npm run lint` to the existing `frontend` job. The script exists in `package.json:11` but CI
-never calls it, so the prior plan's "Ruff and frontend lint pass" gate was never actually enforced.
+Frontend lint needs a decision first. `package.json:11` declares `"lint": "eslint ."`, but eslint
+is **not a dependency and there is no eslint config file**, so the script has never run. That is
+why CI omits it. Do not simply add `npm run lint` to CI: it would fail immediately.
+
+Pick one and record it:
+- Install eslint with a flat config matching the repo's TypeScript and React usage, fix what it
+  finds, then add it to CI. This makes design 13.5's "frontend lint passes" gate real.
+- Or delete the phantom script, and amend design 13.5 to drop the frontend lint gate, since
+  `tsc -b --noEmit` is then the only static check.
+
+Either is defensible. What is not defensible is leaving a script that claims a gate nobody runs.
 
 Cache the model directory or rely on `FOREKO_FAKE_MODELS=1` so CI performs no model download.
 Assert that the journey makes no new outbound network request (design §13.5).
