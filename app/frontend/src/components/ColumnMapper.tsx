@@ -173,8 +173,12 @@ function Select({ value, onChange, options }: SelectProps) {
  <span className="text-text-muted text-xs transition-transform duration-200"style={{ transform: isOpen ?"rotate(180deg)" :"rotate(0deg)" }}>▼</span>
  </button>
  
+ {/* Was bg-bg-elevated/95 + backdrop-blur-2xl + rounded-b-lg. The blur was
+     invisible behind a 95% opaque surface and cost a compositor layer on
+     every dropdown on every page, and the radius class contradicts a
+     zero-radius identity even though the token resolves it to 0. */}
  {isOpen && (
- <div className="absolute z-[100] mt-1.5 max-h-64 w-full overflow-y-auto border border-border/80 bg-bg-elevated/95 backdrop-blur-2xl py-1 shadow-[var(--shadow-elev-2)] flex flex-col no-scrollbar rounded-b-lg">
+ <div role="listbox" className="absolute z-[100] mt-1.5 max-h-64 w-full overflow-y-auto border border-border/80 bg-bg-elevated py-1 shadow-[var(--shadow-elev-2)] flex flex-col no-scrollbar">
  {options.length === 0 && <div className="px-3 py-2 text-sm text-text-muted italic">(no columns)</div>}
  {options.map((o) => (
  <button
@@ -183,7 +187,9 @@ function Select({ value, onChange, options }: SelectProps) {
  onChange(o.value);
  setIsOpen(false);
  }}
- className={`w-full text-left px-3 py-2 text-sm hover:bg-accent/10 hover:text-accent transition-colors ${o.value === value ?"bg-accent/10 text-accent font-medium border-l-2 border-accent" :"text-text-secondary border-l-2 border-transparent"}`}
+ role="option"
+ aria-selected={o.value === value}
+ className={`w-full text-left px-3 py-2 text-sm hover:bg-accent/10 hover:text-accent transition-colors ${o.value === value ?"bg-accent/10 text-accent font-medium" :"text-text-secondary"}`}
  >
  {o.label}
  </button>

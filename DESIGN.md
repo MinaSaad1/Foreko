@@ -136,19 +136,42 @@ Honor `prefers-reduced-motion`.
 - **App shell:** `StatusBar` on top, collapsible left sidebar (56 open / 68px
   collapsed), scrolling `main`. Sidebar is project-first (design §5.1).
 - **Grid seams** over floating cards.
-- **Rails:** `ThreeRailLayout` (260px / fluid / 320px) is the V1 pattern on 11
-  pages. It is under active review. Its known failure is that configuration,
-  context, and interpretation all shout at equal volume, so the center column
-  loses primacy. Prefer the V2 Studio composition for new work.
-- Rails collapse below `lg` and pages must surface the same context inline.
-  A rail is never the only home for essential information.
+- **One ranked column.** Every page is a single column, ordered by rank, built
+  from `components/common/Page.tsx`:
+
+  | Primitive | Holds |
+  |---|---|
+  | `PageHeading` | kicker, title, one sans explanation, one primary action |
+  | `FactGrid` / `Fact` | the read-only facts about the run |
+  | `Section` | a region of work, with its controls in the heading row |
+  | `Depth` | interpretation, on demand |
+  | `SecondaryActions` | secondary and destructive actions, below a rule |
+
+  Rank comes from **order and emphasis**, never from assigning a column.
+
+- **No rails.** `ThreeRailLayout` existed on 11 pages and is deleted. It gave
+  configuration, context, and interpretation three columns at equal volume, so
+  nothing was primary, and `LeftRail` was `hidden lg:flex`, so below 1024px the
+  controls did not exist while headers still reported their values back to the
+  user. Do not reintroduce it.
+
+- **A control sits on the thing it changes.** Never in a separate column, never
+  behind a breakpoint. If a page has to tell the user where its own controls
+  are, the layout is wrong. One page shipped exactly that string.
+- **Nothing essential hides.** No `hidden lg:*` on a control or on an
+  explanation. Reflow (`flex-wrap`) instead.
+- Wide content (tables, charts) scrolls inside its own `overflow-x-auto`
+  container. The page body never scrolls horizontally.
 
 ## Components
 
 - `btn-terminal` / `btn-terminal-primary`: mono, uppercase, tracked, square.
 - `StudioStepper`: stage state as text plus ARIA, never hue alone.
-- `Rails.tsx` primitives: `RailSection`, `RailRow`, `RailChoiceGrid`,
-  `WhatYoullGet`.
+- `Page.tsx`: the page primitives above, plus `ChoiceGrid` for horizon / fold /
+  top-N pickers.
+- `RunError`: every mutation reports its own failure next to the control that
+  fired it. Without one, a failed run leaves the previous result on screen and
+  reads as success.
 - `Term`: glossary popover. The mechanism for depth-on-demand; prefer it over
   inline explanation that everyone pays for.
 
