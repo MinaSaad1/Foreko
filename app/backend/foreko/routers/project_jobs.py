@@ -7,17 +7,19 @@ any future scheduled runs share one progress and failure shape.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 
 import numpy as np
 import pandas as pd
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
 from ..deps import get_generic_jobs, get_project_db, get_registry, get_settings
-from ..schemas.project import ProjectRunCreate
+from ..schemas.project import AccuracyResult, ProjectRunCreate
 from ..services import (
+    actuals as actuals_service,
     backtest as backtest_service,
     csv_loader,
     factor_plan,
@@ -587,6 +589,110 @@ def list_scenarios(
         for run in store.list_runs(project_id)
         if run.stage == "plan" and run.status == "done"
     ]
+
+
+@router.post("/{project_id}/runs/{run_id}/issue", status_code=201)
+def issue_run(
+    project_id: str,
+    run_id: str,
+    body: dict | None = None,
+    store: ProjectStore = Depends(get_project_db),
+) -> dict:
+    """Freeze a completed run as the forecast of record.
+
+    Requires ``confirm_assumptions=true``: issuing is a statement about the
+    future that will be scored later, so the user confirms they have reviewed
+    what it assumes (design 8.3).
+    """
+    project = store.get_project(project_id)
+    if project is None:
+        raise HTTPException(404, "Project not found.")
+
+    payload = body or {}
+    if not payload.get("confirm_assumptions"):
+        raise HTTPException(
+            409,
+            "Issuing records this forecast permanently. Confirm the assumptions "
+            "first with confirm_assumptions=true.",
+        )
+
+    run = store.get_run(run_id)
+    if run is None or run.project_id != project_id:
+        raise HTTPException(404, "Run not found for this project.")
+
+    try:
+        issued = store.issue_run(run_id, manifest=payload.get("manifest") or {})
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from None
+    return issued.model_dump()
+
+
+@router.get("/{project_id}/issued")
+def list_issued(
+    project_id: str,
+    store: ProjectStore = Depends(get_project_db),
+) -> list[dict]:
+    if store.get_project(project_id) is None:
+        raise HTTPException(404, "Project not found.")
+    return [i.model_dump() for i in store.list_issued(project_id)]
+
+
+@router.post("/{project_id}/actuals", status_code=201)
+async def import_actuals(
+    project_id: str,
+    file: UploadFile = File(...),
+    date_col: str | None = None,
+    value_col: str | None = None,
+    series_id_col: str | None = None,
+    store: ProjectStore = Depends(get_project_db),
+) -> dict:
+    """Import what actually happened. Mutates no run and no issued forecast."""
+    project = store.get_project(project_id)
+    if project is None:
+        raise HTTPException(404, "Project not found.")
+    if project.config is None:
+        raise HTTPException(409, "Configure the project first.")
+
+    mapping = project.config.mapping
+    content = await file.read()
+    try:
+        rows = actuals_service.parse_actuals(
+            content,
+            date_col=date_col or mapping.date_col or "date",
+            value_col=value_col or mapping.value_col,
+            series_id_col=series_id_col or mapping.series_id_col,
+            default_series_id=mapping.value_col,
+        )
+    except actuals_service.ActualsImportError as exc:
+        raise HTTPException(422, str(exc)) from None
+
+    fingerprint = hashlib.sha256(content).hexdigest()
+    imported = store.upsert_actuals(project_id, rows, source_fingerprint=fingerprint)
+    return {"imported": imported, "source_fingerprint": fingerprint}
+
+
+@router.get("/{project_id}/accuracy")
+def get_accuracy(
+    project_id: str,
+    store: ProjectStore = Depends(get_project_db),
+) -> dict:
+    """Post-issue accuracy: what was issued versus what happened.
+
+    Scored against the issued values, never against a later rerun.
+    """
+    if store.get_project(project_id) is None:
+        raise HTTPException(404, "Project not found.")
+
+    issued = store.latest_issued(project_id)
+    if issued is None:
+        return AccuracyResult(
+            metric_warnings=["No forecast has been issued yet."]
+        ).model_dump()
+
+    result = actuals_service.score_issued_forecast(
+        issued, store.list_actuals(project_id)
+    )
+    return result.model_dump()
 
 
 @jobs_router.get("/{job_id}")

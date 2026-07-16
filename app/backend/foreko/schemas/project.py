@@ -171,8 +171,83 @@ class ProjectRun(BaseModel):
     error: str | None = None
 
 
+class IssuedForecast(BaseModel):
+    """A forecast frozen at the moment it was issued.
+
+    Immutable by construction: the values are copied out of the run, so a later
+    revision or rerun cannot change what was predicted. Accuracy is always
+    scored against this, never against the latest run.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = SCHEMA_VERSION
+    id: str
+    project_id: str
+    run_id: str
+    revision_no: int
+    issued_at: str
+    forecast: dict[str, Any]
+    assumptions: dict[str, Any] = Field(default_factory=dict)
+    manifest: dict[str, Any] = Field(default_factory=dict)
+
+
+class ActualRow(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    series_id: str
+    date: str
+    value: float
+
+
+class AccuracyMetrics(BaseModel):
+    """Post-issue accuracy. Deliberately named apart from backtest metrics.
+
+    Design 14: post-issue metrics must not be confusable with backtest metrics
+    in labels or API fields. A metric that cannot be computed is None with a
+    reason, never zero.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    mase: float | None = None
+    wape: float | None = None
+    smape: float | None = None
+    rmse: float | None = None
+    bias_pct: float | None = None
+    pinball_loss: float | None = None
+    coverage_p10_p90: float | None = None
+
+
+class SeriesAccuracy(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    series_id: str
+    matched_points: int
+    metrics: AccuracyMetrics
+    metric_warnings: list[str] = Field(default_factory=list)
+
+
+class AccuracyResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = SCHEMA_VERSION
+    issued_id: str | None = None
+    issued_at: str | None = None
+    matched_points: int = 0
+    unmatched_periods: int = 0
+    series: list[SeriesAccuracy] = Field(default_factory=list)
+    metrics: AccuracyMetrics = Field(default_factory=AccuracyMetrics)
+    metric_warnings: list[str] = Field(default_factory=list)
+
+
 __all__ = [
     "SCHEMA_VERSION",
+    "AccuracyMetrics",
+    "AccuracyResult",
+    "ActualRow",
+    "IssuedForecast",
+    "SeriesAccuracy",
     "CovariateRole",
     "ModelId",
     "PreparationKind",

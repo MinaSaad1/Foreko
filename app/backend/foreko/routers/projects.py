@@ -132,13 +132,14 @@ def list_runs(
 def workflow_for(store: ProjectStore, project: ProjectDetail) -> dict:
     """Workflow state for a project. Shared with the stage-job router, which
     needs the same readiness answer before it starts a run."""
+    issued = store.latest_issued(project.id)
     state = compute_workflow_state(
         project_id=project.id,
         current_revision=project.current_revision,
         # list_runs is newest first, so the first hit per stage is the latest.
         latest_runs=latest_runs_by_stage(store.list_runs(project.id)),
-        issued_revision=None,
-        actuals_updated_at=None,
+        issued_revision=issued.revision_no if issued else None,
+        actuals_updated_at=store.actuals_updated_at(project.id),
     )
     return workflow_as_dict(state)
 

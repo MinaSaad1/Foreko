@@ -13,11 +13,14 @@ import sqlite3
 import threading
 import time
 import uuid
+from collections.abc import Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator
 
 from ..schemas.project import (
+    ActualRow,
+    IssuedForecast,
     ProjectCreate,
     ProjectDetail,
     ProjectPatch,
@@ -300,6 +303,135 @@ class ProjectStore:
             ).fetchall()
         return [_run_from_row(r) for r in rows]
 
+    # ---------- issued forecasts ----------
+
+    def issue_run(
+        self,
+        run_id: str,
+        *,
+        assumptions: dict[str, Any] | None = None,
+        manifest: dict[str, Any] | None = None,
+    ) -> IssuedForecast:
+        """Freeze a completed run's forecast as an immutable issued record.
+
+        The values are copied, not referenced. A later revision, rerun, or
+        deletion of the source run cannot change what was issued, because the
+        whole point of issuing is to be able to say later what you predicted.
+        """
+        run = self.get_run(run_id)
+        if run is None:
+            raise LookupError(run_id)
+        if run.status != "done":
+            raise ValueError(
+                f"Only a completed run can be issued. This one is {run.status}."
+            )
+        if run.stage not in ("forecast", "plan"):
+            raise ValueError(
+                f"Only a forecast or scenario run can be issued, not {run.stage}."
+            )
+
+        project = self.get_project(run.project_id)
+        if project is None:
+            raise ProjectNotFoundError(run.project_id)
+        if run.revision_no != project.current_revision:
+            raise ValueError(
+                f"This run used revision {run.revision_no} but the project is on "
+                f"revision {project.current_revision}. Rerun it before issuing."
+            )
+
+        issued_id = _gen_id()
+        now = _now()
+        with _db_lock, self._conn() as c:
+            c.execute(
+                "INSERT INTO issued_forecasts "
+                "(id, project_id, run_id, revision_no, issued_at, forecast_json, "
+                " assumptions_json, manifest_json) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    issued_id,
+                    run.project_id,
+                    run.id,
+                    run.revision_no,
+                    now,
+                    json.dumps(run.summary, default=str),
+                    json.dumps(assumptions or run.summary.get("assumptions") or {}, default=str),
+                    json.dumps(manifest or {}, default=str),
+                ),
+            )
+        issued = self.get_issued_forecast(issued_id)
+        if issued is None:  # pragma: no cover - insert just succeeded
+            raise LookupError(issued_id)
+        return issued
+
+    def get_issued_forecast(self, issued_id: str) -> IssuedForecast | None:
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT * FROM issued_forecasts WHERE id=?", (issued_id,)
+            ).fetchone()
+        return _issued_from_row(row) if row is not None else None
+
+    def latest_issued(self, project_id: str) -> IssuedForecast | None:
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT * FROM issued_forecasts WHERE project_id=? "
+                "ORDER BY issued_at DESC, rowid DESC LIMIT 1",
+                (project_id,),
+            ).fetchone()
+        return _issued_from_row(row) if row is not None else None
+
+    def list_issued(self, project_id: str) -> list[IssuedForecast]:
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT * FROM issued_forecasts WHERE project_id=? "
+                "ORDER BY issued_at DESC, rowid DESC",
+                (project_id,),
+            ).fetchall()
+        return [_issued_from_row(r) for r in rows]
+
+    # ---------- actuals ----------
+
+    def upsert_actuals(
+        self, project_id: str, rows: Sequence[ActualRow], *, source_fingerprint: str | None = None
+    ) -> int:
+        """Insert or replace actuals. Never touches a run or an issued forecast."""
+        if self.get_project(project_id) is None:
+            raise ProjectNotFoundError(project_id)
+        now = _now()
+        with _db_lock, self._conn() as c:
+            c.executemany(
+                "INSERT INTO project_actuals "
+                "(project_id, series_id, date, value, imported_at, source_fingerprint) "
+                "VALUES (?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(project_id, series_id, date) DO UPDATE SET "
+                "value=excluded.value, imported_at=excluded.imported_at, "
+                "source_fingerprint=excluded.source_fingerprint",
+                [
+                    (project_id, r.series_id, r.date, float(r.value), now, source_fingerprint)
+                    for r in rows
+                ],
+            )
+        return len(rows)
+
+    def list_actuals(self, project_id: str) -> list[ActualRow]:
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT series_id, date, value FROM project_actuals "
+                "WHERE project_id=? ORDER BY series_id, date",
+                (project_id,),
+            ).fetchall()
+        return [
+            ActualRow(series_id=r["series_id"], date=r["date"], value=float(r["value"]))
+            for r in rows
+        ]
+
+    def actuals_updated_at(self, project_id: str) -> str | None:
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT MAX(imported_at) AS latest FROM project_actuals WHERE project_id=?",
+                (project_id,),
+            ).fetchone()
+        return row["latest"] if row and row["latest"] else None
+
     def _set_run_status(self, run_id: str, status: str) -> ProjectRun:
         with _db_lock, self._conn() as c:
             cur = c.execute(
@@ -344,6 +476,19 @@ def _revision_from_row(row: sqlite3.Row) -> ProjectRevision:
         revision_no=int(row["revision_no"]),
         created_at=row["created_at"],
         config=ProjectRevisionCreate.model_validate_json(row["config_json"]),
+    )
+
+
+def _issued_from_row(row: sqlite3.Row) -> IssuedForecast:
+    return IssuedForecast(
+        id=row["id"],
+        project_id=row["project_id"],
+        run_id=row["run_id"],
+        revision_no=int(row["revision_no"]),
+        issued_at=row["issued_at"],
+        forecast=json.loads(row["forecast_json"]),
+        assumptions=json.loads(row["assumptions_json"]),
+        manifest=json.loads(row["manifest_json"]),
     )
 
 
