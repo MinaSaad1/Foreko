@@ -112,3 +112,61 @@ describe("FutureFactorGrid", () => {
     expect(screen.getByText(/needs no future factors/i)).toBeVisible();
   });
 });
+
+describe("FutureFactorGrid in a scenario", () => {
+  function renderScenario() {
+    render(
+      <FutureFactorGrid
+        requirements={REQUIREMENTS}
+        values={{}}
+        fillPolicies={{}}
+        onChange={vi.fn()}
+        onPolicyChange={vi.fn()}
+        emptyMeans="inherit"
+      />,
+    );
+  }
+
+  it("does not claim a value is needed when it will be inherited", () => {
+    // In a scenario an empty cell keeps the baseline's value, so telling the
+    // author it is "still needed" is simply false.
+    renderScenario();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText(/still needed/i)).not.toBeInTheDocument();
+  });
+
+  it("says an empty cell keeps the baseline value", () => {
+    renderScenario();
+    expect(screen.getByText(/keeps the baseline's value/i)).toBeVisible();
+    expect(
+      screen.queryByText(/the forecast will not run until/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("relabels the fallback column for a scenario", () => {
+    renderScenario();
+    expect(screen.getByText("Baseline fallback")).toBeVisible();
+    expect(screen.queryByText("If left empty")).not.toBeInTheDocument();
+  });
+
+  it("still blocks by default, so the baseline keeps its guarantee", () => {
+    renderGrid();
+    expect(screen.getByRole("alert")).toHaveTextContent(/still needed/i);
+    expect(screen.getByText("If left empty")).toBeVisible();
+  });
+});
+
+describe("FutureFactorGrid when no model reads the factors", () => {
+  it("explains why it is not asking, rather than showing nothing", () => {
+    render(
+      <FutureFactorGrid
+        requirements={{ ...REQUIREMENTS, required: [], ignored_by_policy: ["price"] }}
+        values={{}}
+        fillPolicies={{}}
+        onChange={vi.fn()}
+        onPolicyChange={vi.fn()}
+      />,
+    );
+    expect(screen.getByText(/cannot read price/i)).toBeVisible();
+  });
+});

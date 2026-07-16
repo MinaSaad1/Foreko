@@ -7,6 +7,16 @@ interface Props {
  onChange: (values: Record<string, Record<string, number | string>>) => void;
  onPolicyChange: (policies: Record<string, FillPolicy>) => void;
  disabled?: boolean;
+ /**
+  * What an empty cell means here.
+  *
+  * "block": the baseline forecast, where a gap is a missing assumption and
+  * nothing runs until it is filled. "inherit": a scenario, where an empty cell
+  * keeps the baseline's value, so a gap is not a gap at all. Telling a scenario
+  * author that a value is "still needed" when it will be inherited is simply
+  * false.
+  */
+ emptyMeans?: "block" | "inherit";
 }
 
 export function missingCells(
@@ -40,13 +50,17 @@ export function FutureFactorGrid({
  onChange,
  onPolicyChange,
  disabled,
+ emptyMeans = "block",
 }: Props) {
- const missing = missingCells(requirements, values, fillPolicies);
+ const blocking = emptyMeans === "block";
+ const missing = blocking ? missingCells(requirements, values, fillPolicies) : [];
 
  if (!requirements.required.length) {
  return (
  <p className="text-[12px] text-text-muted">
- This model policy needs no future factors.
+ {requirements.ignored_by_policy?.length
+ ? `The selected models cannot read ${requirements.ignored_by_policy.join(", ")}, so Foreko does not ask you to plan ${requirements.ignored_by_policy.length === 1 ? "it" : "them"}.`
+ : "This model policy needs no future factors."}
  </p>
  );
  }
@@ -64,8 +78,9 @@ export function FutureFactorGrid({
  Future factors
  </h2>
  <p className="max-w-2xl text-[12px] text-text-secondary">
- The forecast will not run until every required factor has a value for every
- period, or you choose how to fill it. Foreko does not guess these.
+ {blocking
+ ? "The forecast will not run until every required factor has a value for every period, or you choose how to fill it. Foreko does not guess these."
+ : "Change only what you want to test. Any cell you leave empty keeps the baseline's value."}
  </p>
 
  <div className="overflow-x-auto">
@@ -92,7 +107,7 @@ export function FutureFactorGrid({
  scope="col"
  className="px-2 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted"
  >
- If left empty
+ {blocking ? "If left empty" : "Baseline fallback"}
  </th>
  </tr>
  </thead>
@@ -109,7 +124,7 @@ export function FutureFactorGrid({
  </th>
  {requirements.periods.map((period) => {
  const value = values[covariate]?.[period] ?? "";
- const isMissing = value === "" && policy === "none";
+ const isMissing = blocking && value === "" && policy === "none";
  return (
  <td key={period} className="px-1 py-1">
  <input
@@ -137,7 +152,9 @@ export function FutureFactorGrid({
  }
  className="border border-border-strong/70 bg-transparent px-2 py-1 text-[12px] text-text-primary"
  >
- <option value="none">Block the forecast</option>
+ <option value="none">
+ {blocking ? "Block the forecast" : "Keep the baseline value"}
+ </option>
  <option value="forward_fill">Carry the last value</option>
  <option value="zero">Use zero</option>
  </select>
