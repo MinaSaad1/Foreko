@@ -42,3 +42,23 @@ CLAUDE.md
 app/frontend/e2e/artifacts/
 app/frontend/playwright-report/
 app/frontend/test-results/
+
+# Generated media and kits. These are renders, not source: ~110 MB of MP4 and
+# PNG between them. Commit 9827e06 deliberately stripped ~11 MB of screenshots
+# to keep a clone cheap, and git history is forever, so they stay out.
+/marketing/
+/output/
+
+# A stray copy. The README renders docs/header.png, which is tracked; this one
+# is a different file with the same name sitting in the repo root.
+/header.png
+
+# Generated agent tooling state
+/.agents/
+
+# Superpowers working state. The brainstorm content is kept, because design
+# 2026-07-15 section 1 cites it as the approved visual companion. These two are
+# machine-local: sdd/ already self-ignores, and server-info records a random
+# port plus absolute paths from whoever ran it last.
+/.superpowers/sdd/
+/.superpowers/brainstorm/*/state/
