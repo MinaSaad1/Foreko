@@ -16,7 +16,7 @@ from .. import __version__
 from ..deps import get_registry, get_settings
 from ..schemas.system import HealthInfo, ModelInfo
 from ..services.model_registry import ModelRegistry
-from ..settings import Settings
+from ..settings import STORAGE_DIR_NAMES, Settings
 
 logger = logging.getLogger(__name__)
 
@@ -57,11 +57,13 @@ class StorageWipeResult(BaseModel):
     kept: list[str]
 
 
-# Directories wiped by ``DELETE /system/storage``. The model cache is kept on
-# purpose: the weights are loaded into memory at this point, deleting them on
-# Windows would race with the registry's open file handles, and users would
-# face an unnecessary 1.2 GB redownload on restart.
-_WIPEABLE_DIRS = ("datasets", "adapters", "jobs", "data", "exports", "logs")
+# Directories wiped by ``DELETE /system/storage``. This is every persistent
+# storage subdirectory, so a directory added to STORAGE_DIR_NAMES cannot be
+# created but left behind by a wipe. The model cache is kept on purpose: it is
+# not in that list, the weights are loaded into memory at this point, deleting
+# them on Windows would race with the registry's open file handles, and users
+# would face an unnecessary 1.2 GB redownload on restart.
+_WIPEABLE_DIRS = STORAGE_DIR_NAMES
 
 
 @router.delete("/system/storage", response_model=StorageWipeResult)

@@ -8,6 +8,20 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+# Every persistent subdirectory of storage_dir. Single source of truth: both
+# ensure_dirs() and the storage-wipe endpoint read this, so a new directory
+# cannot be created but left behind by a wipe.
+STORAGE_DIR_NAMES: tuple[str, ...] = (
+    "datasets",
+    "adapters",
+    "jobs",
+    "data",
+    "exports",
+    "logs",
+    "projects",
+)
+
+
 class Settings(BaseSettings):
     """Environment-configurable settings.
 
@@ -95,16 +109,13 @@ class Settings(BaseSettings):
     def logs_dir(self) -> Path:
         return self.storage_dir / "logs"
 
+    @property
+    def projects_dir(self) -> Path:
+        return self.storage_dir / "projects"
+
     def ensure_dirs(self) -> None:
-        for d in (
-            self.datasets_dir,
-            self.adapters_dir,
-            self.jobs_dir,
-            self.data_dir,
-            self.exports_dir,
-            self.logs_dir,
-        ):
-            d.mkdir(parents=True, exist_ok=True)
+        for name in STORAGE_DIR_NAMES:
+            (self.storage_dir / name).mkdir(parents=True, exist_ok=True)
 
 
 def get_settings() -> Settings:

@@ -254,11 +254,21 @@ class Store:
             return cur.rowcount > 0
 
 
-_singleton: Store | None = None
+_stores: dict[Path, Store] = {}
+_registry_lock = threading.Lock()
 
 
 def get_store(db_path: Path) -> Store:
-    global _singleton
-    if _singleton is None:
-        _singleton = Store(db_path)
-    return _singleton
+    """Return the store for *db_path*, one instance per resolved path.
+
+    Keyed by path rather than a single global: the previous version ignored
+    db_path after the first call, so a caller pointing at a different database
+    silently got the first one.
+    """
+    resolved = Path(db_path).resolve()
+    with _registry_lock:
+        store = _stores.get(resolved)
+        if store is None:
+            store = Store(resolved)
+            _stores[resolved] = store
+        return store

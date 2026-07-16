@@ -95,6 +95,8 @@ def test_v1_database_without_user_version_is_adopted_at_baseline(
     store = Store(db)
 
     assert current_version(db) == SCHEMA_VERSION
+    # The V1 rows survive, and the project domain is added alongside them.
+    assert "projects" in _table_names(db)
     assert store.history_list("dataset-1") == [
         {
             "id": "history-1",
@@ -161,6 +163,11 @@ def test_fresh_database_gets_full_migration(tmp_path: Path) -> None:
         "analyses",
         "annotations",
         "forecast_history",
+        "issued_forecasts",
+        "project_actuals",
+        "project_revisions",
+        "project_runs",
+        "projects",
         "scenarios",
     )
 

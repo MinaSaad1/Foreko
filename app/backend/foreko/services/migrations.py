@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 class MigrationError(Exception):
@@ -64,6 +64,68 @@ MIGRATIONS: tuple[Migration, ...] = (
   created_at  TEXT NOT NULL
 );""",
             "CREATE INDEX IF NOT EXISTS idx_annot_dataset ON annotations(dataset_id);",
+        ),
+    ),
+    Migration(
+        version=2,
+        description="Create the forecast project domain",
+        statements=(
+            """CREATE TABLE IF NOT EXISTS projects (
+  id               TEXT PRIMARY KEY,
+  name             TEXT NOT NULL,
+  description      TEXT NOT NULL DEFAULT '',
+  dataset_id       TEXT NOT NULL,
+  created_at       TEXT NOT NULL,
+  updated_at       TEXT NOT NULL,
+  archived_at      TEXT,
+  current_revision INTEGER NOT NULL DEFAULT 0
+);""",
+            "CREATE INDEX IF NOT EXISTS idx_projects_dataset ON projects(dataset_id);",
+            "CREATE INDEX IF NOT EXISTS idx_projects_updated ON projects(updated_at);",
+            """CREATE TABLE IF NOT EXISTS project_revisions (
+  id          TEXT PRIMARY KEY,
+  project_id  TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  revision_no INTEGER NOT NULL,
+  created_at  TEXT NOT NULL,
+  config_json TEXT NOT NULL,
+  UNIQUE(project_id, revision_no)
+);""",
+            "CREATE INDEX IF NOT EXISTS idx_revisions_project ON project_revisions(project_id);",
+            """CREATE TABLE IF NOT EXISTS project_runs (
+  id            TEXT PRIMARY KEY,
+  project_id    TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  revision_no   INTEGER NOT NULL,
+  stage         TEXT NOT NULL,
+  status        TEXT NOT NULL,
+  job_id        TEXT,
+  started_at    TEXT NOT NULL,
+  completed_at  TEXT,
+  artifact_path TEXT,
+  summary_json  TEXT NOT NULL DEFAULT '{}',
+  error         TEXT
+);""",
+            "CREATE INDEX IF NOT EXISTS idx_runs_project ON project_runs(project_id, started_at);",
+            """CREATE TABLE IF NOT EXISTS issued_forecasts (
+  id               TEXT PRIMARY KEY,
+  project_id       TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  run_id           TEXT NOT NULL,
+  revision_no      INTEGER NOT NULL,
+  issued_at        TEXT NOT NULL,
+  forecast_json    TEXT NOT NULL,
+  assumptions_json TEXT NOT NULL DEFAULT '{}',
+  manifest_json    TEXT NOT NULL DEFAULT '{}'
+);""",
+            "CREATE INDEX IF NOT EXISTS idx_issued_project ON issued_forecasts(project_id, issued_at);",
+            """CREATE TABLE IF NOT EXISTS project_actuals (
+  project_id         TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  series_id          TEXT NOT NULL,
+  date               TEXT NOT NULL,
+  value              REAL NOT NULL,
+  imported_at        TEXT NOT NULL,
+  source_fingerprint TEXT,
+  PRIMARY KEY (project_id, series_id, date)
+);""",
+            "CREATE INDEX IF NOT EXISTS idx_actuals_project ON project_actuals(project_id);",
         ),
     ),
 )
