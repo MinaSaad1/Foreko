@@ -20,14 +20,57 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from ..schemas.project import ProjectRevisionCreate
-from . import csv_loader
+from ..schemas.forecast import ForecastConfigIn
+from ..schemas.project import CovariateRole, ProjectRevisionCreate
+from . import csv_loader, factor_plan
 from .backtest import _forecast_one_model
 from .ensemble_policy import combine
 from .forecaster import _infer_future_dates
 from .model_registry import ModelRegistry
 from .preparation import PreparationError, prepare_series
 from .validation_policy import ENSEMBLE_ID
+
+
+# Only TimesFM can consume covariates, through forecast_with_covariates. The
+# classical baselines and the LightGBM baseline take (dates, values) only, so a
+# future factor provably cannot change what they produce.
+COVARIATE_CAPABLE_MODELS: frozenset[str] = frozenset({"timesfm"})
+
+_NUMERIC_ROLES = {"known_future_numerical", "scenario_controlled"}
+_CATEGORICAL_ROLES = {"known_future_categorical"}
+
+
+def champions_of(series_policies: dict[str, Any]) -> set[str]:
+    """Every model that will actually run, expanding ensembles to their members."""
+    champions: set[str] = set()
+    for policy in series_policies.values():
+        if not isinstance(policy, dict):
+            continue
+        champion = policy.get("champion")
+        if champion == ENSEMBLE_ID:
+            champions.update((policy.get("ensemble_weights") or {}).keys())
+        elif champion:
+            champions.add(champion)
+    return champions
+
+
+def policy_consumes_covariates(series_policies: dict[str, Any]) -> bool:
+    """True when at least one model that will run can read a covariate.
+
+    Design 6.5 gates the factor plan on the selected policy requiring
+    covariates. Asking for a value that no selected model can read means asking
+    the user to supply an input which provably does nothing.
+    """
+    return bool(champions_of(series_policies) & COVARIATE_CAPABLE_MODELS)
+
+
+def required_future_factors(
+    roles: dict[str, CovariateRole], series_policies: dict[str, Any]
+) -> tuple[str, ...]:
+    """Factors the user must supply: declared as known-future AND readable."""
+    if not policy_consumes_covariates(series_policies):
+        return ()
+    return factor_plan.required_covariates(roles)
 
 
 @dataclass
@@ -76,6 +119,32 @@ class ProjectForecastResult:
         }
 
 
+def _covariate_history_by_series(
+    df: pd.DataFrame, config: ProjectRevisionCreate, ids: list[str]
+) -> dict[str, dict[str, np.ndarray]]:
+    """Observed values of every declared covariate, per series.
+
+    A dynamic covariate must span history and horizon, so the planned future
+    values alone are not enough; the model needs what actually happened too.
+    """
+    names = [
+        name
+        for name, role in config.covariate_roles.items()
+        if role in _NUMERIC_ROLES | _CATEGORICAL_ROLES and name in df.columns
+    ]
+    if not names:
+        return {}
+
+    series_col = config.mapping.series_id_col
+    out: dict[str, dict[str, np.ndarray]] = {}
+    if series_col and series_col in df.columns:
+        for series_id, group in df.groupby(series_col):
+            out[str(series_id)] = {n: group[n].to_numpy() for n in names}
+    else:
+        out[ids[0]] = {n: df[n].to_numpy() for n in names}
+    return out
+
+
 def _policy_for(policies: dict[str, Any], series_id: str) -> dict[str, Any] | None:
     entry = policies.get(series_id)
     return entry if isinstance(entry, dict) else None
@@ -88,6 +157,7 @@ async def run_project_forecast(
     series_policies: dict[str, Any],
     datasets_dir: Path,
     registry: ModelRegistry,
+    future_factors: dict[str, dict[str, Any]] | None = None,
     progress_cb: Any = None,
     stop_event: Any = None,
 ) -> ProjectForecastResult:
@@ -96,6 +166,8 @@ async def run_project_forecast(
     ids, values, dates = csv_loader.extract_series(df, config.mapping)
     if not ids:
         raise ValueError("The dataset has no series after mapping.")
+
+    covariate_history = _covariate_history_by_series(df, config, ids)
 
     forecasts: list[SeriesForecastResult] = []
     exceptions: list[SeriesException] = []
@@ -139,6 +211,8 @@ async def run_project_forecast(
                 policy=policy,
                 champion=champion,
                 registry=registry,
+                covariate_history=covariate_history.get(series_id, {}),
+                future_factors=future_factors,
             )
         except PreparationError as exc:
             exceptions.append(
@@ -162,6 +236,56 @@ async def run_project_forecast(
     return ProjectForecastResult(forecasts=forecasts, exceptions=exceptions)
 
 
+async def _forecast_with_covariates(
+    *,
+    history: np.ndarray,
+    horizon: int,
+    registry: ModelRegistry,
+    roles: dict[str, CovariateRole],
+    covariate_history: dict[str, np.ndarray],
+    future_factors: dict[str, dict[str, Any]],
+    history_offset: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """TimesFM with external regressors.
+
+    A dynamic covariate must span the history and the horizon, so each one is
+    the observed history concatenated with the values the user planned.
+    """
+    dynamic_numeric: dict[str, list[Any]] = {}
+    dynamic_categorical: dict[str, list[Any]] = {}
+
+    for name, role in roles.items():
+        if name not in future_factors:
+            continue
+        planned = future_factors[name]
+        observed = covariate_history.get(name)
+        if observed is None:
+            raise ValueError(
+                f"{name} is planned for the future but absent from the dataset, "
+                "so it cannot be used as a covariate."
+            )
+        past = list(observed[history_offset:])
+        future = [planned[period] for period in sorted(planned)]
+        if len(future) < horizon:
+            raise ValueError(f"{name} has fewer planned values than the horizon.")
+        combined = past + future[:horizon]
+
+        if role in _NUMERIC_ROLES:
+            dynamic_numeric[name] = [[float(v) for v in combined]]
+        elif role in _CATEGORICAL_ROLES:
+            dynamic_categorical[name] = [[str(v) for v in combined]]
+
+    point_all, quantiles_all, _hash = await registry.forecast_with_covariates(
+        config=ForecastConfigIn(),
+        inputs=[history.copy()],
+        dynamic_numerical_covariates=dynamic_numeric or None,
+        dynamic_categorical_covariates=dynamic_categorical or None,
+    )
+    point = np.asarray(point_all[0], dtype=float)[:horizon]
+    quantiles = np.asarray(quantiles_all[0], dtype=float)
+    return point, quantiles[:horizon, 1], quantiles[:horizon, 9]
+
+
 async def _forecast_series(
     *,
     series_id: str,
@@ -171,6 +295,8 @@ async def _forecast_series(
     policy: dict[str, Any],
     champion: str,
     registry: ModelRegistry,
+    covariate_history: dict[str, np.ndarray] | None = None,
+    future_factors: dict[str, dict[str, Any]] | None = None,
 ) -> SeriesForecastResult:
     prepared = prepare_series(
         series_values, list(config.preparation_steps), dates=series_dates
@@ -185,7 +311,17 @@ async def _forecast_series(
     history = prepared.values
     history_dates = series_dates[prepared.history_offset :]
 
-    if champion == ENSEMBLE_ID:
+    if champion in COVARIATE_CAPABLE_MODELS and future_factors:
+        point, p10, p90 = await _forecast_with_covariates(
+            history=history,
+            horizon=horizon,
+            registry=registry,
+            roles=config.covariate_roles,
+            covariate_history=covariate_history or {},
+            future_factors=future_factors,
+            history_offset=prepared.history_offset,
+        )
+    elif champion == ENSEMBLE_ID:
         weights = dict(policy.get("ensemble_weights") or {})
         if not weights:
             raise ValueError("The ensemble policy has no weights.")

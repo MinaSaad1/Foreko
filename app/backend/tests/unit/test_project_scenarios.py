@@ -59,7 +59,7 @@ def _ready_project(client) -> tuple[str, list[str]]:
             "frequency": "MS",
             "horizon": 3,
             "preparation_steps": [],
-            "candidate_models": ["seasonal_naive"],
+            "candidate_models": ["timesfm"],
             "folds": 2,
             "primary_metric": "mase",
             "covariate_roles": {"price": "known_future_numerical"},

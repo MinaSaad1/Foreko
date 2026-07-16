@@ -32,7 +32,12 @@ def _upload(client, content: bytes | None = None) -> str:
     return response.json()["id"]
 
 
-def _project(client, dataset_id: str, roles: dict[str, str] | None = None) -> str:
+def _project(
+    client,
+    dataset_id: str,
+    roles: dict[str, str] | None = None,
+    models: list[str] | None = None,
+) -> str:
     project = client.post(
         "/api/projects", json={"name": "Forecast", "dataset_id": dataset_id}
     ).json()
@@ -47,7 +52,7 @@ def _project(client, dataset_id: str, roles: dict[str, str] | None = None) -> st
             "frequency": "MS",
             "horizon": 3,
             "preparation_steps": [],
-            "candidate_models": ["seasonal_naive"],
+            "candidate_models": models or ["seasonal_naive"],
             "folds": 2,
             "primary_metric": "mase",
             "covariate_roles": roles or {},
@@ -110,12 +115,17 @@ def test_forecast_is_blocked_until_validation_completes(client) -> None:
 @pytest.mark.unit
 def test_missing_future_factors_block_the_forecast_and_name_the_gaps(client) -> None:
     dataset_id = _upload(client, _csv(with_price=True))
-    project_id = _project(client, dataset_id, roles={"price": "known_future_numerical"})
+    project_id = _project(
+        client,
+        dataset_id,
+        roles={"price": "known_future_numerical"},
+        models=["timesfm"],
+    )
     _through_validate(client, project_id)
 
     response = client.post(f"/api/projects/{project_id}/forecast", json={})
-    # The model needs price for every future period, and no model runs until the
-    # user supplies it or says how to fill it.
+    # timesfm reads price, so it needs a value for every future period and no
+    # model runs until the user supplies it or says how to fill it.
     assert response.status_code == 409
     detail = response.json()["detail"]
     assert detail["missing"]
@@ -141,7 +151,12 @@ def test_the_factor_plan_endpoint_states_what_is_required(client) -> None:
 @pytest.mark.unit
 def test_supplying_the_factors_lets_the_forecast_run(client) -> None:
     dataset_id = _upload(client, _csv(with_price=True))
-    project_id = _project(client, dataset_id, roles={"price": "known_future_numerical"})
+    project_id = _project(
+        client,
+        dataset_id,
+        roles={"price": "known_future_numerical"},
+        models=["timesfm"],
+    )
     _through_validate(client, project_id)
 
     periods = client.get(f"/api/projects/{project_id}/factor-plan").json()["periods"]
@@ -160,7 +175,12 @@ def test_supplying_the_factors_lets_the_forecast_run(client) -> None:
 @pytest.mark.unit
 def test_an_explicit_fill_policy_is_recorded_in_the_run(client) -> None:
     dataset_id = _upload(client, _csv(with_price=True))
-    project_id = _project(client, dataset_id, roles={"price": "known_future_numerical"})
+    project_id = _project(
+        client,
+        dataset_id,
+        roles={"price": "known_future_numerical"},
+        models=["timesfm"],
+    )
     _through_validate(client, project_id)
 
     periods = client.get(f"/api/projects/{project_id}/factor-plan").json()["periods"]
@@ -195,3 +215,25 @@ def test_the_forecast_run_records_its_artifact_and_revision(client) -> None:
     assert forecast_runs[0]["status"] == "done"
     assert forecast_runs[0]["revision_no"] == 1
     assert forecast_runs[0]["artifact_path"].endswith("forecast.json")
+
+
+@pytest.mark.unit
+def test_a_classical_champion_is_not_asked_for_factors_it_cannot_read(client) -> None:
+    # Blocking a seasonal_naive forecast on price would demand an input that
+    # provably does nothing, which is what blocker B1 identified.
+    dataset_id = _upload(client, _csv(with_price=True))
+    project_id = _project(
+        client,
+        dataset_id,
+        roles={"price": "known_future_numerical"},
+        models=["seasonal_naive"],
+    )
+    _through_validate(client, project_id)
+
+    plan = client.get(f"/api/projects/{project_id}/factor-plan").json()
+    assert plan["required"] == []
+    assert plan["ignored_by_policy"] == ["price"]
+
+    started = client.post(f"/api/projects/{project_id}/forecast", json={})
+    assert started.status_code == 202
+    assert _await(client, started.json()["job_id"])["status"] == "done"

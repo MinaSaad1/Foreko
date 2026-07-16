@@ -78,7 +78,7 @@ Every reference below was checked against the working tree on 2026-07-16.
 
 ---
 
-## BLOCKER B1: factor plans are collected but never reach a model
+## BLOCKER B1 (RESOLVED 2026-07-16): factor plans never reached a model
 
 Found on 2026-07-16 by running a scenario, not by a test. Doubling a `price`
 assumption from 10 to 20 changed the forecast by exactly +0.0.
@@ -107,25 +107,33 @@ path routes through `_forecast_one_model`, which drops them. Of the V2.0
 candidates, only LightGBM can use covariates at all; TimesFM covariate support
 is a separate question. So today the Plan stage cannot move a number.
 
-**Do not ship the Plan stage until this is resolved.** A screen that says
-"change the assumptions and see what moves" while nothing moves is worse than an
-absent feature: it invites a user to make a decision on evidence that does not
-exist. This is the exact failure mode design 12 forbids.
+**Resolved.** TimesFM consumes covariates via `registry.forecast_with_covariates`;
+the classical baselines and LightGBM take `(dates, values)` only. Verified against
+real TimesFM: moving `price` from 10 to 40 moved the portfolio forecast from
+750.00 to 4350.00. Before the fix that delta was exactly +0.00.
 
-Required before Task 6 can be called done:
+What was done:
 
-1. Add a covariate-aware forecast path (extend `_forecast_one_model`, or route
-   the project forecast through `forecaster.py`'s existing covariate handling).
-2. Make `required_covariates` policy-aware: only require factors the selected
-   champion can actually consume, and say so in the UI when a champion ignores
-   them.
-3. Add the test that would have caught this: **a scenario with different factor
-   values must produce a different forecast.** Every test written for Task 6
-   passed with covariates entirely disconnected, because none of them asserted
-   that an assumption changes an outcome.
+1. `project_forecast._forecast_with_covariates` routes a covariate-capable
+   champion through `forecast_with_covariates`, building each dynamic covariate
+   as observed history concatenated with the planned future.
+2. `required_future_factors` is policy-aware: a factor is only demanded when a
+   model that will actually run can read it. An ensemble is judged by its
+   members. The factor-plan endpoint returns `ignored_by_policy` so a mapped
+   factor that no champion reads is stated rather than silently dropped.
+3. `test_project_covariates.py` asserts a different assumption produces a
+   different forecast, and that the covariate spans history and horizon.
+   Verified by mutation: disconnecting the covariates fails those tests.
 
-The scenario delta mathematics, baseline isolation, and run listing are correct
-and tested independently of this, and can land. The Plan UI cannot.
+The test fake also had to change. `FakeTimesFMModel` had no
+`forecast_with_covariates` at all, so a fake that ignored covariates would have
+let this bug survive indefinitely. It now responds to them.
+
+Four existing tests failed after the fix and were **correct to fail**: they
+asserted a `seasonal_naive` forecast should block on `price`, which is the
+incoherence this blocker names. They now test the gate with a covariate-capable
+champion, plus a new test that a classical champion is not asked for factors it
+cannot read.
 
 ## Decisions required before Task 1
 

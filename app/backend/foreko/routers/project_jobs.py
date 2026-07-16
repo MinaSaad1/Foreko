@@ -307,9 +307,22 @@ def get_factor_plan_requirements(
         for d in _infer_future_dates(dates[0], config.horizon)
     ]
 
+    validation = _latest_validation(store, project)
+    policies = (validation or {}).get("series_policies") or {}
+    required = (
+        list(project_forecast.required_future_factors(config.covariate_roles, policies))
+        if policies
+        else list(factor_plan.required_covariates(config.covariate_roles))
+    )
+    ignored = sorted(set(factor_plan.required_covariates(config.covariate_roles)) - set(required))
+
     return {
         "periods": periods,
-        "required": list(factor_plan.required_covariates(config.covariate_roles)),
+        "required": required,
+        # Declared known-future, but no selected model can read them. Stated
+        # rather than silently dropped, so the user is not left wondering why a
+        # factor they mapped is not asked for.
+        "ignored_by_policy": ignored,
         "roles": dict(config.covariate_roles),
         "calendar": factor_plan.generate_calendar_factors(periods),
     }
@@ -350,8 +363,11 @@ async def start_forecast(
 
     # Blocked before any model runs. A missing assumption is the user's to
     # supply, and the response names every gap (design 10.3).
+    consumable = project_forecast.required_future_factors(
+        config.covariate_roles, validation["series_policies"]
+    )
     plan_check = factor_plan.validate_factor_plan(
-        roles=config.covariate_roles,
+        roles={k: v for k, v in config.covariate_roles.items() if k in consumable},
         periods=periods,
         values=payload.get("values") or {},
         fill_policies=payload.get("fill_policies") or {},
@@ -368,7 +384,7 @@ async def start_forecast(
 
     try:
         materialized = factor_plan.materialize_factor_plan(
-            roles=config.covariate_roles,
+            roles={k: v for k, v in config.covariate_roles.items() if k in consumable},
             periods=periods,
             values=payload.get("values") or {},
             fill_policies=payload.get("fill_policies") or {},
@@ -398,6 +414,7 @@ async def start_forecast(
                 series_policies=validation["series_policies"],
                 datasets_dir=settings.datasets_dir,
                 registry=registry,
+                future_factors=materialized.values,
                 progress_cb=progress,
                 stop_event=job.stop_event,
             )
@@ -406,6 +423,7 @@ async def start_forecast(
 
             summary = result.as_dict()
             summary["assumptions"] = materialized.values
+            summary["factors_used_by_model"] = list(consumable)
             summary["applied_fills"] = materialized.applied_fills
             summary["periods"] = periods
 
@@ -517,6 +535,7 @@ async def start_scenario(
                 series_policies=validation["series_policies"],
                 datasets_dir=settings.datasets_dir,
                 registry=registry,
+                future_factors=materialized.values,
                 progress_cb=progress,
                 stop_event=job.stop_event,
             )
