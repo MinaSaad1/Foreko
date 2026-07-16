@@ -9,12 +9,17 @@ const SAMPLE_PATH = path.resolve(
   "../public/samples/monthly_revenue_demo.csv",
 );
 
+// The backend this run starts, never a developer's on 8000. Hardcoding 8000
+// makes the spec seed one backend while the app reads another, and writes test
+// data into real storage.
+const API = process.env.FOREKO_E2E_API ?? "http://localhost:8001";
+
 // Shared dataset id across tests in this file.
 let datasetId: string | null = null;
 
 async function uploadSampleViaApi(request: APIRequestContext): Promise<string> {
   const buffer = fs.readFileSync(SAMPLE_PATH);
-  const res = await request.post("http://localhost:8000/api/datasets/upload", {
+  const res = await request.post(`${API}/api/datasets/upload`, {
     multipart: {
       file: {
         name: "monthly_revenue_demo.csv",
@@ -43,7 +48,7 @@ test.beforeEach(async ({ context }) => {
 
 test.beforeAll(async ({ request }) => {
   // Ensure backend is ready.
-  const health = await request.get("http://localhost:8000/api/health");
+  const health = await request.get(`${API}/api/health`);
   expect(health.ok()).toBeTruthy();
   const body = await health.json();
   expect(body.model_status).toBe("ready");
@@ -61,7 +66,10 @@ test("landing page renders", async ({ page }) => {
 test("upload page renders and samples pick works", async ({ page }) => {
   await page.goto("/upload");
   await page.waitForLoadState("networkidle");
-  await expect(page.getByRole("heading", { name: /upload your data/i })).toBeVisible();
+  // "Upload your data" has not existed for some time; the page renders
+  // "Datasets". The assertion went stale unnoticed because this suite never ran
+  // in CI, which is the gap the e2e job now closes.
+  await expect(page.getByRole("heading", { name: /^datasets$/i })).toBeVisible();
   // Click first sample -> should land on /compare/:id
   const samples = page.getByRole("button", { name: /use this sample/i });
   if (await samples.count()) {
@@ -163,7 +171,7 @@ test("covariates direct API probe: duplicate timestamps -> descriptive detail", 
   request,
 }) => {
   expect(datasetId).toBeTruthy();
-  const res = await request.post("http://localhost:8000/api/factors/analyze", {
+  const res = await request.post(`${API}/api/factors/analyze`, {
     data: {
       dataset_id: datasetId,
       mapping: {

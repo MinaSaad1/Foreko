@@ -58,6 +58,15 @@ class Settings(BaseSettings):
         default=True,
         description="If True, the model starts loading at FastAPI startup (recommended).",
     )
+    fake_models: bool = Field(
+        default=False,
+        description=(
+            "Test-only. When True, forecasting uses deterministic stand-ins instead "
+            "of TimesFM, so the browser journey runs without model weights and "
+            "returns the same numbers every time. Never enable this outside tests: "
+            "the forecasts are arithmetic, not predictions."
+        ),
+    )
     inference_timeout_s: int = Field(
         default=600,
         description=(

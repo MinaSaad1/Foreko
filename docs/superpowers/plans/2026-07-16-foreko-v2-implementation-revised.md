@@ -78,6 +78,37 @@ Every reference below was checked against the working tree on 2026-07-16.
 
 ---
 
+## Findings from Task 11 (the browser journey)
+
+Building the release gate surfaced three defects that no unit test could have
+caught, because each needed the assembled system running:
+
+**ETS never worked.** `classical_baselines.ets_forecast` called
+`.fit(disp=False)`, which statsmodels' `ExponentialSmoothing` does not accept.
+It raised on every call and returned seasonal naive's forecast under the ETS
+name. Every "ETS" number the app has ever shown was seasonal naive. It also
+explains an oddity accepted earlier in this build: validation kept reporting
+"Ensemble improvement 0.00%", because ETS and seasonal naive were literally the
+same model. Fixed and pinned; mutation-tested.
+
+**Google Fonts contradicted the README.** `index.html` loaded a Google Fonts
+stylesheet, so every page load sent the user's IP and user-agent to a third
+party. README:57 says "Your data never leaves your machine... The only outbound
+request is the one-time TimesFM weights download." That was false. Fonts are now
+bundled via @fontsource and the journey asserts zero external requests, which
+makes the claim true rather than softening it.
+
+**The e2e suite had a stale assertion and never ran.** `foreko.spec.ts` asserted
+a heading "Upload your data" that has not existed for some time. Nothing caught
+it because there was no Playwright job in CI. That job now exists on Windows and
+Linux.
+
+Also worth recording: the first version of the gate reused a developer's backend
+on port 8000, so the journey created projects in real `~/.foreko` storage and
+scored them with real models. It was neither isolated nor deterministic and left
+data behind. The run now starts its own backend on 8001 with its own temp
+storage and never reuses an existing server.
+
 ## BLOCKER B1 (RESOLVED 2026-07-16): factor plans never reached a model
 
 Found on 2026-07-16 by running a scenario, not by a test. Doubling a `price`

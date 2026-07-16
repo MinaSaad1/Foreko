@@ -30,7 +30,9 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        // The e2e run starts its own isolated backend on another port so it
+        // cannot touch a developer's real ~/.foreko storage.
+        target: process.env.FOREKO_API_TARGET ?? "http://localhost:8000",
         changeOrigin: false,
       },
     },

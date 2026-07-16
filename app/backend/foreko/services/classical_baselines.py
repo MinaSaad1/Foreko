@@ -68,14 +68,14 @@ def ets_forecast(values: np.ndarray, horizon: int, freq: str | None = None) -> t
                 seasonal="add",
                 seasonal_periods=period,
                 initialization_method="estimated",
-            ).fit(disp=False)
+            ).fit()
         else:
             model = ExponentialSmoothing(
                 values,
                 trend="add",
                 seasonal=None,
                 initialization_method="estimated",
-            ).fit(disp=False)
+            ).fit()
         point = np.asarray(model.forecast(horizon), dtype=float)
         residuals = np.asarray(model.resid, dtype=float)
         std = float(np.std(residuals)) if len(residuals) else 1.0

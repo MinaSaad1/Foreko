@@ -59,3 +59,46 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
+
+  e2e:
+    name: e2e (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install Python
+        run: uv python install 3.12
+      - name: Sync backend dependencies (CPU torch)
+        run: uv sync --python 3.12 --extra app --extra app-dev
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/frontend/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: app/frontend
+        run: npm ci
+      - name: Install Chromium
+        working-directory: app/frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run the browser journey
+        working-directory: app/frontend
+        # FOREKO_FAKE_MODELS keeps the run deterministic and downloads no model
+        # weights. Playwright starts an isolated backend on 8001 with its own
+        # empty storage, so nothing here touches real data.
+        run: npx playwright test --project=chromium
+      - name: Upload artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts-${{ matrix.os }}
+          path: app/frontend/e2e/artifacts/
+          retention-days: 7
