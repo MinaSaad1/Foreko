@@ -425,6 +425,151 @@ async def start_forecast(
     return {"job_id": job.job_id, "run_id": run.id, "status": "running"}
 
 
+def _latest_forecast(store: ProjectStore, project) -> dict | None:
+    for run in store.list_runs(project.id):
+        if (
+            run.stage == "forecast"
+            and run.status == "done"
+            and run.revision_no == project.current_revision
+        ):
+            return run.summary
+    return None
+
+
+@router.post("/{project_id}/scenarios/run", status_code=202)
+async def start_scenario(
+    project_id: str,
+    body: dict,
+    store: ProjectStore = Depends(get_project_db),
+    jobs=Depends(get_generic_jobs),
+    settings=Depends(get_settings),
+    registry=Depends(get_registry),
+) -> dict:
+    """Run a named scenario against the same revision and policies as the baseline.
+
+    A scenario copies the baseline plan and edits it, so a scenario run never
+    changes the baseline it is compared against (design 7.3).
+    """
+    project = store.get_project(project_id)
+    if project is None:
+        raise HTTPException(404, "Project not found.")
+    if project.config is None:
+        raise HTTPException(409, "Configure the project first.")
+
+    name = str(body.get("name") or "").strip()
+    if not name:
+        raise HTTPException(422, "A scenario needs a name.")
+
+    baseline = _latest_forecast(store, project)
+    if not baseline:
+        raise HTTPException(409, "Run the baseline forecast before a scenario.")
+
+    validation = _latest_validation(store, project)
+    if not validation:
+        raise HTTPException(409, "Run validation before a scenario.")
+
+    config = project.config
+    periods = list(baseline.get("periods") or [])
+
+    merged = factor_plan.copy_for_scenario(
+        baseline.get("assumptions") or {}, body.get("values") or {}
+    )
+    plan_check = factor_plan.validate_factor_plan(
+        roles=config.covariate_roles,
+        periods=periods,
+        values=merged,
+        fill_policies=body.get("fill_policies") or {},
+    )
+    if not plan_check.valid:
+        raise HTTPException(
+            409, {"message": plan_check.message, "missing": plan_check.missing}
+        )
+
+    try:
+        materialized = factor_plan.materialize_factor_plan(
+            roles=config.covariate_roles,
+            periods=periods,
+            values=merged,
+            fill_policies=body.get("fill_policies") or {},
+        )
+    except factor_plan.FactorPlanError as exc:
+        raise HTTPException(409, str(exc)) from None
+
+    job = jobs.create("project-scenario")
+    run = store.create_run(
+        ProjectRunCreate(
+            project_id=project_id,
+            revision_no=project.current_revision,
+            stage="plan",
+            job_id=job.job_id,
+        )
+    )
+    store.start_run(run.id)
+
+    async def _run() -> None:
+        try:
+            async def progress(current, total, stage):
+                await jobs.emit_progress(job, current=current, total=total, stage=stage)
+
+            result = await project_forecast.run_project_forecast(
+                dataset_id=project.dataset_id,
+                config=config,
+                series_policies=validation["series_policies"],
+                datasets_dir=settings.datasets_dir,
+                registry=registry,
+                progress_cb=progress,
+                stop_event=job.stop_event,
+            )
+            if job.stop_event.is_set():
+                return
+
+            summary = result.as_dict()
+            summary["scenario_name"] = name
+            summary["assumptions"] = materialized.values
+            summary["applied_fills"] = materialized.applied_fills
+            summary["periods"] = periods
+            summary["deltas"] = project_forecast.scenario_deltas(baseline, summary)
+
+            artifact = (
+                project_artifacts.run_dir(settings.storage_dir, project_id, run.id)
+                / "scenario.json"
+            )
+            project_artifacts.atomic_write_json(artifact, summary)
+            store.finish_run(run.id, str(artifact), summary)
+            await jobs.finish(job, summary)
+        except Exception as exc:  # noqa: BLE001 - reported to the user verbatim
+            logger.exception("Scenario failed for project %s", project_id)
+            store.fail_run(run.id, str(exc))
+            await jobs.fail(job, str(exc))
+
+    asyncio.create_task(_run())
+    return {"job_id": job.job_id, "run_id": run.id, "status": "running"}
+
+
+@router.get("/{project_id}/scenarios")
+def list_scenarios(
+    project_id: str,
+    store: ProjectStore = Depends(get_project_db),
+) -> list[dict]:
+    project = store.get_project(project_id)
+    if project is None:
+        raise HTTPException(404, "Project not found.")
+    return [
+        {
+            "run_id": run.id,
+            "name": run.summary.get("scenario_name", "Scenario"),
+            "revision_no": run.revision_no,
+            "created_at": run.started_at,
+            "status": run.status,
+            "deltas": run.summary.get("deltas"),
+            "assumptions": run.summary.get("assumptions"),
+            "applied_fills": run.summary.get("applied_fills", []),
+        }
+        for run in store.list_runs(project_id)
+        if run.stage == "plan" and run.status == "done"
+    ]
+
+
 @jobs_router.get("/{job_id}")
 async def get_project_job(job_id: str, jobs=Depends(get_generic_jobs)) -> dict:
     job = jobs.get(job_id)

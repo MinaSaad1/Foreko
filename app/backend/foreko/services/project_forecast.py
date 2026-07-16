@@ -238,9 +238,82 @@ async def _forecast_series(
     )
 
 
+def scenario_deltas(
+    baseline: dict[str, Any], scenario: dict[str, Any]
+) -> dict[str, Any]:
+    """Difference between a scenario and the baseline it was copied from.
+
+    Absolute, percentage, and cumulative per series, plus a portfolio total.
+    Percentage is None where the baseline is zero, because a change from nothing
+    has no percentage, and reporting one would invent a number.
+
+    A series present in one and not the other is reported rather than dropped:
+    silently comparing different sets of series would make the totals lie.
+    """
+    baseline_series = {s["series_id"]: s for s in baseline.get("series", [])}
+    scenario_series = {s["series_id"]: s for s in scenario.get("series", [])}
+    shared = sorted(set(baseline_series) & set(scenario_series))
+
+    per_series: list[dict[str, Any]] = []
+    portfolio_baseline = 0.0
+    portfolio_scenario = 0.0
+
+    for series_id in shared:
+        base_points = [float(v) for v in baseline_series[series_id]["point"]]
+        scen_points = [float(v) for v in scenario_series[series_id]["point"]]
+        length = min(len(base_points), len(scen_points))
+        base_points, scen_points = base_points[:length], scen_points[:length]
+
+        absolute = [s - b for b, s in zip(base_points, scen_points)]
+        percent = [
+            ((s - b) / b * 100.0) if abs(b) > 1e-9 else None
+            for b, s in zip(base_points, scen_points)
+        ]
+        base_total = float(sum(base_points))
+        scen_total = float(sum(scen_points))
+        portfolio_baseline += base_total
+        portfolio_scenario += scen_total
+
+        per_series.append(
+            {
+                "series_id": series_id,
+                "dates": baseline_series[series_id]["dates"][:length],
+                "baseline": base_points,
+                "scenario": scen_points,
+                "absolute": absolute,
+                "percent": percent,
+                "cumulative_absolute": float(sum(absolute)),
+                "baseline_total": base_total,
+                "scenario_total": scen_total,
+                "total_percent": (
+                    (scen_total - base_total) / base_total * 100.0
+                    if abs(base_total) > 1e-9
+                    else None
+                ),
+            }
+        )
+
+    return {
+        "series": per_series,
+        "only_in_baseline": sorted(set(baseline_series) - set(scenario_series)),
+        "only_in_scenario": sorted(set(scenario_series) - set(baseline_series)),
+        "portfolio": {
+            "baseline_total": portfolio_baseline,
+            "scenario_total": portfolio_scenario,
+            "absolute": portfolio_scenario - portfolio_baseline,
+            "percent": (
+                (portfolio_scenario - portfolio_baseline) / portfolio_baseline * 100.0
+                if abs(portfolio_baseline) > 1e-9
+                else None
+            ),
+        },
+    }
+
+
 __all__ = [
     "ProjectForecastResult",
     "SeriesException",
     "SeriesForecastResult",
     "run_project_forecast",
+    "scenario_deltas",
 ]

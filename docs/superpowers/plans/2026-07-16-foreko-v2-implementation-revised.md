@@ -78,6 +78,55 @@ Every reference below was checked against the working tree on 2026-07-16.
 
 ---
 
+## BLOCKER B1: factor plans are collected but never reach a model
+
+Found on 2026-07-16 by running a scenario, not by a test. Doubling a `price`
+assumption from 10 to 20 changed the forecast by exactly +0.0.
+
+`backtest._forecast_one_model` takes `(model, history_values, history_dates,
+horizon, registry, freq)`. It has **no covariates parameter at all**, and
+`project_forecast.py` references covariates zero times. So the current chain is:
+
+1. The Forecast stage requires `price` for every future period.
+2. It refuses to run until the user supplies it.
+3. It then runs a model that cannot see `price`.
+4. Scenario edits to `price` therefore produce identical forecasts.
+
+Two separate defects, and the second is the serious one:
+
+**B1a. The gate is unconditional.** Design 6.5 says "**if the selected model
+policy requires future covariates**, the Forecast stage collects the baseline
+values before execution." The gate must be conditional on the champion actually
+consuming covariates. Blocking a `seasonal_naive` forecast on a factor that
+`seasonal_naive` cannot read is incoherent: the user is being asked for an input
+that provably does nothing.
+
+**B1b. No project model consumes covariates.** `forecaster.py` has covariate
+handling for the V1 path, and LightGBM supports them, but the project forecast
+path routes through `_forecast_one_model`, which drops them. Of the V2.0
+candidates, only LightGBM can use covariates at all; TimesFM covariate support
+is a separate question. So today the Plan stage cannot move a number.
+
+**Do not ship the Plan stage until this is resolved.** A screen that says
+"change the assumptions and see what moves" while nothing moves is worse than an
+absent feature: it invites a user to make a decision on evidence that does not
+exist. This is the exact failure mode design 12 forbids.
+
+Required before Task 6 can be called done:
+
+1. Add a covariate-aware forecast path (extend `_forecast_one_model`, or route
+   the project forecast through `forecaster.py`'s existing covariate handling).
+2. Make `required_covariates` policy-aware: only require factors the selected
+   champion can actually consume, and say so in the UI when a champion ignores
+   them.
+3. Add the test that would have caught this: **a scenario with different factor
+   values must produce a different forecast.** Every test written for Task 6
+   passed with covariates entirely disconnected, because none of them asserted
+   that an assumption changes an outcome.
+
+The scenario delta mathematics, baseline isolation, and run listing are correct
+and tested independently of this, and can land. The Plan UI cannot.
+
 ## Decisions required before Task 1
 
 These are product decisions, not implementation details. Confirm or override each before work
