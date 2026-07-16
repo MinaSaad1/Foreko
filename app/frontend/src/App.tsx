@@ -30,6 +30,7 @@ const OperationsPage = lazy(() => import("@/pages/OperationsPage").then((m) => (
 const ProjectsPage = lazy(() => import("@/pages/ProjectsPage").then((m) => ({ default: m.ProjectsPage })));
 const ProjectOverviewPage = lazy(() => import("@/pages/ProjectOverviewPage").then((m) => ({ default: m.ProjectOverviewPage })));
 const ForecastStudioPage = lazy(() => import("@/pages/ForecastStudioPage").then((m) => ({ default: m.ForecastStudioPage })));
+const ProjectRunsPage = lazy(() => import("@/pages/ProjectRunsPage").then((m) => ({ default: m.ProjectRunsPage })));
 
 interface SideNavItemProps {
   to: string;
@@ -272,6 +273,7 @@ export default function App() {
                 <Route path="/projects" element={<ProjectsPage />} />
                 <Route path="/projects/:projectId" element={<ProjectOverviewPage />} />
                 <Route path="/projects/:projectId/studio/:stage" element={<ForecastStudioPage />} />
+                <Route path="/projects/:projectId/runs" element={<ProjectRunsPage />} />
                 <Route path="/data" element={<DataPage />} />
                 <Route path="/upload" element={<DataPage />} />
                 <Route path="/datasets" element={<DataPage />} />

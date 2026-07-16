@@ -13,7 +13,7 @@ import logging
 
 import numpy as np
 import pandas as pd
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from fastapi.responses import StreamingResponse
 
 from ..deps import get_generic_jobs, get_project_db, get_registry, get_settings
@@ -25,6 +25,7 @@ from ..services import (
     factor_plan,
     preparation,
     project_artifacts,
+    project_exports,
     project_forecast,
     validation_policy,
 )
@@ -693,6 +694,97 @@ def get_accuracy(
         issued, store.list_actuals(project_id)
     )
     return result.model_dump()
+
+
+@router.get("/{project_id}/runs/{run_id}/manifest")
+def get_run_manifest(
+    project_id: str,
+    run_id: str,
+    store: ProjectStore = Depends(get_project_db),
+    settings=Depends(get_settings),
+) -> dict:
+    """Where this run's numbers came from: data, recipe, policy, assumptions."""
+    project = store.get_project(project_id)
+    if project is None:
+        raise HTTPException(404, "Project not found.")
+    run = store.get_run(run_id)
+    if run is None or run.project_id != project_id:
+        raise HTTPException(404, "Run not found for this project.")
+
+    return project_exports.build_manifest(
+        project=project,
+        run=run,
+        issued=store.latest_issued(project_id),
+        validation=_latest_validation(store, project),
+        dataset_fingerprint=_dataset_fingerprint(project.dataset_id, settings),
+    )
+
+
+def _dataset_fingerprint(dataset_id: str, settings) -> str | None:
+    """Content hash of the source, so a manifest pins the data it used."""
+    try:
+        directory = settings.datasets_dir / dataset_id
+        for candidate in sorted(directory.glob("*")):
+            if candidate.is_file() and candidate.suffix != ".json":
+                return project_artifacts.dataset_fingerprint(candidate)
+    except Exception:  # noqa: BLE001 - a missing fingerprint is not fatal
+        logger.warning("Could not fingerprint dataset %s", dataset_id)
+    return None
+
+
+@router.get("/{project_id}/exports/package")
+def export_package(
+    project_id: str,
+    store: ProjectStore = Depends(get_project_db),
+    settings=Depends(get_settings),
+) -> Response:
+    """Download the forecast and everything needed to audit it.
+
+    Prefers the issued forecast: an export is what a reader will act on, so it
+    should carry what was committed rather than the latest rerun.
+    """
+    project = store.get_project(project_id)
+    if project is None:
+        raise HTTPException(404, "Project not found.")
+
+    issued = store.latest_issued(project_id)
+    run = store.get_run(issued.run_id) if issued else None
+    if run is None:
+        for candidate in store.list_runs(project_id):
+            if candidate.stage == "forecast" and candidate.status == "done":
+                run = candidate
+                break
+    if run is None:
+        raise HTTPException(409, "Run a forecast before exporting.")
+
+    accuracy = None
+    if issued is not None:
+        accuracy = actuals_service.score_issued_forecast(
+            issued, store.list_actuals(project_id)
+        )
+
+    payload = project_exports.build_package(
+        project=project,
+        run=run,
+        issued=issued,
+        validation=_latest_validation(store, project),
+        accuracy=accuracy,
+        dataset_fingerprint=_dataset_fingerprint(project.dataset_id, settings),
+    )
+
+    exports = project_artifacts.exports_dir(settings.storage_dir, project_id)
+    exports.mkdir(parents=True, exist_ok=True)
+    (exports / "forecast-package.zip").write_bytes(payload)
+
+    return Response(
+        content=payload,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="foreko-{project.name.replace(" ", "-")}.zip"'
+            )
+        },
+    )
 
 
 @jobs_router.get("/{job_id}")

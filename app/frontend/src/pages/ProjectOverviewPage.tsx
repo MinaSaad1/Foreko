@@ -78,6 +78,12 @@ export function ProjectOverviewPage() {
  ) : null}
 
  <section className="flex flex-wrap gap-2 border-t border-border-strong/70 pt-4">
+ <Link
+ to={`/projects/${project.id}/runs`}
+ className="border border-border-strong/70 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-text-secondary hover:border-accent hover:text-accent"
+ >
+ Run history
+ </Link>
  <button
  type="button"
  onClick={() =>
