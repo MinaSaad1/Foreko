@@ -55,20 +55,23 @@ function buildBacktestReport(
  const sections: PdfSection[] = [];
  const modelNames = Object.keys(result.aggregate);
 
- // Winner = model with the lowest MAPE mean (fallback to result.winner).
  const byMape = modelNames
  .map((m) => ({ m, mape: result.aggregate[m].mape_mean }))
  .sort((a, b) => a.mape - b.mape);
- const winner = result.winner ?? byMape[0]?.m ?? "-";
- const best = byMape[0];
- const second = byMape[1];
- const winnerAgg = best ? result.aggregate[best.m] : null;
+ // The backend returns a null winner when no candidate completed every fold.
+ // Do not fall back to the lowest MAPE: that model's surviving folds are a
+ // biased sample of the ones it happened to survive, and crowning it here would
+ // state a champion in an exported document that the evidence does not support.
+ const winner = result.winner;
+ const best = winner ? byMape.find((entry) => entry.m === winner) : undefined;
+ const second = winner ? byMape.filter((entry) => entry.m !== winner)[0] : undefined;
+ const winnerAgg = winner ? result.aggregate[winner] : null;
  const liftPct = best && second && second.mape > 0
  ? ((second.mape - best.mape) / second.mape) * 100
  : 0;
 
  // Per-horizon degradation for the winner: first → last horizon.
- const winnerPerH = result.per_horizon_mape[winner] ?? [];
+ const winnerPerH = (winner ? result.per_horizon_mape[winner] : undefined) ?? [];
  const firstHMape = winnerPerH[0];
  const lastHMape = winnerPerH[winnerPerH.length - 1];
  const degradation = Number.isFinite(firstHMape) && Number.isFinite(lastHMape) && firstHMape > 0
@@ -84,11 +87,13 @@ function buildBacktestReport(
 
  sections.push({
  heading: "Executive summary",
- body: best
+ body: best && second
  ? `${winner} is the best performer with ${formatPct(best.mape)} MAPE across ${ctx.folds} expanding-window folds, beating the next-best model by ${liftPct.toFixed(1)}%.`
- : "No model produced usable backtest metrics.",
+ : best
+ ? `${winner} is the best performer with ${formatPct(best.mape)} MAPE across ${ctx.folds} expanding-window folds.`
+ : "No model completed every fold, so there is no eligible winner. Check the failures before relying on these metrics.",
  kv: [
- ["Winner model", winner],
+ ["Winner model", winner ?? "None: no model completed every fold"],
  ["Winner MAPE (mean)", winnerAgg ? formatPct(winnerAgg.mape_mean) : "-"],
  ["Winner MAPE (std)", winnerAgg ? formatPct(winnerAgg.mape_std) : "-"],
  ["Winner RMSE", winnerAgg ? formatNumber(winnerAgg.rmse_mean) : "-"],
@@ -149,7 +154,7 @@ function buildBacktestReport(
  });
  }
 
- const winnerFolds = result.fold_details[winner] ?? [];
+ const winnerFolds = (winner ? result.fold_details[winner] : undefined) ?? [];
  if (winnerFolds.length > 0) {
  sections.push({
  heading: `Fold details, ${winner}`,

@@ -684,7 +684,7 @@ def test_backtest_numeric_month_in_date_parts(client: TestClient) -> None:
 # ---------------------------------------------------------------------------
 
 @pytest.mark.unit
-def test_backtest_unknown_model_falls_back_gracefully(client: TestClient) -> None:
+def test_backtest_unknown_model_is_isolated_from_the_run(client: TestClient) -> None:
     """An unknown model name fails per fold but does not crash the whole backtest."""
     did = _upload(client, _monthly_csv(36))
     handle = _start_backtest(
@@ -694,7 +694,8 @@ def test_backtest_unknown_model_falls_back_gracefully(client: TestClient) -> Non
     )
     job = _poll_job(client, handle["job_id"])
     assert job["status"] == "done"
-    # Unknown model still appears in result (with last-value fallback predictions)
+    # Still reported so the user sees what they asked for, but it is recorded as
+    # a failure and scores nothing. See test_backtest_failures.py.
     assert "totally_nonexistent_model" in job["result"]["models"]
 
 

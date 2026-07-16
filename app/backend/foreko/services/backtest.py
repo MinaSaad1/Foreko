@@ -29,6 +29,22 @@ MODEL_IDS = ["timesfm", "lightgbm", "seasonal_naive", "ets", "arima", "prophet"]
 
 
 @dataclass
+class FoldFailure:
+    """A candidate that raised on a fold.
+
+    Recorded rather than scored. Substituting a fallback forecast and scoring it
+    reports a broken model as a merely mediocre one, and makes the eligibility
+    rule ("a model with any failed fold cannot be champion") unimplementable,
+    because by then the failure looks like a number.
+    """
+
+    model: str
+    fold: int
+    reason: str
+    series_id: str | None = None
+
+
+@dataclass
 class FoldMetrics:
     fold: int
     train_end: int
@@ -195,6 +211,7 @@ async def run_walk_forward(
     step = 0
 
     results: dict[str, list[FoldMetrics]] = {m: [] for m in models}
+    failures: list[FoldFailure] = []
 
     for fold_idx, (train_end, test_end) in enumerate(plan):
         if stop_event is not None and stop_event.is_set():
@@ -221,9 +238,10 @@ async def run_walk_forward(
                 )
             except Exception as exc:
                 logger.warning("Model %s failed on fold %d: %s", model, fold_idx, exc)
-                point = np.full(len(actuals), history[-1] if len(history) else 0.0)
-                p10 = point
-                p90 = point
+                failures.append(
+                    FoldFailure(model=model, fold=fold_idx + 1, reason=str(exc))
+                )
+                continue
 
             m = _detect_period(freq, len(history))
             metrics = FoldMetrics(
@@ -278,9 +296,13 @@ async def run_walk_forward(
             errs.append(float(np.mean(vals)) if vals else 0.0)
         per_horizon[model] = errs
 
+    # A model that failed any fold cannot win: its remaining folds are a biased
+    # sample of the ones it happened to survive.
+    failed_models = {f.model for f in failures}
+    eligible = {m: agg for m, agg in aggregate.items() if m not in failed_models}
     winner = None
-    if aggregate:
-        winner = min(aggregate.items(), key=lambda kv: kv[1]["mape_mean"])[0]
+    if eligible:
+        winner = min(eligible.items(), key=lambda kv: kv[1]["mape_mean"])[0]
 
     return {
         "horizon": horizon,
@@ -308,6 +330,15 @@ async def run_walk_forward(
             ]
             for model, folds_list in results.items()
         },
+        "failures": [
+            {
+                "model": f.model,
+                "fold": f.fold,
+                "reason": f.reason,
+                "series_id": f.series_id,
+            }
+            for f in failures
+        ],
         "winner": winner,
     }
 
