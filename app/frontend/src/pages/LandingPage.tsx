@@ -92,7 +92,7 @@ const FEATURES: FeatureTile[] = [
 const TRUST_POINTS: { title: string; body: string }[] = [
   {
     title: "Free and open source",
-    body: "MIT-licensed. No upsell, no paid tier, no telemetry. The whole app is on GitHub.",
+    body: "Apache-2.0 licensed. No upsell, no paid tier, no telemetry. The whole app is on GitHub.",
   },
   {
     title: "Stays on your machine",
@@ -245,7 +245,7 @@ export function LandingPage() {
       </section>
 
       <footer className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-border-strong/70 pt-5 font-mono text-[10px] uppercase tracking-[0.18em] text-text-faint">
-        <span>Foreko · Free and open source · MIT licensed</span>
+        <span>Foreko · Free and open source · Apache-2.0 licensed</span>
         <div className="flex gap-5">
           <Link to="/glossary" className="hover:text-accent transition-colors">Glossary</Link>
           <Link to="/data" className="hover:text-accent transition-colors">Datasets</Link>

@@ -62,10 +62,11 @@ The only outbound request is the one-time TimesFM weights download.
 
 <img src="docs/img/feat-models.png" width="58" alt=""/>
 
-### Two models, one click
+### Forecast Projects
 
-Google's TimesFM foundation model and a LightGBM baseline run side by
-side, backtested on your data. Foreko shows the winner and the runner-up.
+A forecast is a cycle, not a one-off chart. Create a project once and it keeps
+the data recipe, the model evidence, the assumptions you entered, the forecast
+you issued, and how accurate it turned out. Reopen it and everything is there.
 
 </td>
 </tr>
@@ -134,6 +135,23 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 
 ## The pages
 
+**Forecast Projects** are the main workflow. A project moves through five
+stages, and each says plainly whether it is ready, needs attention, or is
+blocked and why:
+
+| Stage | What it does |
+|---|---|
+| Prepare | Clean the history with a saved, reversible recipe. The original data is never modified, and a recipe that cannot return forecasts to the original scale is refused. |
+| Validate | Score every candidate across rolling folds, per series. The champion comes from that evidence, not a single holdout. A model that failed any fold cannot win. |
+| Forecast | Run the baseline with each series' own selected model. Required future factors must be entered or explicitly filled; Foreko never guesses them. |
+| Plan | Change the assumptions and compare scenarios against a versioned baseline. |
+| Review | Import actuals and see how the forecast you issued actually did, kept separate from backtest evidence. |
+
+An issued forecast is immutable. Accuracy is always scored against what you
+issued, never against a later rerun.
+
+The specialist analyses below remain available under Advanced analysis.
+
 <table>
 <tr>
 <td width="33%" align="center" valign="top">
@@ -158,9 +176,10 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 
 <img src="docs/img/pages/forecast.png" alt="Forecast" width="100%"/>
 
-**Forecast**
+**Model Comparison**
 <br/>
-<sub>TimesFM vs LightGBM side by side. Winner picked by holdout MAPE.</sub>
+<sub>A quick two-model look on one holdout. For a number that matters, use a Forecast Project.
+<br/><br/>Old label: TimesFM vs LightGBM side by side. Winner picked by holdout MAPE.</sub>
 
 </td>
 </tr>
@@ -267,7 +286,7 @@ forecasting and analysis services. Everything is persisted under `~/.foreko/`.
 | Browser `:5173` | React single-page app |
 | FastAPI `:8000` | HTTP API + async job manager (SSE progress) |
 | Services | forecaster (TimesFM) · baselines (LightGBM, ETS, seasonal-naive) · diagnostics (residuals, ACF, STL) · anomaly methods · factor diagnostics · exports (ReportLab PDF) |
-| `~/.foreko/` | `datasets/` · `models/` (TimesFM weights) · `foreko.db` (SQLite) · `exports/` |
+| `~/.foreko/` | `datasets/` · `projects/<id>/` (derived data, runs, exports) · `models/` (TimesFM weights) · `foreko.db` (SQLite) · `exports/` |
 
 ---
 
@@ -279,7 +298,7 @@ forecasting and analysis services. Everything is persisted under `~/.foreko/`.
 | Forecasting | TimesFM 2.5 (transformer) · LightGBM (with quantile regression) · ETS · seasonal-naive |
 | Probabilistic | LightGBM `objective='quantile'` for P10/P90 · block-bootstrap residuals · prediction-interval calibration |
 | Frontend | React 18 · Vite · TanStack Query · Zustand · Tailwind · Apache ECharts · Sonner |
-| Storage | SQLite (annotations, saved analyses) · local filesystem (datasets, model cache, exports) |
+| Storage | SQLite (projects, revisions, runs, issued forecasts, actuals, annotations, saved analyses) · local filesystem (datasets, derived data, run artifacts, model cache, exports) |
 | Connectors | SQLAlchemy · Postgres · MySQL · SQL Server · OS keyring for secrets |
 | Reports | ReportLab in-process PDF |
 | Tests | pytest (backend, ~160 tests) · Vitest + Testing Library (frontend) |

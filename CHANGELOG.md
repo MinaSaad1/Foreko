@@ -4,6 +4,37 @@ All notable changes to Foreko are documented here. Format follows [Keep a Change
 
 ## [Unreleased]
 
+### Added
+
+- **Forecast Projects.** A project is now the unit of work: it holds the data recipe, the model evidence, the assumptions, the forecast you issued, and its accuracy. Reopening one restores all of it without rerunning anything. Five stages (Prepare, Validate, Forecast, Plan, Review) each report whether they are ready, need attention, or are blocked and why.
+- Reversible preparation recipes. Aggregate duplicates, insert missing periods, impute, winsorize, log, Box-Cox, differencing, seasonal differencing. The source dataset is never modified, and a recipe that cannot return forecasts to the original scale within tolerance is refused rather than warned about.
+- Rolling validation as the selection engine. Every candidate is scored across folds for every series, and selection runs independently per series, so a model that loses on one series can still win on another. The portfolio score weights each series equally, so one high-volume series cannot decide the headline number.
+- MASE as the default selection metric, with WAPE, sMAPE, RMSE, signed bias, pinball loss, and P10-P90 coverage as supporting evidence. MAPE is informational only.
+- Ensembles, promoted only when they beat the best individual model by at least 2 percent without worsening bias by more than 0.5 points or moving coverage more than 5 points from 0.80.
+- Known-future factor plans. A factor the selected model reads must have a value for every future period, or an explicit fill policy; every filled value is recorded with the run. Foreko never invents one.
+- Issued forecasts, immutable by construction, and post-issue accuracy scored against them rather than against a later rerun. Backtest evidence and post-issue accuracy are kept impossible to confuse.
+- Forecast export packages: a zip with the manifest, machine-readable forecast, assumptions, validation summary, and accuracy, carrying no credentials.
+- Run history with per-run manifests recording dataset fingerprint, recipe, policy, and assumptions.
+- Versioned SQLite migrations. An existing database is adopted and migrated additively; V1 data opens untouched.
+- An end-to-end browser journey covering the whole cycle, now running in CI on Windows and Linux.
+
+### Changed
+
+- Navigation is project-first. Projects and Data Sources are top-level; the specialist analyses moved into Advanced analysis, still fully available.
+- The page at `/compare` is now labelled **Model Comparison**, not Forecast. It selects a winner from one holdout using MAPE, while a Forecast Project uses rolling validation with MASE, and the two can disagree. Two destinations named Forecast would have given conflicting champions with no way to tell which to trust. The route and its behaviour are unchanged.
+- Frontend lint now runs. `npm run lint` was declared but eslint was never installed and no config existed, so the script had never run once.
+
+### Fixed
+
+- **ETS never worked.** It called `.fit(disp=False)`, which statsmodels' `ExponentialSmoothing` does not accept, so it raised on every call and silently returned seasonal naive's forecast under the ETS name. Every "ETS" number Foreko has shown was seasonal naive.
+- **Backtest laundered model failures.** A candidate that raised had its forecast replaced with a flat last-value series, which was then scored like a real result, so a broken model looked merely mediocre. Failures are now recorded, and a model that failed any fold cannot be champion.
+- **Fonts were fetched from Google on every page load**, sending your IP and user-agent to a third party, which contradicted this project's claim that the only outbound request is the model download. Fonts are now bundled.
+- **Deleting a project left its data on disk.** The database rows cascaded but the derived data, run artifacts, and exports remained, so user data survived an explicit delete.
+- `diff` and `seasonal_diff` were reported as not invertible by `POST /api/transforms/roundtrip`. Both invert exactly; the check anchored the inverse on the wrong rows.
+- `get_store` ignored its `db_path` after the first call, so a caller pointing at a different database silently received the first one.
+- The Backtest PDF export named a "Winner model" even when no candidate completed every fold, stating a champion the evidence did not support.
+- `ensure_dirs()` and the storage-wipe list were maintained separately, so a new storage directory could be created but survive an explicit wipe.
+
 ## [1.0.0] - 2026-06-17
 
 ### Added

@@ -31,6 +31,25 @@
 | **Confidence** | A categorical assessment of Forecast reliability (High, Medium, Low) derived from diagnostics. | Score, level, quality |
 | **Calibration** | The measurement of whether a Model's prediction intervals contain the expected fraction of Actuals. | PI coverage, reliability assessment |
 
+## Forecast Projects
+
+| Term | Definition | Aliases to avoid |
+| --- | --- | --- |
+| **Forecast Project** | The durable root object of the V2 workflow. Owns a current Project Revision, an immutable history of prior revisions, its Project Runs, its Issued Forecast, and its Actuals. | Analysis, workspace, plan |
+| **Project Revision** | An immutable, numbered snapshot of a project's configuration: mapping, frequency, horizon, Preparation Recipe, candidates, folds, primary metric, Covariate Roles. Changing any of it creates a new revision, which is what keeps a completed run linked to the exact configuration that produced it. | Config, version, settings |
+| **Project Run** | One execution of a Studio stage against one revision. Immutable once terminal. Kept even when superseded, and marked stale rather than deleted. | Job, execution, attempt |
+| **Stage** | One of Prepare, Validate, Forecast, Plan, Review. Each reports not started, needs attention, ready, complete, or blocked, with a reason. | Step, phase, tab |
+| **Preparation Recipe** | The ordered, saved, reversible steps applied to history before modelling. Cleaning steps precede value transforms. A recipe that cannot round-trip cannot be used. | Cleaning, wrangling, transform list |
+| **Derived data** | The output of a Preparation Recipe, cached by source fingerprint plus recipe hash. Never overwrites the source. | Cleaned data, processed data |
+| **Covariate Role** | What a mapped column is to the model: historical only, known future numerical or categorical, calendar generated, static numerical or categorical, or scenario controlled. | Feature type, column type |
+| **Factor Plan** | The period-by-period values of every known-future Covariate the selected policy reads. A missing required value blocks the forecast. | Assumptions grid, inputs |
+| **Fill Policy** | The user's explicit instruction for an empty Factor Plan cell: block, carry the last value, or use zero. Never a default. | Imputation, autofill |
+| **Model Policy** | The champion, challenger, and any ensemble weights selected for one series, with the reason. Selection is per series. | Winner, chosen model |
+| **Issued Forecast** | A completed run frozen as the forecast of record, with its values, intervals, and assumptions copied rather than referenced. Immutable. | Published forecast, final forecast |
+| **Post-issue Accuracy** | How the Issued Forecast compared with the Actuals that arrived, scored against what was issued. Not a Backtest, and deliberately never named like one. | Accuracy, error, backtest |
+| **Actuals** | Observed values imported after issuing, keyed by project, series, and period. Importing them mutates no run and no Issued Forecast. | Truth, realised, outturn |
+| **Scenario** | A copy of the baseline Factor Plan with edits, run against the same revision and policies. Never disturbs the baseline it is measured against. | What-if, variant |
+
 ## Model Evaluation
 
 | Term | Definition | Aliases to avoid |
@@ -40,7 +59,10 @@
 | **Fold** | A single train/test split within a Backtest, defined by a train-end index and a test window of Horizon length. | Split, iteration, window |
 | **Train window** | The slice of History used to fit a Model within a single Fold. | Training period, lookback |
 | **Test window** | The Horizon-length holdout slice within a Fold against which Forecast values are compared to Actuals. | Holdout, evaluation period |
-| **Winner** | The Model with the lowest mean MAPE across all Folds of a Backtest. | Best model, champion |
+| **Winner** | The Model with the lowest mean MAPE across all Folds of a V1 Backtest. Null when no candidate completed every Fold. In a Forecast Project the equivalent is the per-series **Champion**, chosen on MASE, and the two can disagree. | Best model, champion |
+| **Champion** | The Model selected for one series by rolling validation on the project's primary metric. Eligible only if it completed every configured Fold for that series. | Winner, best model |
+| **Challenger** | The runner-up among eligible candidates for a series. | Alternative, second best |
+| **Eligibility** | A candidate is eligible for a series only if it completed every configured Fold there. A model with any failed fold cannot be Champion, because its surviving folds are a biased sample of the ones it happened to survive. | Validity |
 | **Lift** | The percentage improvement in MAPE of the Winner over the second-best Model. | Gain, improvement |
 | **Reliability table** | The per-quantile comparison of nominal coverage vs. empirical coverage, produced by Calibration. | Coverage table |
 | **Miscalibration** | The mean absolute gap between nominal and empirical coverage across all quantiles. | Coverage error, calibration error |

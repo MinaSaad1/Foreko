@@ -1505,3 +1505,71 @@ Treat the checkbox list as the unit of work, not the task headings.
 holdout winner against the backtest winner when a backtest exists, so the real V1 gap is the cold
 path where no backtest has been run. The V2 workflow remains justified on the other five problems
 in design §3, but nobody should cite problem #2 as written to justify scope.
+
+---
+
+## Release evidence (2026-07-16)
+
+Design 14's acceptance criteria, each against the test that holds it.
+
+### Project persistence
+
+- Create, name, archive, reopen, delete: `test_projects_router.py`, `test_project_store.py`.
+- Reopening restores the current revision, stage states, policy, scenarios, issued forecast, and accuracy without rerunning: the browser journey reloads and asserts every stage still reads complete.
+- Every completed run stays linked to the revision that produced it: `test_project_store.py::test_revisions_are_sequential_and_immutable`, and the workflow marks an older run stale rather than deleting it.
+
+### Preparation
+
+- The original dataset is unchanged: `test_project_prepare_job.py::test_prepare_does_not_modify_the_source_dataset` compares its bytes before and after.
+- Transformations are saved and reproducible: recipes live on the revision and the derived artifact is keyed by source fingerprint plus recipe hash.
+- A non-invertible recipe cannot become forecast-ready: `test_preparation.py` refuses log on non-positive values and names the count.
+
+### Validation and forecasting
+
+- The headline champion comes from rolling validation, not a holdout: `test_project_validate_job.py`, and `/compare` is now labelled Model Comparison so the two cannot be confused.
+- Fold, horizon, series, point-error, bias, and coverage evidence is inspectable: the leaderboard and `validation_policy.MetricSet`.
+- Multi-series projects forecast every valid series and expose failures: `test_backtest_multi_series.py`, `test_project_forecast.py`.
+- An ensemble is promoted only under the guardrails: `test_ensemble_policy.py`, including the case that clears the 2 percent gate and is still refused on bias.
+
+### Planning
+
+- Required future factors cannot be fabricated: `test_factor_plan.py`, `test_project_forecast_job.py`. Verified by mutation on both the gate and the executor.
+- Every filled value is visible and stored: `applied_fills` in the run summary and the run manifest.
+- Scenarios show deltas against a versioned baseline: `test_project_scenarios.py`, and a scenario cannot disturb the baseline.
+
+### Review
+
+- The issued forecast is immutable: `test_actuals.py::test_issuing_copies_the_values_rather_than_referencing_the_run`. Mutation-tested by making issuance read through to the live run.
+- Actuals are matched by series and period: `test_actuals.py::test_score_matches_series_and_period_only`.
+- Post-issue metrics cannot be confused with backtest metrics: separate schemas, separate field names, separate headings, and the journey asserts the Review page states the backtest section is not a measure of the issued forecast.
+
+### Local-first behaviour
+
+- No account, telemetry, hosted API, or narrative model added.
+- The journey asserts zero outbound network requests. This is how the Google Fonts stylesheet was found: the README's claim that the only outbound request is the model download was false until it was removed.
+- All new data lives under `FOREKO_STORAGE_DIR`, and deleting a project removes its artifacts as well as its rows.
+
+### Gate results
+
+| Gate | Result |
+|---|---|
+| Backend unit and non-model integration | 393 passed, 12 deselected |
+| Frontend Vitest | 70 passed |
+| Playwright, Chromium | 16 passed, including the V2 journey |
+| Ruff | clean |
+| eslint | 0 errors, 1 pre-existing warning |
+| TypeScript | clean |
+| Production build | succeeds |
+| V1 regression | the 15 pre-existing e2e tests pass |
+
+### Deferred, and not represented as implemented
+
+V2.1 (hierarchies, reconciliation, intermittent demand) and V2.2 (schedules,
+drift monitoring, alerts, automatic champion replacement) are absent. No control
+for either is shown. Schedules do not appear in navigation.
+
+Known gaps, stated rather than hidden:
+
+- Only TimesFM consumes covariates. A project whose champion is a classical model is told plainly that its factors cannot be read, rather than being asked for input that does nothing.
+- One `react-hooks/exhaustive-deps` warning in `ScenariosPage`, pre-existing.
+- The desktop packaging smoke test belongs to the separate `foreko-desktop` repo and was not run here.
