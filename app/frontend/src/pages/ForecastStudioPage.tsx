@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { PrepareStage } from "@/components/project/PrepareStage";
 import { StudioStepper } from "@/components/project/StudioStepper";
+import { ValidateStage } from "@/components/project/ValidateStage";
 import { useProject, useProjectWorkflow } from "@/hooks/useProject";
 import { STAGE_LABELS, STUDIO_STAGES } from "@/types/project";
 import type { StudioStage } from "@/types/project";
@@ -49,6 +50,8 @@ export function ForecastStudioPage() {
  <BlockedStage stage={stage} reason={state.reason} projectId={project.id} />
  ) : stage === "prepare" ? (
  <PrepareStage project={project} workflow={workflow} />
+ ) : stage === "validate" ? (
+ <ValidateStage project={project} workflow={workflow} />
  ) : (
  <NotBuiltYet stage={stage} />
  )}

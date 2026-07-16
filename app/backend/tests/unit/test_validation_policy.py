@@ -29,6 +29,7 @@ def rows(
     for fold in range(1, folds + 1):
         for step in range(1, steps + 1):
             actual = 100.0 + fold * 10 + step
+            point = actual + error
             out.append(
                 FoldPrediction(
                     series_id=series_id,
@@ -36,9 +37,12 @@ def rows(
                     fold=fold,
                     horizon_step=step,
                     actual=actual,
-                    point=actual + error,
-                    p10=actual - band,
-                    p90=actual + band,
+                    point=point,
+                    # The band is around the forecast, as a real model emits it.
+                    # Centring it on the actual would put the actual inside by
+                    # construction and make coverage untestable.
+                    p10=point - band,
+                    p90=point + band,
                     train_end=12 * fold,
                     mase_scale=scale,
                 )
@@ -74,11 +78,21 @@ def test_metrics_report_coverage_and_flag_an_unusable_mase_scale() -> None:
 
 
 @pytest.mark.unit
-def test_coverage_counts_actuals_outside_the_band() -> None:
-    narrow = metrics_for_rows(rows("egypt", "a", error=0.0, band=0.0))
-    assert narrow.coverage_p10_p90 == pytest.approx(1.0)
-    wide_miss = metrics_for_rows(rows("egypt", "a", error=100.0, band=1.0))
-    assert wide_miss.coverage_p10_p90 == pytest.approx(1.0)
+def test_coverage_counts_actuals_outside_a_real_band() -> None:
+    missed = metrics_for_rows(rows("egypt", "a", error=100.0, band=1.0))
+    # A real band that the actuals fall outside is genuinely 0% coverage.
+    assert missed.coverage_p10_p90 == pytest.approx(0.0)
+
+
+@pytest.mark.unit
+def test_a_zero_width_band_has_undefined_coverage_not_zero() -> None:
+    # A model whose residuals collapse emits p10 == p90. Every actual then falls
+    # outside a zero-width band, which computes to 0% and reads as
+    # catastrophically miscalibrated, when the model in fact expressed no
+    # uncertainty at all.
+    degenerate = metrics_for_rows(rows("egypt", "a", error=5.0, band=0.0))
+    assert degenerate.coverage_p10_p90 is None
+    assert any("no interval" in w for w in degenerate.warnings)
 
 
 @pytest.mark.unit

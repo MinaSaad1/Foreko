@@ -111,8 +111,18 @@ def signed_bias_pct(actual: np.ndarray, predicted: np.ndarray) -> float | None:
 def interval_coverage(
     actual: np.ndarray, p10: np.ndarray, p90: np.ndarray
 ) -> float | None:
-    """Share of actuals that landed inside the P10 to P90 band."""
+    """Share of actuals that landed inside the P10 to P90 band.
+
+    None when the band has no width. A model whose residuals collapse produces
+    p10 == p90, and every actual then falls outside a zero-width band, which
+    computes to 0% coverage. That reads as catastrophically miscalibrated when
+    the truth is that the model expressed no uncertainty at all. Coverage of a
+    degenerate interval is undefined, not zero.
+    """
     if not len(actual):
+        return None
+    width = np.abs(np.asarray(p90) - np.asarray(p10))
+    if float(np.max(width)) < 1e-9:
         return None
     inside = (actual >= np.minimum(p10, p90)) & (actual <= np.maximum(p10, p90))
     return float(np.mean(inside))
@@ -162,13 +172,20 @@ def metrics_for_rows(rows: Sequence[FoldPrediction]) -> MetricSet:
     if wape_value is None:
         warnings.append("WAPE is undefined: the actuals sum to zero.")
 
+    coverage = interval_coverage(actual, p10, p90)
+    if coverage is None and len(actual):
+        warnings.append(
+            "Coverage is undefined: this candidate produced no interval, so its "
+            "P10 and P90 are identical."
+        )
+
     return MetricSet(
         mase=mase_value,
         wape=wape_value,
         smape=smape(actual, point),
         rmse=rmse(actual, point),
         bias_pct=signed_bias_pct(actual, point),
-        coverage_p10_p90=interval_coverage(actual, p10, p90),
+        coverage_p10_p90=coverage,
         warnings=tuple(warnings),
     )
 
