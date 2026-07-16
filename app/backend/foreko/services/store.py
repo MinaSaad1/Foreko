@@ -17,48 +17,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator, Literal
 
-
-_SCHEMA = """
-CREATE TABLE IF NOT EXISTS analyses (
-  id          TEXT PRIMARY KEY,
-  dataset_id  TEXT NOT NULL,
-  kind        TEXT NOT NULL,
-  params_hash TEXT NOT NULL,
-  result_json TEXT NOT NULL,
-  created_at  TEXT NOT NULL,
-  UNIQUE(dataset_id, kind, params_hash)
-);
-CREATE INDEX IF NOT EXISTS idx_analyses_dataset ON analyses(dataset_id);
-
-CREATE TABLE IF NOT EXISTS scenarios (
-  id          TEXT PRIMARY KEY,
-  dataset_id  TEXT NOT NULL,
-  label       TEXT NOT NULL,
-  config_json TEXT NOT NULL,
-  created_at  TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_scenarios_dataset ON scenarios(dataset_id);
-
-CREATE TABLE IF NOT EXISTS forecast_history (
-  id            TEXT PRIMARY KEY,
-  dataset_id    TEXT NOT NULL,
-  model         TEXT NOT NULL,
-  run_at        TEXT NOT NULL,
-  horizon       INTEGER NOT NULL,
-  forecast_json TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_fhistory_dataset ON forecast_history(dataset_id);
-
-CREATE TABLE IF NOT EXISTS annotations (
-  id          TEXT PRIMARY KEY,
-  dataset_id  TEXT NOT NULL,
-  date        TEXT NOT NULL,
-  label       TEXT NOT NULL,
-  note        TEXT,
-  created_at  TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_annot_dataset ON annotations(dataset_id);
-"""
+from foreko.services.migrations import run_migrations
 
 
 AnalysisKind = Literal[
@@ -103,8 +62,8 @@ class Store:
             conn.close()
 
     def _init_schema(self) -> None:
-        with _db_lock, self._conn() as c:
-            c.executescript(_SCHEMA)
+        with _db_lock:
+            run_migrations(self.db_path)
 
     # ---------- analyses cache ----------
 
