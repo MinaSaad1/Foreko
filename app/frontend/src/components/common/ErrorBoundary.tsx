@@ -16,7 +16,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
  }
 
  componentDidCatch(error: Error, info: { componentStack?: string | null }): void {
- // eslint-disable-next-line no-console
+  
  console.error("[Foreko] render error", error, info.componentStack);
  }
 

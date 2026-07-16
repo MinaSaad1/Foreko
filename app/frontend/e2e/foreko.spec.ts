@@ -1,4 +1,4 @@
-import { test, expect, Page, APIRequestContext } from "@playwright/test";
+import { test, expect, APIRequestContext } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,12 +26,6 @@ async function uploadSampleViaApi(request: APIRequestContext): Promise<string> {
   expect(res.ok(), `upload failed: ${res.status()} ${await res.text()}`).toBeTruthy();
   const body = await res.json();
   return body.id as string;
-}
-
-async function seedDatasetInApp(page: Page, id: string) {
-  // Navigate directly to a route including the dataset id; the sync hook will hydrate.
-  await page.goto(`/datasets`);
-  await page.waitForLoadState("networkidle");
 }
 
 test.describe.configure({ mode: "default" });
@@ -120,7 +114,6 @@ for (const route of DATASET_ROUTES) {
 
 test("covariates multi-series bug: series_col=none should surface descriptive error, not Internal Server Error", async ({
   page,
-  request,
 }) => {
   expect(datasetId).toBeTruthy();
   await page.goto(`/covariates/${datasetId}`);
@@ -142,11 +135,6 @@ test("covariates multi-series bug: series_col=none should surface descriptive er
   const analyzeBtn = page.getByRole("button", { name: /analyze factor impact/i });
   await expect(analyzeBtn).toBeEnabled({ timeout: 30_000 });
   await analyzeBtn.click();
-
-  // Wait for an error to surface. The backend should now send a descriptive `detail`.
-  const errorBanner = page
-    .locator('p:has-text("Internal Server Error"), .text-anomaly, [role="alert"]')
-    .first();
 
   // Give the request up to 60s to complete and surface.
   const errorText = await page

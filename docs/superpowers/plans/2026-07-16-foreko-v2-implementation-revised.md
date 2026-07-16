@@ -1355,17 +1355,25 @@ Add an `e2e` job to `.github/workflows/main.yml` running on `ubuntu-latest` and 
 installing uv and Node, running `npx playwright install --with-deps chromium`, and executing the
 suite with a temp `FOREKO_E2E_STORAGE_DIR`. Upload `e2e/artifacts` on failure.
 
-Frontend lint needs a decision first. `package.json:11` declares `"lint": "eslint ."`, but eslint
-is **not a dependency and there is no eslint config file**, so the script has never run. That is
-why CI omits it. Do not simply add `npm run lint` to CI: it would fail immediately.
+**DECIDED 2026-07-16: installed.** `package.json:11` declared `"lint": "eslint ."` while eslint was
+not a dependency and no config existed, so the script had never run. eslint 9 with a flat config is
+now installed and `npm run lint` is in CI, making design 13.5's gate real.
 
-Pick one and record it:
-- Install eslint with a flat config matching the repo's TypeScript and React usage, fix what it
-  finds, then add it to CI. This makes design 13.5's "frontend lint passes" gate real.
-- Or delete the phantom script, and amend design 13.5 to drop the frontend lint gate, since
-  `tsc -b --noEmit` is then the only static check.
+The config is deliberately narrow, and that scoping was the actual decision. `eslint-plugin-react-hooks`
+v7 ships React Compiler rules (`set-state-in-effect`, `refs`, `purity`, `globals`). Enabling them
+produced 21 errors against working code: setting state from a fetched result, a module-level cache,
+`Date.now` during render. This app does not use React Compiler, so those rules would have meant
+rewriting sound code to satisfy a compiler that is not in the build. They are off, with a note to
+revisit if Foreko adopts it. `rules-of-hooks` is an error, `exhaustive-deps` a warning, and tsc
+remains the real gate on types.
 
-Either is defensible. What is not defensible is leaving a script that claims a gate nobody runs.
+That left 4 real errors, all dead code in `e2e/foreko.spec.ts`: an uncalled `seedDatasetInApp`, an
+unused `request` fixture, a superseded `errorBanner` locator, and the `Page` import they orphaned.
+Removed rather than suppressed. `ErrorBoundary.tsx:19` also carried a stale `eslint-disable` for a
+rule nobody was running, which is its own evidence that someone once intended this gate to exist.
+
+Result: `npm run lint` exits 0 with one `exhaustive-deps` warning against pre-existing code, which is
+a real observation and correctly non-blocking.
 
 Cache the model directory or rely on `FOREKO_FAKE_MODELS=1` so CI performs no model download.
 Assert that the journey makes no new outbound network request (design §13.5).
