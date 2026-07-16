@@ -11,7 +11,7 @@ deleting the immutable runs that produced it.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -81,6 +81,32 @@ class WorkflowState:
             if self.stages[stage].status != "complete":
                 return stage
         return None
+
+
+def latest_runs_by_stage(runs: Sequence[ProjectRun]) -> dict[str, ProjectRun]:
+    """Most recent run per stage, from a newest-first list."""
+    latest: dict[str, ProjectRun] = {}
+    for run in runs:
+        latest.setdefault(run.stage, run)
+    return latest
+
+
+def workflow_as_dict(state: WorkflowState) -> dict:
+    """Wire shape for the workflow endpoint and any caller checking readiness."""
+    return {
+        "project_id": state.project_id,
+        "revision": state.revision,
+        "next_stage": state.next_stage(),
+        "stages": {
+            stage: {
+                "stage": state.stages[stage].stage,
+                "status": state.stages[stage].status,
+                "reason": state.stages[stage].reason,
+                "run_id": state.stages[stage].run_id,
+            }
+            for stage in STAGE_ORDER
+        },
+    }
 
 
 def _is_current(run: ProjectRun | None, revision: int) -> bool:

@@ -14,10 +14,17 @@ import numpy as np
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
-from ..deps import get_generic_jobs, get_project_db, get_settings
+from ..deps import get_generic_jobs, get_project_db, get_registry, get_settings
 from ..schemas.project import ProjectRunCreate
-from ..services import csv_loader, preparation, project_artifacts
+from ..services import (
+    backtest as backtest_service,
+    csv_loader,
+    preparation,
+    project_artifacts,
+    validation_policy,
+)
 from ..services.project_store import ProjectStore
+from .projects import workflow_for as _workflow_for
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +138,128 @@ async def start_prepare(
             await jobs.finish(job, summary)
         except Exception as exc:  # noqa: BLE001 - reported to the user verbatim
             logger.exception("Prepare failed for project %s", project_id)
+            store.fail_run(run.id, str(exc))
+            await jobs.fail(job, str(exc))
+
+    asyncio.create_task(_run())
+    return {"job_id": job.job_id, "run_id": run.id, "status": "running"}
+
+
+def _serialize_metrics(metrics: validation_policy.MetricSet) -> dict:
+    return {
+        "mase": metrics.mase,
+        "wape": metrics.wape,
+        "smape": metrics.smape,
+        "rmse": metrics.rmse,
+        "bias_pct": metrics.bias_pct,
+        "coverage_p10_p90": metrics.coverage_p10_p90,
+        "warnings": list(metrics.warnings),
+    }
+
+
+def _serialize_validation(result: validation_policy.ValidationResult) -> dict:
+    return {
+        "primary_metric": result.primary_metric,
+        "portfolio_metrics": _serialize_metrics(result.portfolio_metrics),
+        "series_policies": {
+            series_id: {
+                "series_id": policy.series_id,
+                "champion": policy.champion,
+                "challenger": policy.challenger,
+                "eligible": list(policy.eligible),
+                "ineligible": policy.ineligible,
+                "reason": policy.reason,
+                "ensemble_weights": policy.ensemble_weights,
+                "metrics": {
+                    model: _serialize_metrics(m) for model, m in policy.metrics.items()
+                },
+            }
+            for series_id, policy in result.series_policies.items()
+        },
+        "failures": [
+            {
+                "model": f.model,
+                "fold": f.fold,
+                "reason": f.reason,
+                "series_id": f.series_id,
+            }
+            for f in result.failures
+        ],
+    }
+
+
+@router.post("/{project_id}/validate", status_code=202)
+async def start_validate(
+    project_id: str,
+    store: ProjectStore = Depends(get_project_db),
+    jobs=Depends(get_generic_jobs),
+    settings=Depends(get_settings),
+    registry=Depends(get_registry),
+) -> dict:
+    """Score every candidate over rolling folds and select a policy per series.
+
+    This is the headline evidence: the champion comes from rolling validation,
+    not a single holdout (design 14).
+    """
+    project = store.get_project(project_id)
+    if project is None:
+        raise HTTPException(404, "Project not found.")
+    if project.config is None:
+        raise HTTPException(409, "Configure the project before validating it.")
+
+    workflow = _workflow_for(store, project)
+    if workflow["stages"]["validate"]["status"] == "blocked":
+        raise HTTPException(409, workflow["stages"]["validate"]["reason"])
+
+    config = project.config
+    job = jobs.create("project-validate")
+    run = store.create_run(
+        ProjectRunCreate(
+            project_id=project_id,
+            revision_no=project.current_revision,
+            stage="validate",
+            job_id=job.job_id,
+        )
+    )
+    store.start_run(run.id)
+
+    async def _run() -> None:
+        try:
+            async def progress(current, total, stage):
+                await jobs.emit_progress(job, current=current, total=total, stage=stage)
+
+            predictions, failures = await backtest_service.run_multi_series_folds(
+                dataset_id=project.dataset_id,
+                mapping=config.mapping,
+                horizon=config.horizon,
+                folds=config.folds,
+                models=list(config.candidate_models),
+                datasets_dir=settings.datasets_dir,
+                registry=registry,
+                progress_cb=progress,
+                stop_event=job.stop_event,
+            )
+            if job.stop_event.is_set():
+                return
+
+            result = validation_policy.select_policies(
+                predictions,
+                failures,
+                expected_folds=config.folds,
+                primary_metric=config.primary_metric,
+            )
+            payload = _serialize_validation(result)
+
+            artifact = (
+                project_artifacts.run_dir(settings.storage_dir, project_id, run.id)
+                / "validation.json"
+            )
+            project_artifacts.atomic_write_json(artifact, payload)
+
+            store.finish_run(run.id, str(artifact), payload)
+            await jobs.finish(job, payload)
+        except Exception as exc:  # noqa: BLE001 - reported to the user verbatim
+            logger.exception("Validate failed for project %s", project_id)
             store.fail_run(run.id, str(exc))
             await jobs.fail(job, str(exc))
 

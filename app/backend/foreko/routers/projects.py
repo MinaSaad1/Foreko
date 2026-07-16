@@ -21,9 +21,9 @@ from ..schemas.project import (
 from ..services import project_artifacts
 from ..services.project_store import ProjectNotFoundError, ProjectStore
 from ..services.project_workflow import (
-    STAGE_ORDER,
-    WorkflowState,
     compute_workflow_state,
+    latest_runs_by_stage,
+    workflow_as_dict,
 )
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -129,37 +129,23 @@ def list_runs(
     return store.list_runs(project_id)
 
 
+def workflow_for(store: ProjectStore, project: ProjectDetail) -> dict:
+    """Workflow state for a project. Shared with the stage-job router, which
+    needs the same readiness answer before it starts a run."""
+    state = compute_workflow_state(
+        project_id=project.id,
+        current_revision=project.current_revision,
+        # list_runs is newest first, so the first hit per stage is the latest.
+        latest_runs=latest_runs_by_stage(store.list_runs(project.id)),
+        issued_revision=None,
+        actuals_updated_at=None,
+    )
+    return workflow_as_dict(state)
+
+
 @router.get("/{project_id}/workflow")
 def get_workflow(
     project_id: str,
     store: ProjectStore = Depends(get_project_db),
 ) -> dict:
-    project = _require_project(store, project_id)
-    runs = store.list_runs(project_id)
-
-    # list_runs is newest first, so the first hit per stage is the latest.
-    latest: dict[str, ProjectRun] = {}
-    for run in runs:
-        latest.setdefault(run.stage, run)
-
-    state: WorkflowState = compute_workflow_state(
-        project_id=project_id,
-        current_revision=project.current_revision,
-        latest_runs=latest,
-        issued_revision=None,
-        actuals_updated_at=None,
-    )
-    return {
-        "project_id": state.project_id,
-        "revision": state.revision,
-        "next_stage": state.next_stage(),
-        "stages": {
-            stage: {
-                "stage": state.stages[stage].stage,
-                "status": state.stages[stage].status,
-                "reason": state.stages[stage].reason,
-                "run_id": state.stages[stage].run_id,
-            }
-            for stage in STAGE_ORDER
-        },
-    }
+    return workflow_for(store, _require_project(store, project_id))
