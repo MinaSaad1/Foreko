@@ -11,6 +11,7 @@ import json
 import logging
 
 import numpy as np
+import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
@@ -19,10 +20,13 @@ from ..schemas.project import ProjectRunCreate
 from ..services import (
     backtest as backtest_service,
     csv_loader,
+    factor_plan,
     preparation,
     project_artifacts,
+    project_forecast,
     validation_policy,
 )
+from ..services.forecaster import _infer_future_dates
 from ..services.project_store import ProjectStore
 from .projects import workflow_for as _workflow_for
 
@@ -260,6 +264,160 @@ async def start_validate(
             await jobs.finish(job, payload)
         except Exception as exc:  # noqa: BLE001 - reported to the user verbatim
             logger.exception("Validate failed for project %s", project_id)
+            store.fail_run(run.id, str(exc))
+            await jobs.fail(job, str(exc))
+
+    asyncio.create_task(_run())
+    return {"job_id": job.job_id, "run_id": run.id, "status": "running"}
+
+
+def _latest_validation(store: ProjectStore, project) -> dict | None:
+    for run in store.list_runs(project.id):
+        if (
+            run.stage == "validate"
+            and run.status == "done"
+            and run.revision_no == project.current_revision
+        ):
+            return run.summary
+    return None
+
+
+@router.get("/{project_id}/factor-plan")
+def get_factor_plan_requirements(
+    project_id: str,
+    store: ProjectStore = Depends(get_project_db),
+    settings=Depends(get_settings),
+) -> dict:
+    """Which future factors the forecast needs, and for which periods.
+
+    The Forecast stage collects these before it will run, so the user sees the
+    exact gaps rather than a refusal after the fact.
+    """
+    project = store.get_project(project_id)
+    if project is None:
+        raise HTTPException(404, "Project not found.")
+    if project.config is None:
+        raise HTTPException(409, "Configure the project first.")
+
+    config = project.config
+    df = csv_loader.load_dataset(project.dataset_id, settings.datasets_dir)
+    _ids, _values, dates = csv_loader.extract_series(df, config.mapping)
+    periods = [
+        str(pd.Timestamp(d).date())
+        for d in _infer_future_dates(dates[0], config.horizon)
+    ]
+
+    return {
+        "periods": periods,
+        "required": list(factor_plan.required_covariates(config.covariate_roles)),
+        "roles": dict(config.covariate_roles),
+        "calendar": factor_plan.generate_calendar_factors(periods),
+    }
+
+
+@router.post("/{project_id}/forecast", status_code=202)
+async def start_forecast(
+    project_id: str,
+    body: dict | None = None,
+    store: ProjectStore = Depends(get_project_db),
+    jobs=Depends(get_generic_jobs),
+    settings=Depends(get_settings),
+    registry=Depends(get_registry),
+) -> dict:
+    """Run the baseline forecast for every series using its selected policy."""
+    project = store.get_project(project_id)
+    if project is None:
+        raise HTTPException(404, "Project not found.")
+    if project.config is None:
+        raise HTTPException(409, "Configure the project before forecasting.")
+
+    workflow = _workflow_for(store, project)
+    if workflow["stages"]["forecast"]["status"] == "blocked":
+        raise HTTPException(409, workflow["stages"]["forecast"]["reason"])
+
+    validation = _latest_validation(store, project)
+    if not validation or not validation.get("series_policies"):
+        raise HTTPException(409, "Run validation before forecasting.")
+
+    config = project.config
+    payload = body or {}
+    df = csv_loader.load_dataset(project.dataset_id, settings.datasets_dir)
+    _ids, _values, dates = csv_loader.extract_series(df, config.mapping)
+    periods = [
+        str(pd.Timestamp(d).date())
+        for d in _infer_future_dates(dates[0], config.horizon)
+    ]
+
+    # Blocked before any model runs. A missing assumption is the user's to
+    # supply, and the response names every gap (design 10.3).
+    plan_check = factor_plan.validate_factor_plan(
+        roles=config.covariate_roles,
+        periods=periods,
+        values=payload.get("values") or {},
+        fill_policies=payload.get("fill_policies") or {},
+    )
+    if not plan_check.valid:
+        raise HTTPException(
+            409,
+            {
+                "message": plan_check.message,
+                "missing": plan_check.missing,
+                "periods": periods,
+            },
+        )
+
+    try:
+        materialized = factor_plan.materialize_factor_plan(
+            roles=config.covariate_roles,
+            periods=periods,
+            values=payload.get("values") or {},
+            fill_policies=payload.get("fill_policies") or {},
+        )
+    except factor_plan.FactorPlanError as exc:
+        raise HTTPException(409, str(exc)) from None
+
+    job = jobs.create("project-forecast")
+    run = store.create_run(
+        ProjectRunCreate(
+            project_id=project_id,
+            revision_no=project.current_revision,
+            stage="forecast",
+            job_id=job.job_id,
+        )
+    )
+    store.start_run(run.id)
+
+    async def _run() -> None:
+        try:
+            async def progress(current, total, stage):
+                await jobs.emit_progress(job, current=current, total=total, stage=stage)
+
+            result = await project_forecast.run_project_forecast(
+                dataset_id=project.dataset_id,
+                config=config,
+                series_policies=validation["series_policies"],
+                datasets_dir=settings.datasets_dir,
+                registry=registry,
+                progress_cb=progress,
+                stop_event=job.stop_event,
+            )
+            if job.stop_event.is_set():
+                return
+
+            summary = result.as_dict()
+            summary["assumptions"] = materialized.values
+            summary["applied_fills"] = materialized.applied_fills
+            summary["periods"] = periods
+
+            artifact = (
+                project_artifacts.run_dir(settings.storage_dir, project_id, run.id)
+                / "forecast.json"
+            )
+            project_artifacts.atomic_write_json(artifact, summary)
+            store.finish_run(run.id, str(artifact), summary)
+            await jobs.finish(job, summary)
+        except Exception as exc:  # noqa: BLE001 - reported to the user verbatim
+            logger.exception("Forecast failed for project %s", project_id)
             store.fail_run(run.id, str(exc))
             await jobs.fail(job, str(exc))
 
