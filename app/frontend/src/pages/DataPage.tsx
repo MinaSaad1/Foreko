@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ export function DataPage() {
   const [previewErrors, setPreviewErrors] = useState<Record<string, string>>({});
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
+  const [showAllVersions, setShowAllVersions] = useState(false);
 
   const { data: datasets, isLoading } = useQuery({
     queryKey: ["datasets"],
@@ -41,6 +42,32 @@ export function DataPage() {
   });
 
   const hasDatasets = datasets && datasets.length > 0;
+
+  /**
+   * One row per file, newest upload wins.
+   *
+   * Re-uploading the same file is the normal way to refresh data, and each
+   * upload is a separate dataset, so the table filled with rows that were
+   * identical apart from a timestamp. The older copies are still on disk and
+   * still count against storage, so they are hidden, not disowned: the count
+   * says how many, and the toggle brings them back so they can be deleted.
+   */
+  const visibleDatasets = useMemo(() => {
+    if (!datasets) return [];
+    if (showAllVersions) return datasets;
+    const newest = new Map<string, DatasetSummary>();
+    for (const d of datasets) {
+      const seen = newest.get(d.filename);
+      if (!seen || Date.parse(d.uploaded_at) > Date.parse(seen.uploaded_at)) {
+        newest.set(d.filename, d);
+      }
+    }
+    return [...newest.values()].sort(
+      (a, b) => Date.parse(b.uploaded_at) - Date.parse(a.uploaded_at),
+    );
+  }, [datasets, showAllVersions]);
+
+  const olderCopies = (datasets?.length ?? 0) - visibleDatasets.length;
 
   const [addOpen, setAddOpen] = useState<boolean>(() => readAddPanelOpen(null));
 
@@ -114,7 +141,10 @@ export function DataPage() {
     navigate(`/compare/${preview.id}`);
   };
 
-  const totalRows = (datasets ?? []).reduce((sum, d) => sum + d.row_count, 0);
+  const totalRows = visibleDatasets.reduce((sum, d) => sum + d.row_count, 0);
+  // Every copy occupies disk, including the ones the table is hiding, so this
+  // one counts all of them. A storage figure that only counted what is on
+  // screen would understate what is actually being kept.
   const totalBytes = (datasets ?? []).reduce((sum, d) => sum + d.size_bytes, 0);
 
   return (
@@ -127,9 +157,9 @@ export function DataPage() {
 
       {hasDatasets && (
         <FactGrid>
-          <Fact label="Datasets" value={String(datasets.length)} />
+          <Fact label="Files" value={String(visibleDatasets.length)} />
           <Fact label="Total rows" value={totalRows.toLocaleString()} />
-          <Fact label="Storage" value={`${(totalBytes / 1024).toFixed(1)} KB`} />
+          <Fact label="Storage on disk" value={`${(totalBytes / 1024).toFixed(1)} KB`} />
           <Fact label="Kept for" value="30 days, then purged" />
         </FactGrid>
       )}
@@ -174,7 +204,30 @@ export function DataPage() {
           ))}
         </div>
       ) : hasDatasets ? (
-        <Section title="Your datasets">
+        <Section
+          title="Your datasets"
+          controls={
+            olderCopies > 0 || showAllVersions ? (
+              <button
+                type="button"
+                onClick={() => setShowAllVersions((v) => !v)}
+                aria-pressed={showAllVersions}
+                className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted transition-colors hover:text-accent"
+              >
+                {showAllVersions
+                  ? "Show newest only"
+                  : `Show ${olderCopies} older ${olderCopies === 1 ? "copy" : "copies"}`}
+              </button>
+            ) : undefined
+          }
+        >
+          {olderCopies > 0 && !showAllVersions && (
+            <p className="mb-3 text-[13px] text-text-secondary">
+              Showing the newest upload of each file. {olderCopies} older{" "}
+              {olderCopies === 1 ? "copy is" : "copies are"} hidden, still stored, and
+              still counted in storage above.
+            </p>
+          )}
           <div className="overflow-x-auto border border-border bg-bg-surface">
             <table className="terminal-table">
               <colgroup>
@@ -197,7 +250,7 @@ export function DataPage() {
                 </tr>
               </thead>
               <tbody className="font-mono text-xs">
-                {datasets.map((d) => (
+                {visibleDatasets.map((d) => (
                   <Fragment key={d.id}>
                     <tr className="group border-b border-border/40 transition-colors last:border-0 hover:bg-accent/10">
                       <td
@@ -221,12 +274,17 @@ export function DataPage() {
                       <td className="px-4 py-2">
                         {/* Not opacity-60 until hover. Using a dataset is the
                             main path on this page; it should not need to be
-                            discovered by hovering. */}
-                        <div className="flex justify-end gap-3">
+                            discovered by hovering.
+
+                            No min-width here: three fixed-width buttons plus
+                            gap-3 pushed this column past its 30% track and
+                            scrolled the whole table sideways, clipping the
+                            actions to "VI". */}
+                        <div className="flex flex-wrap justify-end gap-2">
                           <button
                             onClick={() => handleExpand(d.id)}
                             aria-expanded={expandedId === d.id}
-                            className={`flex min-w-[70px] items-center justify-center border bg-transparent px-3 py-1 font-mono text-xs uppercase tracking-[0.15em] transition-colors ${
+                            className={`border bg-transparent px-2.5 py-1 font-mono text-xs uppercase tracking-[0.1em] transition-colors ${
                               expandedId === d.id
                                 ? "border-accent text-accent"
                                 : "border-text-muted/40 text-text-secondary hover:border-text-primary hover:text-text-primary"
@@ -236,7 +294,7 @@ export function DataPage() {
                           </button>
                           <button
                             onClick={() => handleUse(d)}
-                            className="flex min-w-[70px] items-center justify-center border border-accent bg-accent px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.15em] text-on-accent transition-colors hover:bg-transparent hover:text-accent"
+                            className="border border-accent bg-accent px-2.5 py-1 font-mono text-xs font-medium uppercase tracking-[0.1em] text-on-accent transition-colors hover:bg-transparent hover:text-accent"
                           >
                             Use
                           </button>
@@ -247,13 +305,13 @@ export function DataPage() {
                                   deleteMutation.mutate(d.id);
                                   setConfirmingDelete(null);
                                 }}
-                                className="flex items-center justify-center border border-anomaly bg-transparent px-3 py-1 font-mono text-xs uppercase tracking-[0.15em] text-anomaly transition-colors hover:bg-anomaly hover:text-on-accent"
+                                className="border border-anomaly bg-transparent px-2.5 py-1 font-mono text-xs uppercase tracking-[0.1em] text-anomaly transition-colors hover:bg-anomaly hover:text-on-accent"
                               >
                                 Confirm
                               </button>
                               <button
                                 onClick={() => setConfirmingDelete(null)}
-                                className="flex items-center justify-center border border-border-strong/70 bg-transparent px-3 py-1 font-mono text-xs uppercase tracking-[0.15em] text-text-secondary"
+                                className="border border-border-strong/70 bg-transparent px-2.5 py-1 font-mono text-xs uppercase tracking-[0.1em] text-text-secondary"
                               >
                                 Cancel
                               </button>
@@ -264,7 +322,7 @@ export function DataPage() {
                             <button
                               onClick={() => setConfirmingDelete(d.id)}
                               aria-label={`Delete ${d.filename}`}
-                              className="flex min-w-[70px] items-center justify-center border border-anomaly/40 bg-transparent px-3 py-1 font-mono text-xs uppercase tracking-[0.15em] text-anomaly transition-colors hover:bg-anomaly hover:text-on-accent"
+                              className="border border-anomaly/40 bg-transparent px-2.5 py-1 font-mono text-xs uppercase tracking-[0.1em] text-anomaly transition-colors hover:bg-anomaly hover:text-on-accent"
                             >
                               Delete
                             </button>
