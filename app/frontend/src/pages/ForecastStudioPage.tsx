@@ -4,6 +4,7 @@ import { StudioStepper } from "@/components/project/StudioStepper";
 import { ValidateStage } from "@/components/project/ValidateStage";
 import { ForecastStage } from "@/components/project/ForecastStage";
 import { PlanStage } from "@/components/project/PlanStage";
+import { ReviewStage } from "@/components/project/ReviewStage";
 import { useProject, useProjectWorkflow } from "@/hooks/useProject";
 import { STAGE_LABELS, STUDIO_STAGES } from "@/types/project";
 import type { StudioStage } from "@/types/project";
@@ -58,6 +59,8 @@ export function ForecastStudioPage() {
  <ForecastStage project={project} workflow={workflow} />
  ) : stage === "plan" ? (
  <PlanStage project={project} workflow={workflow} />
+ ) : stage === "review" ? (
+ <ReviewStage project={project} workflow={workflow} />
  ) : (
  <NotBuiltYet stage={stage} />
  )}

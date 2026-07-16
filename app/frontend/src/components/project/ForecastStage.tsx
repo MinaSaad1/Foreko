@@ -7,7 +7,8 @@ import {
 } from "@/components/project/FutureFactorGrid";
 import { useProjectJob } from "@/hooks/useProjectJob";
 import { useProjectRuns } from "@/hooks/useProject";
-import type { ProjectDetail, WorkflowState } from "@/types/project";
+import type { ProjectDetail, ProjectRun, WorkflowState } from "@/types/project";
+import { IssueForecast } from "@/components/project/IssueForecast";
 import type {
  FactorPlanRequirements,
  FillPolicy,
@@ -155,12 +156,23 @@ export function ForecastStage({ project, workflow }: Props) {
  </p>
  ) : null}
 
- {result ? <ForecastResult result={result} /> : null}
+ {result ? (
+ <ForecastResult result={result} projectId={project.id} runs={runs} />
+ ) : null}
  </div>
  );
 }
 
-function ForecastResult({ result }: { result: ForecastRunResult }) {
+function ForecastResult({
+ result,
+ projectId,
+ runs,
+}: {
+ result: ForecastRunResult;
+ projectId: string;
+ runs: ProjectRun[] | undefined;
+}) {
+ const runId = runs?.find((r) => r.stage === "forecast" && r.status === "done")?.id;
  return (
  <div className="grid gap-4" aria-live="polite">
  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent">
@@ -214,6 +226,8 @@ function ForecastResult({ result }: { result: ForecastRunResult }) {
  </tbody>
  </table>
  </div>
+
+ {runId ? <IssueForecast projectId={projectId} runId={runId} /> : null}
 
  {result.exceptions.length ? (
  <div role="alert" className="border border-warn/50 bg-bg-surface/40 p-3">
