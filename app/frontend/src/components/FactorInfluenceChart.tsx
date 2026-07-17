@@ -65,8 +65,12 @@ export function FactorInfluenceChart({ factors }: FactorInfluenceChartProps) {
  data: values.map((v, i) => ({
  value: v,
  itemStyle: {
+ // Colour is the second channel, not the only one: the label carries the
+ // direction as a glyph. These two hues are a deep cyan and a blue that
+ // sit beside each other in the light theme, and the page used to ask
+ // people to tell a positive driver from a negative one by eye alone.
  color: directions[i] ==="up" ? t.accent : t.neutral,
- borderRadius: [0, 2, 2, 0],
+ borderRadius: 0,
  },
  label: {
  show: true,
@@ -74,7 +78,7 @@ export function FactorInfluenceChart({ factors }: FactorInfluenceChartProps) {
  color: t.textSecondary,
  fontFamily:"JetBrains Mono",
  fontSize: 10,
- formatter: `${v.toFixed(1)}%`,
+ formatter: `${directions[i] ==="up" ?"▲" :"▼"} ${v.toFixed(1)}%`,
  },
  })),
  barMaxWidth: 16,

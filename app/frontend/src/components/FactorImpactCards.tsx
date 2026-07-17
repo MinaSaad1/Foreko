@@ -1,96 +1,103 @@
-import type { FactorImpact } from"@/types/factors";
+import type { FactorImpact } from "@/types/factors";
 
 interface FactorImpactCardsProps {
- impact: FactorImpact;
- horizon: number;
+  impact: FactorImpact;
+  horizon: number;
 }
 
 function formatNumber(n: number, digits: number = 0): string {
- const abs = Math.abs(n);
- if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
- if (abs >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
- return n.toFixed(digits);
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toFixed(digits);
 }
 
+/**
+ * What the factors are worth, next to what the forecast said without them.
+ *
+ * Previously three identical cards, each with a 4px coloured side stripe and
+ * its own 3xl number. That was four bans in sixty lines: side-stripe accents,
+ * an identical-card grid, the hero-metric template, and three numbers at the
+ * same size so none of them led. The stripes were also aria-hidden, which made
+ * colour the only channel carrying direction.
+ *
+ * Now: one seam grid, no stripes, and the delta is the only 3xl number, because
+ * the delta is the answer. Baseline and with-factors are what it is measured
+ * against, so they sit a step down.
+ */
 export function FactorImpactCards({ impact, horizon }: FactorImpactCardsProps) {
- const pct = (impact.delta_percent * 100).toFixed(1);
- const arrow = impact.direction ==="up" ?"▲" : impact.direction ==="down" ?"▼" :"·";
+  const pct = (impact.delta_percent * 100).toFixed(1);
+  const arrow = impact.direction === "up" ? "▲" : impact.direction === "down" ? "▼" : "·";
 
- const deltaValueColor =
- impact.direction ==="up"
- ?"text-positive"
- : impact.direction ==="down"
- ?"text-anomaly"
- :"text-text-primary";
- const deltaStripe =
- impact.direction ==="up"
- ?"bg-positive"
- : impact.direction ==="down"
- ?"bg-anomaly"
- :"bg-border-strong";
+  const deltaValueColor =
+    impact.direction === "up"
+      ? "text-positive"
+      : impact.direction === "down"
+        ? "text-anomaly"
+        : "text-text-primary";
 
- const deltaSign = impact.delta_absolute >= 0 ?"+" :"";
- const pctSign = impact.delta_percent >= 0 ?"+" :"";
+  // Direction in words. The arrow is decoration on top of this, not instead of
+  // it, so the reading survives colour being ignored or indistinguishable.
+  const directionWord =
+    impact.direction === "up"
+      ? "higher than baseline"
+      : impact.direction === "down"
+        ? "lower than baseline"
+        : "level with baseline";
 
- return (
- <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
- {/* Impact on total */}
- <div className="relative overflow-hidden rounded-panel border border-border bg-bg-surface p-5">
- <span className={`absolute left-0 top-0 h-full w-1 ${deltaStripe}`} aria-hidden />
- <p className="font-mono text-xs uppercase tracking-widest text-text-secondary">
- Impact on total · next {horizon} periods
- </p>
- <div className="mt-3 flex items-baseline gap-2">
- <span className={`font-display text-3xl font-semibold ${deltaValueColor}`}>
- {arrow}
- </span>
- <span className={`font-display text-3xl font-semibold ${deltaValueColor}`}>
- {deltaSign}
- {formatNumber(impact.delta_absolute)}
- </span>
- </div>
- <p className={`mt-2 font-mono text-xs ${deltaValueColor}`}>
- {pctSign}
- {pct}% <span className="text-text-muted">vs baseline</span>
- </p>
- </div>
+  const deltaSign = impact.delta_absolute >= 0 ? "+" : "";
+  const pctSign = impact.delta_percent >= 0 ? "+" : "";
 
- {/* Baseline reference */}
- <div className="relative overflow-hidden rounded-panel border border-border bg-bg-surface p-5">
- <span className="absolute left-0 top-0 h-full w-1 bg-neutral"aria-hidden />
- <p className="font-mono text-xs uppercase tracking-widest text-text-secondary">
- Baseline · no factors
- </p>
- <div className="mt-3 flex items-baseline gap-2">
- <span className="font-display text-3xl font-semibold text-text-primary">
- {formatNumber(impact.total_baseline)}
- </span>
- </div>
- <p className="mt-2 font-mono text-xs text-text-muted">
- pure time-series pattern
- </p>
- </div>
+  return (
+    <div className="grid grid-cols-1 border-l border-t border-border-strong/70 md:grid-cols-3">
+      {/* The answer. The only 3xl number here. */}
+      <div className="border-r border-b border-border-strong/70 bg-bg-surface p-5">
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">
+          Impact on total, next {horizon} periods
+        </p>
+        <p className={`mt-3 font-display text-3xl font-semibold ${deltaValueColor}`}>
+          <span aria-hidden>{arrow}</span> {deltaSign}
+          {formatNumber(impact.delta_absolute)}
+        </p>
+        <p className="mt-2 text-[13px] text-text-secondary">
+          <span className={deltaValueColor}>
+            {pctSign}
+            {pct}%
+          </span>{" "}
+          {directionWord}
+        </p>
+      </div>
 
- {/* With factors */}
- <div className="relative overflow-hidden rounded-panel border border-accent/40 bg-bg-surface p-5">
- <span className="absolute left-0 top-0 h-full w-1 bg-accent"aria-hidden />
- <p className="font-mono text-xs uppercase tracking-widest text-accent">
- With factors
- </p>
- <div className="mt-3 flex items-baseline gap-2">
- <span className="font-display text-3xl font-semibold text-accent">
- {formatNumber(impact.total_with_factors)}
- </span>
- </div>
- <p className="mt-2 font-mono text-xs text-text-secondary">
- {impact.top_driver ? (
- <>
- <span className="text-text-muted">top driver:</span> {impact.top_driver}
- </>
- ) : ("forecast adjusted by factors"
- )}
- </p>
- </div>
- </div>
- );
+      {/* What it is measured against. */}
+      <div className="border-r border-b border-border-strong/70 bg-bg-surface p-5">
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">
+          Baseline, no factors
+        </p>
+        <p className="mt-3 font-display text-2xl font-medium text-text-primary">
+          {formatNumber(impact.total_baseline)}
+        </p>
+        <p className="mt-2 text-[13px] text-text-secondary">
+          The time-series pattern on its own
+        </p>
+      </div>
+
+      <div className="border-r border-b border-border-strong/70 bg-bg-surface p-5">
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent">
+          With factors
+        </p>
+        <p className="mt-3 font-display text-2xl font-medium text-accent">
+          {formatNumber(impact.total_with_factors)}
+        </p>
+        <p className="mt-2 text-[13px] text-text-secondary">
+          {impact.top_driver ? (
+            <>
+              <span className="text-text-muted">Top driver:</span> {impact.top_driver}
+            </>
+          ) : (
+            "Forecast adjusted by the factors you selected"
+          )}
+        </p>
+      </div>
+    </div>
+  );
 }

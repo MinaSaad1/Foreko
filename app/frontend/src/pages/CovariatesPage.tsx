@@ -166,8 +166,8 @@ export function CovariatesPage() {
          {result.factors.length > 0 && (
            <Section title="Which factors matter most">
              <p className="mb-3 text-[13px] leading-relaxed text-text-secondary">
-               Relative influence based on absolute correlation with the target. Cyan bars
-               = positive driver, blue bars = negative driver.
+               Relative influence based on absolute correlation with the target. A ▲ marks
+               a factor that moves the target up, ▼ one that moves it down.
              </p>
              <FactorInfluenceChart factors={result.factors} />
            </Section>
@@ -294,7 +294,7 @@ export function CovariatesPage() {
        <ul className="space-y-2 text-[13px] leading-relaxed text-text-secondary">
          {[
            "Influence bars rank factors by absolute correlation with the target.",
-           "Cyan = positive driver, blue = negative.",
+           "▲ means the factor moves the target up, ▼ means it moves it down. Correlation is association, not proof of cause.",
          ].map((item) => (
            <li key={item} className="flex gap-2">
              <span className="text-accent" aria-hidden>
