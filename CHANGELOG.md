@@ -4,6 +4,16 @@ All notable changes to Foreko are documented here. Format follows [Keep a Change
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-07-17
+
+Foreko becomes a forecasting workflow rather than a collection of analysis
+pages. A project holds the data recipe, the model evidence, the assumptions you
+entered, the forecast you issued, and how accurate it turned out. Reopening one
+restores all of it without rerunning anything.
+
+Existing data opens untouched: the SQLite migration is additive and V1
+datasets, annotations, scenarios, and saved analyses survive it.
+
 ### Added
 
 - **Forecast Projects.** A project is now the unit of work: it holds the data recipe, the model evidence, the assumptions, the forecast you issued, and its accuracy. Reopening one restores all of it without rerunning anything. Five stages (Prepare, Validate, Forecast, Plan, Review) each report whether they are ready, need attention, or are blocked and why.
@@ -31,6 +41,7 @@ All notable changes to Foreko are documented here. Format follows [Keep a Change
 
 ### Fixed
 
+- **A busy port made the packaged app open someone else's server.** The free-port probe set `SO_REUSEADDR`, which on Windows permits binding an address another socket is actively listening on, so every occupied port was reported free. The packaged backend then wrote the taken port into `runtime.json`, failed to bind it, and exited, leaving the desktop shell pointing its webview at whatever else owned that port. Found by building the installer's backend and starting it while another server held 8000.
 - **The whole Forecast Projects surface had no semantic colour.** V2 used `danger` and `warn` in 36 places across 18 files, and neither token was ever defined, so Tailwind emitted nothing for them. Every error message rendered as ordinary body text, Confirm delete had no danger styling, and a stage needing attention looked identical to one not started. Renamed to the tokens the rest of the app already uses correctly.
 - **The data quality score was scaled twice and always read green.** The backend returns 0 to 100; the rail multiplied by 100 again and banded against 0.8, so it displayed "8700 / 100" and called every real score healthy, including a catastrophic one, while the card beside it read the same number correctly. Both now share one reader.
 - **Explain and Scenarios never reported a failed run.** Eight mutations between them had no error branch, so a failure left the previous chart on screen and read as success.
