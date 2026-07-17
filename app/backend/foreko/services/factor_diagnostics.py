@@ -1,6 +1,9 @@
 """Factor diagnostics: surrogate importance, permutation importance, lag CCF, Granger.
 
-Surrogate importance: fit LightGBM on target ~ factors, use native gain + SHAP.
+Surrogate importance: fit LightGBM on target ~ factors, use native gain. Not
+SHAP: shap is not a dependency and is not imported. The claim survived here long
+enough to reach the marketing site, which advertised "SHAP-based attributions"
+to people deciding whether to download.
 Permutation importance: shuffle each factor, re-forecast with TimesFM, measure ΔMAPE.
 Lag analysis: cross-correlation at lags -N..+N per numeric factor.
 Granger causality: linear test via statsmodels.
