@@ -15,7 +15,10 @@ import { test, expect, type APIRequestContext, type Page } from "@playwright/tes
  * user with an installer.
  */
 
-const API = process.env.FOREKO_E2E_API ?? "http://localhost:8002";
+// When the gate runs against a packaged build, the app and the API are the same
+// origin: the frozen backend serves the bundled frontend itself.
+const API =
+  process.env.FOREKO_E2E_API ?? process.env.FOREKO_E2E_BASE_URL ?? "http://localhost:8002";
 
 // Real fits, no stand-ins. TimesFM only where a checkpoint is already cached.
 const MODELS = (
@@ -88,12 +91,17 @@ test("every stage completes with real models on a wide dataset", async ({
   page,
   request,
 }) => {
+  // A packaged build serves itself from 127.0.0.1, which is this machine just as
+  // much as "localhost" is. Only a request to somewhere else is a finding.
+  const isLocal = (url: string) =>
+    url.startsWith("http://localhost") ||
+    url.startsWith("http://127.0.0.1") ||
+    url.startsWith("data:") ||
+    url.startsWith("blob:");
+
   const external: string[] = [];
   page.on("request", (req) => {
-    const url = req.url();
-    if (!url.startsWith("http://localhost") && !url.startsWith("data:")) {
-      external.push(url);
-    }
+    if (!isLocal(req.url())) external.push(req.url());
   });
 
   const datasetId = await seedDataset(request);

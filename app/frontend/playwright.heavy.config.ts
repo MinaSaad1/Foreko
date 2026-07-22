@@ -27,6 +27,13 @@ const storageDir =
   process.env.FOREKO_E2E_STORAGE_DIR ??
   fs.mkdtempSync(path.join(os.tmpdir(), "foreko-e2e-heavy-"));
 
+// Point this at a backend that is already running and the gate drives that
+// instead of starting one from source. That is how the built artifact gets
+// tested: run the installer's own foreko-backend.exe, which serves the bundled
+// frontend itself, and aim the same journey at it. Source passing says nothing
+// about what PyInstaller froze.
+const externalBaseUrl = process.env.FOREKO_E2E_BASE_URL;
+
 export default defineConfig({
   testDir: "./e2e",
   testMatch: /real-models\.spec\.ts/,
@@ -39,7 +46,7 @@ export default defineConfig({
   reporter: [["list"]],
   outputDir: "./e2e/artifacts-heavy",
   use: {
-    baseURL: "http://localhost:5175",
+    baseURL: externalBaseUrl ?? "http://localhost:5175",
     headless: true,
     trace: "on",
     video: "retain-on-failure",
@@ -47,7 +54,7 @@ export default defineConfig({
     actionTimeout: 30_000,
     navigationTimeout: 60_000,
   },
-  webServer: [
+  webServer: externalBaseUrl ? undefined : [
     {
       command: "uv run uvicorn foreko.main:app --port 8002 --app-dir app/backend",
       port: 8002,
