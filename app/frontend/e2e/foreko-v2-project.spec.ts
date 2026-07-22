@@ -78,37 +78,34 @@ test("forecast project survives the complete issue and review cycle", async ({
 
   await page.getByRole("button", { name: "New project" }).first().click();
   await page.getByLabel("Project name").fill("MEA Demand Plan");
-  await page.getByLabel("Dataset id").fill(datasetId);
+  await page.getByLabel("Data source").selectOption(datasetId);
   await page.getByRole("button", { name: "Create project" }).click();
 
-  await expect(page.getByRole("link", { name: /MEA Demand Plan/i })).toBeVisible();
-  await page.getByRole("link", { name: /MEA Demand Plan/i }).click();
-  await expect(page.getByRole("heading", { name: "MEA Demand Plan" })).toBeVisible();
-
+  // --- Set up -------------------------------------------------------------
+  // Through the UI, because a project with no revision can run nothing: this is
+  // the step whose absence used to leave Run prepare permanently disabled.
+  await expect(page.getByRole("heading", { name: "Set up the project" })).toBeVisible();
   const projectId = page.url().split("/projects/")[1].split("/")[0];
 
-  // Configure the revision through the API: the mapping UI is V1's job and is
-  // covered elsewhere. This journey is about the project workflow.
-  await page.evaluate(async (id) => {
-    await fetch(`/api/projects/${id}/revisions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        mapping: { date_col: "month", value_col: "sales", series_id_col: "region" },
-        frequency: "MS",
-        horizon: 3,
-        preparation_steps: [{ kind: "impute", method: "linear" }],
-        candidate_models: ["seasonal_naive", "ets"],
-        folds: 2,
-        primary_metric: "mase",
-        covariate_roles: {},
-      }),
-    });
-  }, projectId);
+  const seriesField = page.locator("label").filter({ hasText: "Series column" });
+  await seriesField.getByRole("button").first().click();
+  await page.getByRole("option", { name: /^region/ }).click();
+
+  await page.getByLabel("Frequency").selectOption("MS");
+  await page.getByLabel("Horizon").fill("3");
+  await page.getByLabel("Folds").fill("2");
+
+  // Deterministic candidates only. TimesFM would reach for a model download,
+  // which the external-request assertion at the end forbids.
+  await page.getByRole("checkbox", { name: /^TimesFM/ }).uncheck();
+  await page.getByRole("checkbox", { name: /^LightGBM/ }).uncheck();
+  await page.getByRole("checkbox", { name: /^ETS/ }).check();
+
+  await page.getByRole("button", { name: "Save and continue" }).click();
 
   // --- Prepare ------------------------------------------------------------
-  await page.goto(`/projects/${projectId}/studio/prepare`);
   await expect(page.getByRole("heading", { name: "Prepare" })).toBeVisible();
+  await page.getByRole("button", { name: "Add fill missing values" }).click();
   await page.getByRole("button", { name: "Run prepare" }).click();
   await expect(page.getByText("Prepare complete")).toBeVisible({ timeout: 60_000 });
 

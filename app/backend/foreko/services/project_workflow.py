@@ -122,17 +122,34 @@ def compute_workflow_state(
     latest_runs: Mapping[str, ProjectRun],
     issued_revision: int | None,
     actuals_updated_at: str | None,
+    has_config: bool = True,
 ) -> WorkflowState:
     """Derive every stage's state from the runs that exist.
 
     ``latest_runs`` maps a stage name to the most recent run for that stage,
     whatever its status or revision. A run from an older revision is evidence
     that the stage ran, not that it is current.
+
+    ``has_config`` is False for a project that has no revision yet. Prepare is
+    blocked in that case rather than merely not started, because nothing can run
+    until the columns, horizon, and candidates exist. The stage that refuses the
+    work has to be the stage that says why.
     """
 
     stages: dict[ProjectStage, StageState] = {}
 
     for stage in STAGE_ORDER:
+        if stage == "prepare" and not has_config:
+            stages[stage] = StageState(
+                stage=stage,
+                status="blocked",
+                reason=(
+                    "Configure the project before preparing it: "
+                    "no revision exists yet."
+                ),
+            )
+            continue
+
         if stage == "review":
             stages[stage] = _review_state(
                 latest_runs.get("forecast"),

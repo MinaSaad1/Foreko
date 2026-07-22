@@ -134,6 +134,22 @@ def test_workflow_starts_at_prepare_and_blocks_the_rest(client) -> None:
 
 
 @pytest.mark.unit
+def test_workflow_blocks_prepare_until_the_project_is_configured(client) -> None:
+    # A freshly created project has no revision. The workflow has to say that,
+    # because the Prepare screen reads its reason to explain the locked run.
+    project = _create(client)
+
+    workflow = client.get(f"/api/projects/{project['id']}/workflow").json()
+    assert workflow["revision"] == 0
+    assert workflow["stages"]["prepare"]["status"] == "blocked"
+    assert "Configure the project" in workflow["stages"]["prepare"]["reason"]
+
+    client.post(f"/api/projects/{project['id']}/revisions", json=_revision_body())
+    unblocked = client.get(f"/api/projects/{project['id']}/workflow").json()
+    assert unblocked["stages"]["prepare"]["status"] == "not_started"
+
+
+@pytest.mark.unit
 def test_project_ids_are_safe_path_segments(client) -> None:
     # The id is concatenated onto storage_dir to build the artifact directory.
     project = _create(client)

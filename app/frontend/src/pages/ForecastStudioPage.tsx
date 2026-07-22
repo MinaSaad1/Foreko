@@ -49,7 +49,9 @@ export function ForecastStudioPage() {
  <StudioStepper projectId={project.id} active={stage} workflow={workflow} />
  </header>
 
- {state?.status === "blocked" ? (
+ {!project.config ? (
+ <NeedsSetup projectId={project.id} />
+ ) : state?.status === "blocked" ? (
  <BlockedStage stage={stage} reason={state.reason} projectId={project.id} />
  ) : stage === "prepare" ? (
  <PrepareStage project={project} workflow={workflow} />
@@ -64,6 +66,28 @@ export function ForecastStudioPage() {
  ) : (
  <NotBuiltYet stage={stage} />
  )}
+ </div>
+ );
+}
+
+function NeedsSetup({ projectId }: { projectId: string }) {
+ // No revision means no columns, no horizon, and no candidates, so every stage
+ // would only be able to refuse. Say that once, here, with the way out.
+ return (
+ <div className="border border-border-strong/70 bg-bg-surface/40 p-6">
+ <h1 className="font-display text-[1.5rem] font-medium text-text-primary">
+ Set up the project first
+ </h1>
+ <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-text-secondary">
+ This project has no configuration yet, so no stage can run. Choose the date
+ and value columns, the horizon, and the models to compare.
+ </p>
+ <Link
+ to={`/projects/${projectId}/setup`}
+ className="mt-4 inline-block border border-accent/70 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-accent hover:bg-accent/10"
+ >
+ Set up project
+ </Link>
  </div>
  );
 }

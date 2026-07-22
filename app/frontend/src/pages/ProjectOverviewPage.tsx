@@ -63,7 +63,20 @@ export function ProjectOverviewPage() {
  <Fact label="Frequency" value={project.config?.frequency ?? "not set"} />
  </dl>
 
- {nextStage ? (
+ {!project.config ? (
+ <div className="flex flex-wrap items-center gap-3">
+ <Link
+ to={`/projects/${project.id}/setup`}
+ className="border border-accent/70 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-accent transition-colors hover:bg-accent/10"
+ >
+ Set up project
+ </Link>
+ <span className="text-[12px] text-text-secondary">
+ Pick the date and value columns, the horizon, and the models to compare.
+ Nothing can run until this is set.
+ </span>
+ </div>
+ ) : nextStage ? (
  <div className="flex items-center gap-3">
  <Link
  to={`/projects/${project.id}/studio/${nextStage}`}
@@ -78,6 +91,14 @@ export function ProjectOverviewPage() {
  ) : null}
 
  <section className="flex flex-wrap gap-2 border-t border-border-strong/70 pt-4">
+ {project.config ? (
+ <Link
+ to={`/projects/${project.id}/setup`}
+ className="border border-border-strong/70 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-text-secondary hover:border-accent hover:text-accent"
+ >
+ Edit setup
+ </Link>
+ ) : null}
  <Link
  to={`/projects/${project.id}/runs`}
  className="border border-border-strong/70 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-text-secondary hover:border-accent hover:text-accent"

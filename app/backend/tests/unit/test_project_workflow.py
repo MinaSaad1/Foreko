@@ -52,6 +52,23 @@ def test_empty_project_starts_at_prepare() -> None:
 
 
 @pytest.mark.unit
+def test_project_without_a_revision_blocks_prepare_with_the_reason() -> None:
+    # "Not started yet" would invite the user to press a button that can only
+    # refuse. The stage has to name the missing configuration instead.
+    state = compute_workflow_state(
+        current_revision=0,
+        latest_runs={},
+        issued_revision=None,
+        actuals_updated_at=None,
+        has_config=False,
+    )
+    assert state.prepare.status == "blocked"
+    assert "Configure the project" in state.prepare.reason
+    assert state.validate.status == "blocked"
+    assert state.next_stage() == "prepare"
+
+
+@pytest.mark.unit
 def test_preparation_change_invalidates_downstream() -> None:
     state = compute_workflow_state(
         current_revision=3,

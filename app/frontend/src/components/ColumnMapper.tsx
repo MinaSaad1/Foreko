@@ -5,6 +5,13 @@ interface ColumnMapperProps {
  preview: DatasetPreview;
  value: ColumnMapping | null;
  onChange: (mapping: ColumnMapping) => void;
+ /**
+  * Mapping to start from instead of the auto-detected one. A saved project
+  * revision must reopen on the columns it was saved with, otherwise editing an
+  * unrelated setting would silently remap the series. Pass a stable reference:
+  * a new object every render would reset the fields on every render.
+  */
+ initial?: ColumnMapping | null;
 }
 
 type DateMode ="single" |"year-month";
@@ -30,29 +37,55 @@ function detectYearMonth(preview: DatasetPreview) {
  };
 }
 
-export function ColumnMapper({ preview, value, onChange }: ColumnMapperProps) {
- const autoDate = useMemo(() => autoDetectDateColumn(preview), [preview]);
- const autoValue = useMemo(() => autoDetectValueColumn(preview), [preview]);
- const autoYM = useMemo(() => detectYearMonth(preview), [preview]);
+interface Seed {
+ mode: DateMode;
+ dateCol: string;
+ yearCol: string;
+ monthCol: string;
+ valueCol: string;
+ seriesIdCol: string;
+}
 
- const defaultMode: DateMode =
- autoYM.yearCol && autoYM.monthCol ?"year-month" :"single";
+function seedFrom(preview: DatasetPreview, initial?: ColumnMapping | null): Seed {
+ if (initial) {
+ return {
+ mode: initial.date_parts ?"year-month" :"single",
+ dateCol: initial.date_col ??"",
+ yearCol: initial.date_parts?.year_col ??"",
+ monthCol: initial.date_parts?.month_col ??"",
+ valueCol: initial.value_col,
+ seriesIdCol: initial.series_id_col ??"",
+ };
+ }
+ const ym = detectYearMonth(preview);
+ return {
+ mode: ym.yearCol && ym.monthCol ?"year-month" :"single",
+ dateCol: autoDetectDateColumn(preview) ??"",
+ yearCol: ym.yearCol ??"",
+ monthCol: ym.monthCol ??"",
+ valueCol: autoDetectValueColumn(preview) ??"",
+ seriesIdCol:"",
+ };
+}
 
- const [mode, setMode] = useState<DateMode>(defaultMode);
- const [dateCol, setDateCol] = useState<string>(autoDate ??"");
- const [yearCol, setYearCol] = useState<string>(autoYM.yearCol ??"");
- const [monthCol, setMonthCol] = useState<string>(autoYM.monthCol ??"");
- const [valueCol, setValueCol] = useState<string>(autoValue ??"");
- const [seriesIdCol, setSeriesIdCol] = useState<string>("");
+export function ColumnMapper({ preview, value, onChange, initial }: ColumnMapperProps) {
+ const seed = useMemo(() => seedFrom(preview, initial), [preview, initial]);
+
+ const [mode, setMode] = useState<DateMode>(seed.mode);
+ const [dateCol, setDateCol] = useState<string>(seed.dateCol);
+ const [yearCol, setYearCol] = useState<string>(seed.yearCol);
+ const [monthCol, setMonthCol] = useState<string>(seed.monthCol);
+ const [valueCol, setValueCol] = useState<string>(seed.valueCol);
+ const [seriesIdCol, setSeriesIdCol] = useState<string>(seed.seriesIdCol);
 
  useEffect(() => {
- setMode(defaultMode);
- setDateCol(autoDate ??"");
- setYearCol(autoYM.yearCol ??"");
- setMonthCol(autoYM.monthCol ??"");
- setValueCol(autoValue ??"");
- setSeriesIdCol("");
- }, [preview, autoDate, autoValue, autoYM.yearCol, autoYM.monthCol, defaultMode]);
+ setMode(seed.mode);
+ setDateCol(seed.dateCol);
+ setYearCol(seed.yearCol);
+ setMonthCol(seed.monthCol);
+ setValueCol(seed.valueCol);
+ setSeriesIdCol(seed.seriesIdCol);
+ }, [seed]);
 
  useEffect(() => {
  if (!valueCol) return;
@@ -61,7 +94,7 @@ export function ColumnMapper({ preview, value, onChange }: ColumnMapperProps) {
  const mapping: ColumnMapping = {
  value_col: valueCol,
  series_id_col: seriesIdCol || null,
- freq:"infer",
+ freq: initial?.freq ??"infer",
  ...(mode ==="single"
  ? { date_col: dateCol, date_parts: null }
  : { date_col: null, date_parts: { year_col: yearCol, month_col: monthCol } }),
@@ -69,7 +102,7 @@ export function ColumnMapper({ preview, value, onChange }: ColumnMapperProps) {
  if (JSON.stringify(mapping) !== JSON.stringify(value)) {
  onChange(mapping);
  }
- }, [mode, dateCol, yearCol, monthCol, valueCol, seriesIdCol, value, onChange]);
+ }, [mode, dateCol, yearCol, monthCol, valueCol, seriesIdCol, value, onChange, initial]);
 
  const columnOptions = preview.columns.map((c) => ({
  value: c.name,

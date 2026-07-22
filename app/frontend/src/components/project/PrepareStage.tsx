@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
  orderError,
  PreparationRecipeEditor,
@@ -79,7 +80,15 @@ export function PrepareStage({ project, workflow }: Props) {
  Cancel
  </button>
  ) : null}
- {dirty ? (
+ {!project.config ? (
+ <span className="text-[12px] text-text-muted">
+ The project has no configuration yet.{" "}
+ <Link to={`/projects/${project.id}/setup`} className="text-accent">
+ Set it up
+ </Link>{" "}
+ before preparing.
+ </span>
+ ) : dirty ? (
  <span className="text-[12px] text-text-muted">
  Running saves this recipe as a new revision.
  </span>

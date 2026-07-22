@@ -140,6 +140,7 @@ def workflow_for(store: ProjectStore, project: ProjectDetail) -> dict:
         latest_runs=latest_runs_by_stage(store.list_runs(project.id)),
         issued_revision=issued.revision_no if issued else None,
         actuals_updated_at=store.actuals_updated_at(project.id),
+        has_config=project.config is not None,
     )
     return workflow_as_dict(state)
 

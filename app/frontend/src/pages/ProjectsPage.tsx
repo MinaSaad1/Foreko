@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api/endpoints";
 import { useProjects, useCreateProject } from "@/hooks/useProject";
 import { useProjectStore } from "@/stores/projectStore";
 import { useDatasetStore } from "@/stores/datasetStore";
@@ -111,12 +113,22 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
 }
 
 function CreateProjectForm({ onDone }: { onDone: () => void }) {
+ const navigate = useNavigate();
  const activeDatasetId = useDatasetStore((s) => s.activeDatasetId);
+ const datasets = useQuery({
+ queryKey: ["datasets", "list"],
+ queryFn: () => api.listDatasets(),
+ });
  const [name, setName] = useState("");
+ // A dataset id is a generated string, so it has to be picked from what is
+ // loaded rather than typed from memory.
  const [datasetId, setDatasetId] = useState(activeDatasetId ?? "");
+ const available = datasets.data ?? [];
+ const selected =
+ available.find((d) => d.id === datasetId)?.id ?? available[0]?.id ?? "";
  const create = useCreateProject();
 
- const canSubmit = name.trim().length > 0 && datasetId.trim().length > 0;
+ const canSubmit = name.trim().length > 0 && selected.length > 0;
 
  return (
  <form
@@ -125,8 +137,15 @@ function CreateProjectForm({ onDone }: { onDone: () => void }) {
  e.preventDefault();
  if (!canSubmit) return;
  create.mutate(
- { name: name.trim(), dataset_id: datasetId.trim(), description: "" },
- { onSuccess: onDone },
+ { name: name.trim(), dataset_id: selected, description: "" },
+ {
+ onSuccess: (project) => {
+ onDone();
+ // A project with no revision cannot run anything, so creation
+ // hands straight over to setup instead of leaving a dead shell.
+ navigate(`/projects/${project.id}/setup`);
+ },
+ },
  );
  }}
  >
@@ -142,13 +161,31 @@ function CreateProjectForm({ onDone }: { onDone: () => void }) {
  </label>
  <label className="grid gap-1">
  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
- Dataset id
+ Data source
  </span>
- <input
- value={datasetId}
+ {datasets.isPending ? (
+ <span className="text-[13px] text-text-muted">Loading data sources…</span>
+ ) : available.length === 0 ? (
+ <span className="text-[13px] text-text-secondary">
+ No data loaded yet.{" "}
+ <Link to="/data" className="text-accent">
+ Add a data source
+ </Link>{" "}
+ first.
+ </span>
+ ) : (
+ <select
+ value={selected}
  onChange={(e) => setDatasetId(e.target.value)}
  className="border border-border-strong/70 bg-transparent px-3 py-2 text-[13px] text-text-primary"
- />
+ >
+ {available.map((d) => (
+ <option key={d.id} value={d.id}>
+ {d.filename} ({d.row_count} rows)
+ </option>
+ ))}
+ </select>
+ )}
  </label>
  {create.isError ? (
  <p role="alert" className="text-[12px] text-anomaly">
