@@ -40,6 +40,7 @@ CLAUDE.md
 
 # Playwright run output
 app/frontend/e2e/artifacts/
+app/frontend/e2e/artifacts-heavy/
 app/frontend/playwright-report/
 app/frontend/test-results/
 
