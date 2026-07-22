@@ -177,27 +177,31 @@ async def _forecast_one_model(
         return point, p10, p90
     if model == "lightgbm":
         future_dates = _infer_future_dates(history_dates, horizon)
-        loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(
-            None,
-            lambda: lgb_fit_and_forecast(
-                dates=history_dates,
-                values=history_values,
-                future_dates=future_dates,
-                horizon=horizon,
-            ),
+        result = await asyncio.to_thread(
+            lgb_fit_and_forecast,
+            dates=history_dates,
+            values=history_values,
+            future_dates=future_dates,
+            horizon=horizon,
         )
         point = np.asarray(result.point_forecast, dtype=float)
         std = float(np.std(history_values)) if len(history_values) else 1.0
         return point, point - 1.28 * std, point + 1.28 * std
+    # The classical fits are as blocking as the learned ones. Calling them
+    # inline stalled the whole backend for the length of a validation run: no
+    # progress events, no SSE heartbeat, no other request served, so the browser
+    # dropped the event stream and the run looked like it had died while it was
+    # still going. Every candidate now fits off the loop.
     if model == "seasonal_naive":
-        return seasonal_naive(history_values, horizon, freq)
+        return await asyncio.to_thread(seasonal_naive, history_values, horizon, freq)
     if model == "ets":
-        return ets_forecast(history_values, horizon, freq)
+        return await asyncio.to_thread(ets_forecast, history_values, horizon, freq)
     if model == "arima":
-        return arima_forecast(history_values, horizon, freq)
+        return await asyncio.to_thread(arima_forecast, history_values, horizon, freq)
     if model == "prophet":
-        return prophet_forecast(list(history_dates), history_values, horizon, freq)
+        return await asyncio.to_thread(
+            prophet_forecast, list(history_dates), history_values, horizon, freq
+        )
     raise ValueError(f"unknown model {model!r}")
 
 
@@ -448,8 +452,8 @@ async def run_multi_series_folds(
     a failure row, not a raised error, so one short series cannot sink the
     portfolio.
     """
-    df = csv_loader.load_dataset(dataset_id, datasets_dir)
-    ids, values, dates = csv_loader.extract_series(df, mapping)
+    df = await asyncio.to_thread(csv_loader.load_dataset, dataset_id, datasets_dir)
+    ids, values, dates = await asyncio.to_thread(csv_loader.extract_series, df, mapping)
     if not ids:
         raise ValueError("Dataset has no series after mapping.")
 

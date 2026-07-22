@@ -153,3 +153,52 @@ async def test_a_model_failure_is_isolated_to_its_series(
 
     assert {p.series_id for p in predictions} == {"egypt"}
     assert {f.series_id for f in failures} == {"uae"}
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_a_slow_fit_does_not_freeze_the_event_loop(
+    settings, registry, monkeypatch
+) -> None:
+    """A validation run must not stop the backend from answering anything.
+
+    The classical fits used to run inline on the event loop. A real run then
+    starved the SSE heartbeat and every other request for minutes, the browser
+    dropped the event stream, and a run that was still going was reported to
+    the user as a lost connection. This asserts the loop keeps turning while a
+    candidate is fitting.
+    """
+    import asyncio
+    import time
+
+    import numpy as np
+
+    def slow_ets(values, horizon, freq=None):
+        time.sleep(0.25)
+        flat = np.full(horizon, float(values[-1]))
+        return flat, flat, flat
+
+    monkeypatch.setattr(backtest_service, "ets_forecast", slow_ets)
+
+    ticks = 0
+
+    async def heartbeat() -> None:
+        nonlocal ticks
+        while True:
+            await asyncio.sleep(0.01)
+            ticks += 1
+
+    beat = asyncio.create_task(heartbeat())
+    try:
+        dataset_id = _ingest(settings, _multi_series_csv())
+        predictions, failures = await _folds(
+            settings, registry, dataset_id, models=("ets",)
+        )
+    finally:
+        beat.cancel()
+
+    assert failures == []
+    assert predictions
+    # 2 series x 2 folds x 0.25s of fitting. An inline fit would have let the
+    # loop tick zero times.
+    assert ticks > 10

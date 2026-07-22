@@ -4,6 +4,14 @@ All notable changes to Foreko are documented here. Format follows [Keep a Change
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-07-22
+
+### Fixed
+
+- **A finished run could be reported as "Lost connection to the run".** The progress stream stopped on the job's status instead of on its final event, so once a run finished, anything still queued for the browser was discarded, the result included. The stream then closed mid-run and the stage reported a failure for work that had actually completed and been saved. Validate hit this the hardest because it produces an event per candidate per fold. If it happened to you, the run is not lost: the result was recorded, and reopening the project shows it.
+- Candidate models no longer fit on the web server's event loop. ETS, ARIMA, Prophet, and seasonal naive ran inline, which froze the whole backend for the length of a validation run: no progress, no heartbeat, and no other request answered. They now fit off the loop, as TimesFM and LightGBM already did.
+- A dropped progress stream now asks the backend what happened instead of assuming the worst. If the run is still going it reconnects, if it finished it shows the result, and it only reports a lost connection when the backend itself cannot be reached.
+
 ## [2.0.1] - 2026-07-22
 
 ### Fixed

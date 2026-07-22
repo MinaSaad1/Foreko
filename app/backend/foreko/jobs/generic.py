@@ -10,6 +10,7 @@ SQLite `analyses` cache by the caller.
 from __future__ import annotations
 
 import asyncio
+import json
 import threading
 import time
 import uuid
@@ -78,6 +79,55 @@ class GenericJobManager:
         job.status = "error"
         job.error = error
         await job._queue.put({"type": "error", "error": error})
+
+
+async def sse_lines(job: GenericJob, *, heartbeat_s: float = 30.0):
+    """Yield SSE frames for *job* until it reports a terminal event.
+
+    Shared by every stage stream so the termination rule is written once.
+
+    The rule is: stop on a terminal *event*, never on the job's status. The
+    queue is drained by one consumer that can fall behind whatever produced it,
+    so by the time an event is read the job may already be finished. Ending the
+    stream on ``status != "running"`` discarded everything still queued,
+    including the ``done`` event itself, and the client then saw a stream that
+    closed mid-run: a completed run reported as a lost connection.
+
+    The heartbeat branch is the way out for a stream with nothing left to read,
+    which is what a second consumer of the same job sees.
+    """
+
+    terminal = {
+        "done": lambda: {"type": "done", "result": job.result},
+        "error": lambda: {"type": "error", "error": job.error or "Job failed"},
+        "cancelled": lambda: {"type": "cancelled"},
+    }
+
+    # Read once, before the first frame is handed over. Re-reading it after the
+    # yield would answer "was it finished when the client connected?" with the
+    # state at some later moment, and skip the backlog the client is owed.
+    at_connect = job.status
+    yield f"data: {json.dumps({'type': 'state', 'status': at_connect, 'progress': job.progress})}\n\n"
+
+    if at_connect in terminal:
+        yield f"data: {json.dumps(terminal[at_connect](), default=str)}\n\n"
+        return
+
+    while True:
+        try:
+            evt = await asyncio.wait_for(job._queue.get(), timeout=heartbeat_s)
+        except asyncio.TimeoutError:
+            # Nothing queued. If the job has since finished, its terminal event
+            # went to another consumer or was never queued, so report the
+            # outcome from the job itself rather than streaming forever.
+            if job.status in terminal:
+                yield f"data: {json.dumps(terminal[job.status](), default=str)}\n\n"
+                return
+            yield 'data: {"type": "heartbeat"}\n\n'
+            continue
+        yield f"data: {json.dumps(evt, default=str)}\n\n"
+        if evt.get("type") in terminal:
+            return
 
 
 _singleton: GenericJobManager | None = None

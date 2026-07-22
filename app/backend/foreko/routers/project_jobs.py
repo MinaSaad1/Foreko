@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-import json
 import logging
 
 import numpy as np
@@ -17,6 +16,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFil
 from fastapi.responses import StreamingResponse
 
 from ..deps import get_generic_jobs, get_project_db, get_registry, get_settings
+from ..jobs.generic import sse_lines
 from ..schemas.project import AccuracyResult, ProjectRunCreate
 from ..services import (
     actuals as actuals_service,
@@ -808,29 +808,8 @@ async def stream_project_job_events(job_id: str, jobs=Depends(get_generic_jobs))
     if not job:
         raise HTTPException(404, "Job not found.")
 
-    async def gen():
-        yield f"data: {json.dumps({'type': 'state', 'status': job.status, 'progress': job.progress})}\n\n"
-        if job.status == "done":
-            yield f"data: {json.dumps({'type': 'done', 'result': job.result}, default=str)}\n\n"
-            return
-        if job.status == "error":
-            yield f"data: {json.dumps({'type': 'error', 'error': job.error or 'Job failed'})}\n\n"
-            return
-        if job.status == "cancelled":
-            yield f"data: {json.dumps({'type': 'cancelled'})}\n\n"
-            return
-        while job.status == "running":
-            try:
-                evt = await asyncio.wait_for(job._queue.get(), timeout=30.0)
-            except asyncio.TimeoutError:
-                yield 'data: {"type": "heartbeat"}\n\n'
-                continue
-            yield f"data: {json.dumps(evt, default=str)}\n\n"
-            if evt.get("type") in ("done", "error", "cancelled"):
-                break
-
     return StreamingResponse(
-        gen(),
+        sse_lines(job),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

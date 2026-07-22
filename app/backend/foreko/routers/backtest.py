@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from ..deps import get_db, get_generic_jobs, get_registry, get_settings
+from ..jobs.generic import sse_lines
 from ..schemas.backtest import BacktestRequest, CalibrationRequest, JobHandle, JobStatusResponse
 from ..services import backtest as backtest_service
 from ..services import calibration as calibration_service
@@ -82,32 +82,8 @@ async def stream_events(job_id: str, jobs=Depends(get_generic_jobs)):
     if not job:
         raise HTTPException(404, "job not found")
 
-    async def gen():
-        # Emit current state first so the client knows where we are on connect/reconnect
-        yield f"data: {json.dumps({'type': 'state', 'status': job.status, 'progress': job.progress})}\n\n"
-        # If the job already finished before we started streaming, emit the
-        # terminal event directly so the client receives the result/error.
-        if job.status == "done":
-            yield f"data: {json.dumps({'type': 'done', 'result': job.result}, default=str)}\n\n"
-            return
-        if job.status == "error":
-            yield f"data: {json.dumps({'type': 'error', 'error': job.error or 'Job failed'})}\n\n"
-            return
-        if job.status == "cancelled":
-            yield f"data: {json.dumps({'type': 'cancelled'})}\n\n"
-            return
-        while job.status == "running":
-            try:
-                evt = await asyncio.wait_for(job._queue.get(), timeout=30.0)
-            except asyncio.TimeoutError:
-                yield "data: {\"type\": \"heartbeat\"}\n\n"
-                continue
-            yield f"data: {json.dumps(evt, default=str)}\n\n"
-            if evt.get("type") in ("done", "error", "cancelled"):
-                break
-
     return StreamingResponse(
-        gen(),
+        sse_lines(job),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

@@ -29,11 +29,19 @@ const IDLE: ProjectJobState = {
 export function useProjectJob(projectId: string | undefined) {
  const [state, setState] = useState<ProjectJobState>(IDLE);
  const sourceRef = useRef<EventSource | null>(null);
+ const retryRef = useRef<number | null>(null);
+ const openRef = useRef<((jobId: string) => void) | null>(null);
+ const statusRef = useRef(state.status);
+ statusRef.current = state.status;
  const queryClient = useQueryClient();
 
  const close = useCallback(() => {
  sourceRef.current?.close();
  sourceRef.current = null;
+ if (retryRef.current !== null) {
+ window.clearTimeout(retryRef.current);
+ retryRef.current = null;
+ }
  }, []);
 
  const refreshProject = useCallback(() => {
@@ -44,10 +52,53 @@ export function useProjectJob(projectId: string | undefined) {
  queryClient.invalidateQueries({ queryKey: projectKeys.detail(projectId) });
  }, [projectId, queryClient]);
 
- const track = useCallback(
+ // A run outlives its event stream. The job is backend state, so a dropped
+ // stream is a question ("what happened?"), not an answer ("it failed").
+ const reconcile = useCallback(
+ async (jobId: string) => {
+ try {
+ const response = await fetch(`/api/project-jobs/${jobId}`);
+ if (!response.ok) throw new Error(`HTTP ${response.status}`);
+ const job = (await response.json()) as {
+ status: string;
+ progress: JobProgress | null;
+ result: Record<string, unknown> | null;
+ error: string | null;
+ };
+ if (job.status === "running") {
+ setState((prev) => ({ ...prev, progress: job.progress ?? prev.progress }));
+ // Reopen rather than give up. The delay keeps a backend that is busy
+ // enough to drop streams from being hammered with reconnects.
+ retryRef.current = window.setTimeout(() => openRef.current?.(jobId), 1000);
+ return;
+ }
+ if (job.status === "done") {
+ setState((prev) => ({ ...prev, status: "done", result: job.result }));
+ } else if (job.status === "cancelled") {
+ setState((prev) => ({ ...prev, status: "cancelled" }));
+ } else {
+ setState((prev) => ({
+ ...prev,
+ status: "error",
+ error: job.error ?? "The run failed.",
+ }));
+ }
+ refreshProject();
+ } catch {
+ // The backend itself is unreachable, so the run really is unobservable.
+ setState((prev) =>
+ prev.status === "running"
+ ? { ...prev, status: "error", error: "Lost connection to the run." }
+ : prev,
+ );
+ }
+ },
+ [refreshProject],
+ );
+
+ const open = useCallback(
  (jobId: string) => {
  close();
- setState({ ...IDLE, jobId, status: "running" });
 
  const source = new EventSource(`/api/project-jobs/${jobId}/events`);
  sourceRef.current = source;
@@ -96,17 +147,30 @@ export function useProjectJob(projectId: string | undefined) {
  };
 
  source.onerror = () => {
- // The stream ends when the job finishes; only report an error if the
- // job had not already reached a terminal state.
- setState((prev) =>
- prev.status === "running"
- ? { ...prev, status: "error", error: "Lost connection to the run." }
- : prev,
- );
  close();
+ // The stream also ends normally when the job finishes, so only a run
+ // still believed to be going is worth reconciling. Read through a ref
+ // rather than a state updater: an updater can run twice, and asking the
+ // backend about the same job twice is a side effect, not a reduction.
+ if (statusRef.current === "running") void reconcile(jobId);
  };
  },
- [close, refreshProject],
+ [close, reconcile, refreshProject],
+ );
+
+ // Held in a ref because reconcile schedules a reopen and open closes over
+ // reconcile, which would otherwise be a cycle between two callbacks.
+ openRef.current = open;
+
+ const track = useCallback(
+ (jobId: string) => {
+ // Set before the render that would set it, so a stream that fails
+ // immediately is still recognised as belonging to a running job.
+ statusRef.current = "running";
+ setState({ ...IDLE, jobId, status: "running" });
+ open(jobId);
+ },
+ [open],
  );
 
  const cancel = useCallback(async () => {
