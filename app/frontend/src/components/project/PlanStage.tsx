@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiGet } from "@/api/client";
 import { FutureFactorGrid } from "@/components/project/FutureFactorGrid";
@@ -38,6 +38,16 @@ export function PlanStage({ project, workflow }: Props) {
  const running = job.status === "running";
  const stage = workflow.stages.plan;
 
+ // The scenario exists only once its run finishes. Refetching at the moment the
+ // run was started asked for a result that could not be there yet, and nothing
+ // asked again: the run completed, the stage went green, and the page kept
+ // saying there were no scenarios. Instant stand-in models hid it by finishing
+ // inside the round trip.
+ useEffect(() => {
+ if (job.status !== "done") return;
+ queryClient.invalidateQueries({ queryKey: ["projects", "scenarios", project.id] });
+ }, [job.status, project.id, queryClient]);
+
  async function run() {
  setError(null);
  const response = await fetch(`/api/projects/${project.id}/scenarios/run`, {
@@ -58,7 +68,6 @@ export function PlanStage({ project, workflow }: Props) {
  job.track(body.job_id);
  setName("");
  setValues({});
- queryClient.invalidateQueries({ queryKey: ["projects", "scenarios", project.id] });
  }
 
  return (

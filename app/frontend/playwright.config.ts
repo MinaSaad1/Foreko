@@ -17,6 +17,9 @@ const storageDir =
 
 export default defineConfig({
   testDir: "./e2e",
+  // The real-model gate runs from playwright.heavy.config.ts. Running it here
+  // would hand it FOREKO_FAKE_MODELS and quietly turn it back into this suite.
+  testIgnore: /real-models\.spec\.ts/,
   timeout: 120_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,

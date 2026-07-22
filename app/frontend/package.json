@@ -1,7 +1,7 @@
 {
   "name": "foreko-frontend",
   "private": true,
-  "version": "2.0.2",
+  "version": "2.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,9 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:real": "playwright test -c playwright.heavy.config.ts"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",

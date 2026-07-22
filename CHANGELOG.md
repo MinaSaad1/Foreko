@@ -4,6 +4,16 @@ All notable changes to Foreko are documented here. Format follows [Keep a Change
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-07-22
+
+### Fixed
+
+- **A scenario never appeared after its run finished.** Plan asked for the scenario list at the moment the run started, when there was nothing to return yet, and never asked again. The stage went green while the page still read "No scenarios yet", and only a reload showed the result. It now refetches when the run completes.
+
+### Added
+
+- A release gate that runs every stage against real models on a wide dataset (`npm run test:e2e:real`). The existing journey uses instant stand-ins and a small dataset by design, which is why three defects in a row reached a shipped installer through a green suite. Publishing an installer now requires this to pass.
+
 ## [2.0.2] - 2026-07-22
 
 ### Fixed
