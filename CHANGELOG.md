@@ -4,6 +4,16 @@ All notable changes to Foreko are documented here. Format follows [Keep a Change
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-07-22
+
+### Fixed
+
+- **A new project could never be configured, so nothing could run.** Creating a project stored only its name and dataset, never the first revision, so the project had no column mapping, horizon, or candidate models. Run prepare stayed disabled with no reason given, and every later stage was unreachable. Projects created before this release are not lost: open one and it now offers the setup it was missing.
+- Setting up a project is now part of the app. Pick the date and value columns, the frequency, the horizon, the candidates, the folds, and the metric, then save it as the first revision. The same screen edits the setup later, which records a new revision rather than mutating the old one.
+- A project's data source is picked from what is loaded instead of typed in as a generated id.
+- Editing a project's setup reopens on the columns it was saved with, instead of resetting them to auto-detected ones and silently remapping the series.
+- Prepare reports itself as blocked while a project has no revision, and says what is missing, rather than reporting "not started" next to a button that could only refuse.
+
 ## [2.0.0] - 2026-07-17
 
 Foreko becomes a forecasting workflow rather than a collection of analysis
