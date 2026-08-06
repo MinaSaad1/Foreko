@@ -72,6 +72,25 @@ def test_legacy_database_is_adopted_with_its_sidecars(home: Path) -> None:
     assert not (settings.data_dir / LEGACY_DB_NAME).exists()
 
 
+def test_adoption_survives_the_desktop_shell_creating_the_root_first(home: Path) -> None:
+    """The Tauri shell writes ~/.tempolith/logs/sidecar.log before it spawns
+    the backend, so on the desktop build the new root already exists on the
+    very first run. Gating adoption on the root being absent silently orphaned
+    every desktop user's data.
+    """
+    _populate_legacy(home)
+    shell_logs = home / STORAGE_DIR_NAME / "logs"
+    shell_logs.mkdir(parents=True)
+    (shell_logs / "sidecar.log").write_text("shell started\n")
+
+    settings = Settings(preload_model=False)
+    settings.ensure_dirs()
+
+    assert (settings.datasets_dir / "sales.csv").read_text().startswith("date,value")
+    assert settings.db_path.read_text() == "sqlite-bytes"
+    assert (shell_logs / "sidecar.log").exists()
+
+
 def test_existing_new_root_is_never_clobbered(home: Path) -> None:
     _populate_legacy(home)
     current = home / STORAGE_DIR_NAME

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from contextlib import suppress
 from pathlib import Path
 
 from pydantic import Field
@@ -159,14 +160,30 @@ class Settings(BaseSettings):
     def projects_dir(self) -> Path:
         return self.storage_dir / "projects"
 
+    def _has_own_data(self) -> bool:
+        """True when this storage root already holds real work.
+
+        The root merely existing proves nothing. In the desktop build the
+        Tauri shell writes ``logs/sidecar.log`` before it spawns the backend,
+        so the root is normally already there on the very first run under the
+        new name. Only user-owned content counts as "this app has run here".
+        """
+        if self.db_path.exists():
+            return True
+        return any(
+            (self.storage_dir / name).is_dir() and any((self.storage_dir / name).iterdir())
+            for name in STORAGE_DIR_NAMES
+            if name != "logs"
+        )
+
     def _migrate_legacy_storage(self) -> None:
         """Adopt data written under the app's previous name.
 
         Every dataset, project, adapter, export, and the SQLite database of an
         existing install lives under ``~/.foreko``. Renaming the app without
         this makes an upgrade look like total data loss: the new root is empty
-        and the old one is never read again. Adopting it is a rename, so it
-        costs nothing and leaves no second copy on disk.
+        and the old one is never read again. Adopting it is a move, so it costs
+        nothing and leaves no second copy on disk.
 
         Only the default root is adopted. Someone who set an explicit storage
         directory already knows where their data is, and adopt_legacy_env()
@@ -176,10 +193,19 @@ class Settings(BaseSettings):
             return
 
         legacy_root = Path.home() / LEGACY_STORAGE_DIR_NAME
+        if not legacy_root.is_dir() or self._has_own_data():
+            return
+
         try:
-            if not self.storage_dir.exists() and legacy_root.is_dir():
-                legacy_root.rename(self.storage_dir)
-                logger.info("Adopted existing data from %s.", legacy_root)
+            # Merge entry by entry rather than renaming the root. Renaming
+            # requires the destination not to exist, which on the desktop
+            # build is false by the time the backend starts, and the failure
+            # would orphan the user's work for good.
+            self.storage_dir.mkdir(parents=True, exist_ok=True)
+            for entry in sorted(legacy_root.iterdir()):
+                target = self.storage_dir / entry.name
+                if not target.exists():
+                    entry.rename(target)
 
             legacy_db = self.data_dir / LEGACY_DB_NAME
             if legacy_db.exists() and not self.db_path.exists():
@@ -190,6 +216,12 @@ class Settings(BaseSettings):
                     source = legacy_db.with_name(legacy_db.name + suffix)
                     if source.exists():
                         source.rename(self.db_path.with_name(self.db_path.name + suffix))
+
+            # rmdir only succeeds on an empty directory, so whatever was not
+            # adopted above survives instead of being deleted.
+            with suppress(OSError):
+                legacy_root.rmdir()
+            logger.info("Adopted existing data from %s.", legacy_root)
         except OSError as exc:
             # A failed adoption must not stop the app from booting. The user
             # keeps a readable copy at the old path either way.
