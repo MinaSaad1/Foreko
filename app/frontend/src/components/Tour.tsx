@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from"react";
 import { useLocation } from"react-router-dom";
 
-const STORAGE_KEY ="foreko:tour:completed";
+const STORAGE_KEY ="tempolith:tour:completed";
 
 interface TourStep {
  eyebrow: string;
@@ -13,7 +13,7 @@ const STEPS: TourStep[] = [
  {
  eyebrow:"Welcome",
  title:"Local forecasting, from CSV to insight",
- body:"Foreko turns any time-series CSV into a calibrated forecast, explains what moved, and compares scenarios. This 60-second tour covers the main flow.",
+ body:"Tempolith turns any time-series CSV into a calibrated forecast, explains what moved, and compares scenarios. This 60-second tour covers the main flow.",
  },
  {
  eyebrow:"Step 1",
@@ -33,7 +33,7 @@ const STEPS: TourStep[] = [
  {
  eyebrow:"Final",
  title:"Your data stays on your machine",
- body:"Foreko never sends telemetry or uploads your CSVs. Everything lives under ~/.foreko/. You can clear it anytime from the Privacy page.",
+ body:"Tempolith never sends telemetry or uploads your CSVs. Everything lives under ~/.tempolith/. You can clear it anytime from the Privacy page.",
  },
 ];
 

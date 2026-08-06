@@ -59,7 +59,7 @@ export function FutureFactorGrid({
  return (
  <p className="text-[12px] text-text-muted">
  {requirements.ignored_by_policy?.length
- ? `The selected models cannot read ${requirements.ignored_by_policy.join(", ")}, so Foreko does not ask you to plan ${requirements.ignored_by_policy.length === 1 ? "it" : "them"}.`
+ ? `The selected models cannot read ${requirements.ignored_by_policy.join(", ")}, so Tempolith does not ask you to plan ${requirements.ignored_by_policy.length === 1 ? "it" : "them"}.`
  : "This model policy needs no future factors."}
  </p>
  );
@@ -79,7 +79,7 @@ export function FutureFactorGrid({
  </h2>
  <p className="max-w-2xl text-[12px] text-text-secondary">
  {blocking
- ? "The forecast will not run until every required factor has a value for every period, or you choose how to fill it. Foreko does not guess these."
+ ? "The forecast will not run until every required factor has a value for every period, or you choose how to fill it. Tempolith does not guess these."
  : "Change only what you want to test. Any cell you leave empty keeps the baseline's value."}
  </p>
 

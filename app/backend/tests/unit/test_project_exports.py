@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from foreko.services.project_exports import _scrub, build_manifest, forecast_csv
+from tempolith.services.project_exports import _scrub, build_manifest, forecast_csv
 
 
 def _csv(rows: int = 48) -> bytes:
@@ -160,7 +160,7 @@ def test_the_manifest_pins_the_data_and_the_recipe(client, issued_project: str) 
             "upper_quantile": None,
         }
     ]
-    assert manifest["foreko_version"]
+    assert manifest["tempolith_version"]
 
 
 @pytest.mark.unit
@@ -265,7 +265,7 @@ def test_an_unknown_project_or_run_is_404(client, issued_project: str) -> None:
 
 @pytest.mark.unit
 def test_a_manifest_scrubs_a_credential_that_reaches_it() -> None:
-    from foreko.schemas.project import ProjectDetail, ProjectRun
+    from tempolith.schemas.project import ProjectDetail, ProjectRun
 
     project = ProjectDetail(
         id="p1",

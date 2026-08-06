@@ -1,4 +1,4 @@
-// Captures README screenshots from the running Foreko dev server.
+// Captures README screenshots from the running Tempolith dev server.
 // Usage:  node scripts/capture_screenshots.mjs
 // Pre-req: backend on :8000 + frontend on :5173 + TimesFM weights cached.
 //
@@ -86,7 +86,7 @@ async function loadDemoSample(page) {
   // Pre-set localStorage so the tour doesn't fire
   await ctx.addInitScript(() => {
     try {
-      localStorage.setItem("foreko:tour:completed", "1");
+      localStorage.setItem("tempolith:tour:completed", "1");
     } catch {}
   });
   const page = await ctx.newPage();

@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import pytest
 
-from foreko.schemas.project import ProjectRun, ProjectStage
-from foreko.services.project_workflow import compute_workflow_state
+from tempolith.schemas.project import ProjectRun, ProjectStage
+from tempolith.services.project_workflow import compute_workflow_state
 
 
 def run(

@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foreko.services.transformations import Transformer, TransformError, roundtrip_ok
+from tempolith.services.transformations import Transformer, TransformError, roundtrip_ok
 
 
 SERIES = np.array([10.0, 12, 13, 15, 14, 16, 18, 17, 19, 21, 20, 22], dtype=float)

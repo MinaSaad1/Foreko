@@ -24,9 +24,9 @@ RUN pip install --no-cache-dir -e ".[app]"
 # Copy built frontend
 COPY --from=frontend-builder /workspace/dist ./dist
 
-ENV FOREKO_STORAGE_DIR=/data
+ENV TEMPOLITH_STORAGE_DIR=/data
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 
-CMD ["uvicorn", "foreko.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD ["uvicorn", "tempolith.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

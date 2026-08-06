@@ -9,7 +9,7 @@ import { SamplesPicker } from "@/components/SamplesPicker";
 import { Depth, Fact, FactGrid, PageHeading, Section } from "@/components/common/Page";
 import type { DatasetSummary, DatasetPreview } from "@/types/dataset";
 
-const ADD_PANEL_STORAGE_KEY = "foreko:dataPanelOpen";
+const ADD_PANEL_STORAGE_KEY = "tempolith:dataPanelOpen";
 
 function readAddPanelOpen(hasDatasets: boolean | null): boolean {
   if (typeof window === "undefined") return !hasDatasets;
@@ -403,7 +403,7 @@ export function DataPage() {
               <li>Drop a CSV. A date column and a numeric value column is all you need.</li>
               <li>Map the columns and choose how far ahead to forecast.</li>
               <li>
-                Foreko trains two models on your data, backtests them, and shows which one
+                Tempolith trains two models on your data, backtests them, and shows which one
                 performed better along with the forecast.
               </li>
             </ol>

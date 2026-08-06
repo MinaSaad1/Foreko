@@ -13,8 +13,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from foreko.services.fake_registry import FakeModelRegistry
-from foreko.settings import Settings
+from tempolith.services.fake_registry import FakeModelRegistry
+from tempolith.settings import Settings
 
 
 @pytest.mark.unit
@@ -25,7 +25,7 @@ def test_the_flag_defaults_to_off(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_the_flag_reads_from_the_environment(monkeypatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("FOREKO_FAKE_MODELS", "1")
+    monkeypatch.setenv("TEMPOLITH_FAKE_MODELS", "1")
     assert Settings(storage_dir=tmp_path).fake_models is True
 
 
@@ -33,7 +33,7 @@ def test_the_flag_reads_from_the_environment(monkeypatch, tmp_path: Path) -> Non
 def test_a_real_app_builds_a_real_registry(tmp_path: Path) -> None:
     from fastapi.testclient import TestClient
 
-    from foreko.main import create_app
+    from tempolith.main import create_app
 
     settings = Settings(storage_dir=tmp_path, preload_model=False, fake_models=False)
     with TestClient(create_app(settings=settings)) as client:
@@ -47,7 +47,7 @@ def test_a_real_app_builds_a_real_registry(tmp_path: Path) -> None:
 def test_the_flag_swaps_in_the_stand_in(tmp_path: Path) -> None:
     from fastapi.testclient import TestClient
 
-    from foreko.main import create_app
+    from tempolith.main import create_app
 
     settings = Settings(storage_dir=tmp_path, preload_model=False, fake_models=True)
     with TestClient(create_app(settings=settings)) as client:
@@ -59,7 +59,7 @@ def test_the_flag_swaps_in_the_stand_in(tmp_path: Path) -> None:
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_the_stand_in_is_deterministic() -> None:
-    from foreko.schemas.forecast import ForecastConfigIn
+    from tempolith.schemas.forecast import ForecastConfigIn
 
     registry = FakeModelRegistry()
     series = [np.array([10.0, 12.0, 14.0, 16.0])]
@@ -78,7 +78,7 @@ async def test_the_stand_in_is_deterministic() -> None:
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_the_stand_in_responds_to_covariates() -> None:
-    from foreko.schemas.forecast import ForecastConfigIn
+    from tempolith.schemas.forecast import ForecastConfigIn
 
     registry = FakeModelRegistry()
     history = np.array([10.0, 10.0, 10.0, 10.0])

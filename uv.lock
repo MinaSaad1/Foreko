@@ -763,7 +763,7 @@ wheels = [
 ]
 
 [[package]]
-name = "foreko"
+name = "tempolith"
 version = "2.0.3"
 source = { editable = "." }
 dependencies = [
@@ -875,7 +875,7 @@ requires-dist = [
     { name = "sse-starlette", marker = "extra == 'app'", specifier = ">=2.0.0" },
     { name = "statsmodels", marker = "extra == 'app'", specifier = ">=0.14.0" },
     { name = "torch", marker = "extra == 'app'", specifier = ">=2.0.0" },
-    { name = "torch", marker = "extra == 'cuda'", specifier = ">=2.7.0", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "foreko", extra = "cuda" } },
+    { name = "torch", marker = "extra == 'cuda'", specifier = ">=2.7.0", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "tempolith", extra = "cuda" } },
     { name = "torch", marker = "extra == 'torch'", specifier = ">=2.0.0" },
     { name = "transformers", marker = "extra == 'app'", specifier = ">=4.40.0" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'app'", specifier = ">=0.27.0" },

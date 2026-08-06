@@ -1,20 +1,20 @@
-# PRODUCT.md, Foreko
+# PRODUCT.md, Tempolith
 
 Strategic design context. Answers who, what, and why. Visual decisions live in
 [DESIGN.md](DESIGN.md).
 
 Sources of record: `CLAUDE.md` (mission and boundaries),
-`docs/superpowers/specs/2026-07-15-foreko-v2-design.md` (V2 design, especially
+`docs/superpowers/specs/2026-07-15-tempolith-v2-design.md` (V2 design, especially
 §1 product decision, §5 information architecture, §12 accessibility).
 
 ## Register
 
 **Product.** Design serves the work, it does not perform.
 
-Foreko is a local app the user has already downloaded, installed, and launched
+Tempolith is a local app the user has already downloaded, installed, and launched
 before they see a single screen. The sales pitch has already worked. Every
 pixel after launch is there to help someone finish a forecast, not to convince
-them to want one. Marketing lives in the separate `foreko-landing` repo.
+them to want one. Marketing lives in the separate `tempolith-landing` repo.
 
 The one exception is first run, where a user with no projects and no data needs
 orientation. That is onboarding, not marketing.
@@ -47,7 +47,7 @@ from?" without reopening the analysis, and can hand the answer to a skeptic.
 
 ## Brand personality
 
-An instrument, not an assistant. Foreko is the well-made tool on the bench:
+An instrument, not an assistant. Tempolith is the well-made tool on the bench:
 precise, legible, honest about its own limits, and completely uninterested in
 being charming while you work.
 
@@ -57,15 +57,15 @@ being charming while you work.
   for real signal: an exception, a failure, a decision point.
 - **Numbers first, prose second.** Explain, do not narrate.
 - **No false confidence.** Never imply more certainty than the evidence carries.
-  Foreko does not label confidence High just because two models agree (§12).
+  Tempolith does not label confidence High just because two models agree (§12).
 
 ## Anti-references
 
-What Foreko must never look or behave like. The first four are the mission
+What Tempolith must never look or behave like. The first four are the mission
 boundaries in `CLAUDE.md` and are non-negotiable product law, not taste.
 
 - **An AI assistant.** No chat, no narrative generation, no "insights" written
-  by a language model. Foreko's only model is the forecaster.
+  by a language model. Tempolith's only model is the forecaster.
 - **A SaaS dashboard product.** No paywalls, no tier gating, no hardware-tier
   UI, no upgrade prompts, no commercialization hooks. Nothing to sell.
 - **A telemetry-backed web app.** No tracking, no remote logging, no phone-home.

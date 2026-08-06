@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Foreko setup script for Linux / macOS.
+# Tempolith setup script for Linux / macOS.
 # Installs all Python dependencies and automatically selects the GPU-accelerated
 # PyTorch build when an NVIDIA GPU with a modern driver is detected, falling
 # back to CPU otherwise.
@@ -89,5 +89,5 @@ else
 fi
 echo ""
 echo "Start the app:"
-echo "  Backend  : uv run uvicorn foreko.main:app --port 8000 --reload --app-dir app/backend"
+echo "  Backend  : uv run uvicorn tempolith.main:app --port 8000 --reload --app-dir app/backend"
 echo "  Frontend : cd app/frontend && npm run dev"

@@ -111,7 +111,7 @@ describe("LandingPage projects section", () => {
 
     expect(headings.indexOf("Your projects")).toBeGreaterThan(-1);
     expect(headings.indexOf("Your projects")).toBeLessThan(
-      headings.indexOf("What Foreko does"),
+      headings.indexOf("What Tempolith does"),
     );
   });
 

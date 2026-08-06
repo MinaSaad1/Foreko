@@ -1,6 +1,6 @@
 import type { ColumnMapping } from "@/types/dataset";
 
-// Hand-mirrored from app/backend/foreko/schemas/project.py. There is no codegen
+// Hand-mirrored from app/backend/tempolith/schemas/project.py. There is no codegen
 // step, so a wire change is a two-sided edit.
 
 export type StudioStage = "prepare" | "validate" | "forecast" | "plan" | "review";

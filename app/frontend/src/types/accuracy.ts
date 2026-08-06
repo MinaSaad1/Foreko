@@ -1,4 +1,4 @@
-// Hand-mirrored from app/backend/foreko/schemas/project.py.
+// Hand-mirrored from app/backend/tempolith/schemas/project.py.
 //
 // These field names deliberately differ from the validation types in
 // types/validation.ts. Design 14: post-issue accuracy must not be confusable

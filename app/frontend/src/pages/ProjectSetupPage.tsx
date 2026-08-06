@@ -33,7 +33,7 @@ export function ProjectSetupPage() {
         </h1>
         <p className="max-w-2xl text-[13px] leading-relaxed text-text-secondary">
           {first
-            ? "Tell Foreko which columns hold the dates and the numbers, how far ahead to forecast, and which models to put against each other. Nothing can run until this is set."
+            ? "Tell Tempolith which columns hold the dates and the numbers, how far ahead to forecast, and which models to put against each other. Nothing can run until this is set."
             : "Changing any of this creates a new revision. Runs from the old revision are kept, but they stop counting as current until you run them again."}
         </p>
       </header>

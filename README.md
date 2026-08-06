@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/header.png" alt="Foreko, local-first time-series forecasting workbench" width="100%"/>
+<img src="docs/header.png" alt="Tempolith, local-first time-series forecasting workbench" width="100%"/>
 
 <br/>
 
@@ -22,7 +22,7 @@
 
 <br/>
 
-<a href="https://github.com/MinaSaad1/Foreko/releases/latest"><img src="https://img.shields.io/badge/Download_for_Windows-00B8C9?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows"/></a>
+<a href="https://github.com/MinaSaad1/Tempolith/releases/latest"><img src="https://img.shields.io/badge/Download_for_Windows-00B8C9?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows"/></a>
 &nbsp;&nbsp;
 <a href="#install"><img src="https://img.shields.io/badge/Run_from_source-0E1A26?style=for-the-badge&logo=gnubash&logoColor=00D4E8" alt="Run from source"/></a>
 
@@ -41,7 +41,7 @@ forecast with uncertainty bands, a recommended model, and plain-English diagnost
 <br/>
 
 <p align="center">
-  <img src="docs/screenshots/04b-forecast-result.png" alt="Foreko forecast result: TimesFM vs LightGBM with P10/P90 bands, accuracy stats, and next-step rail" width="100%"/>
+  <img src="docs/screenshots/04b-forecast-result.png" alt="Tempolith forecast result: TimesFM vs LightGBM with P10/P90 bands, accuracy stats, and next-step rail" width="100%"/>
 </p>
 
 <br/>
@@ -100,13 +100,13 @@ repo, under a permissive Apache 2.0 license.
 
 ## Install
 
-Two ways to run Foreko. Both stay entirely on your machine.
+Two ways to run Tempolith. Both stay entirely on your machine.
 
 ### Windows installer (easiest)
 
 Download the latest **`.exe`** installer from the
-[**Releases page**](https://github.com/MinaSaad1/Foreko/releases/latest),
-run it, then launch Foreko from the Start menu. No Python, no Node, no
+[**Releases page**](https://github.com/MinaSaad1/Tempolith/releases/latest),
+run it, then launch Tempolith from the Start menu. No Python, no Node, no
 command line. The installer bundles the backend and opens the app in
 your browser.
 
@@ -114,14 +114,14 @@ your browser.
 
 ```bash
 # 1. Clone
-git clone https://github.com/MinaSaad1/Foreko.git && cd Foreko
+git clone https://github.com/MinaSaad1/Tempolith.git && cd Tempolith
 
 # 2. Install (auto-detects NVIDIA GPU + CUDA driver)
 ./setup.ps1            # Windows
 ./setup.sh             # Linux / macOS
 
 # 3. Run, two terminals
-uv run uvicorn foreko.main:app --port 8000 --reload --app-dir app/backend
+uv run uvicorn tempolith.main:app --port 8000 --reload --app-dir app/backend
 cd app/frontend && npm run dev
 ```
 
@@ -129,7 +129,7 @@ Then open **<http://localhost:5173>** and either upload a CSV or click
 **Try demo dataset**.
 
 > Whichever path you pick, the first forecast downloads TimesFM 2.5
-> weights (~1.2 GB) into `~/.foreko/models/`. Cached after that.
+> weights (~1.2 GB) into `~/.tempolith/models/`. Cached after that.
 
 ---
 
@@ -143,7 +143,7 @@ blocked and why:
 |---|---|
 | Prepare | Clean the history with a saved, reversible recipe. The original data is never modified, and a recipe that cannot return forecasts to the original scale is refused. |
 | Validate | Score every candidate across rolling folds, per series. The champion comes from that evidence, not a single holdout. A model that failed any fold cannot win. |
-| Forecast | Run the baseline with each series' own selected model. Required future factors must be entered or explicitly filled; Foreko never guesses them. |
+| Forecast | Run the baseline with each series' own selected model. Required future factors must be entered or explicitly filled; Tempolith never guesses them. |
 | Plan | Change the assumptions and compare scenarios against a versioned baseline. |
 | Review | Import actuals and see how the forecast you issued actually did, kept separate from backtest evidence. |
 
@@ -276,17 +276,17 @@ The specialist analyses below remain available under Advanced analysis.
 
 ## Architecture
 
-<img src="docs/img/architecture.png" width="100%" alt="Foreko architecture: Browser to FastAPI to forecasting and analysis services to local storage"/>
+<img src="docs/img/architecture.png" width="100%" alt="Tempolith architecture: Browser to FastAPI to forecasting and analysis services to local storage"/>
 
 The React SPA talks to a local FastAPI server, which fans each request out to the
-forecasting and analysis services. Everything is persisted under `~/.foreko/`.
+forecasting and analysis services. Everything is persisted under `~/.tempolith/`.
 
 | Layer | Pieces |
 |---|---|
 | Browser `:5173` | React single-page app |
 | FastAPI `:8000` | HTTP API + async job manager (SSE progress) |
 | Services | forecaster (TimesFM) · baselines (LightGBM, ETS, seasonal-naive) · diagnostics (residuals, ACF, STL) · anomaly methods · factor diagnostics · exports (ReportLab PDF) |
-| `~/.foreko/` | `datasets/` · `projects/<id>/` (derived data, runs, exports) · `models/` (TimesFM weights) · `foreko.db` (SQLite) · `exports/` |
+| `~/.tempolith/` | `datasets/` · `projects/<id>/` (derived data, runs, exports) · `models/` (TimesFM weights) · `tempolith.db` (SQLite) · `exports/` |
 
 ---
 
@@ -307,21 +307,21 @@ forecasting and analysis services. Everything is persisted under `~/.foreko/`.
 
 ## Configuration
 
-Every setting is overridable via `FOREKO_<FIELD>` environment variables.
+Every setting is overridable via `TEMPOLITH_<FIELD>` environment variables.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `FOREKO_MODEL_ID` | `google/timesfm-2.5-200m-pytorch` | HuggingFace model id |
-| `FOREKO_STORAGE_DIR` | `~/.foreko` | Datasets, model cache, analyses, exports |
-| `FOREKO_PRELOAD_MODEL` | `true` | Load weights at startup so the first forecast is instant |
-| `FOREKO_MAX_UPLOAD_BYTES` | `52428800` | Hard cap on CSV upload size (50 MB) |
-| `FOREKO_DATASET_TTL_HOURS` | `720` | When the janitor sweeps old uploads (30 days) |
-| `FOREKO_CORS_ORIGINS` | dev origins | Allowed origins, comma-separated |
-| `FOREKO_MAX_SQL_ROWS` | `5000000` | Hard cap on rows from a SQL ingest |
+| `TEMPOLITH_MODEL_ID` | `google/timesfm-2.5-200m-pytorch` | HuggingFace model id |
+| `TEMPOLITH_STORAGE_DIR` | `~/.tempolith` | Datasets, model cache, analyses, exports |
+| `TEMPOLITH_PRELOAD_MODEL` | `true` | Load weights at startup so the first forecast is instant |
+| `TEMPOLITH_MAX_UPLOAD_BYTES` | `52428800` | Hard cap on CSV upload size (50 MB) |
+| `TEMPOLITH_DATASET_TTL_HOURS` | `720` | When the janitor sweeps old uploads (30 days) |
+| `TEMPOLITH_CORS_ORIGINS` | dev origins | Allowed origins, comma-separated |
+| `TEMPOLITH_MAX_SQL_ROWS` | `5000000` | Hard cap on rows from a SQL ingest |
 
 ```bash
-FOREKO_STORAGE_DIR=/tmp/foreko FOREKO_PRELOAD_MODEL=false \
-  uv run uvicorn foreko.main:app --port 8000 --app-dir app/backend
+TEMPOLITH_STORAGE_DIR=/tmp/tempolith TEMPOLITH_PRELOAD_MODEL=false \
+  uv run uvicorn tempolith.main:app --port 8000 --app-dir app/backend
 ```
 
 ---
@@ -330,7 +330,7 @@ FOREKO_STORAGE_DIR=/tmp/foreko FOREKO_PRELOAD_MODEL=false \
 
 ```
 src/timesfm/                  TimesFM 2.5 model code (Apache 2.0, vendored)
-app/backend/foreko/
+app/backend/tempolith/
   routers/                    HTTP endpoints, one file per concern
   services/                   forecaster, baselines, diagnostics, store, ...
   schemas/                    Pydantic request / response models
@@ -381,7 +381,7 @@ node scripts/capture_screenshots.mjs
 <img src="docs/img/banner-faq.png" width="100%" alt=""/>
 
 <details>
-<summary><b>Does Foreko send my data anywhere?</b></summary>
+<summary><b>Does Tempolith send my data anywhere?</b></summary>
 <br/>
 
 No. The backend runs on your machine, the SPA talks to it on `localhost`,
@@ -395,17 +395,17 @@ from the HuggingFace Hub. There is no telemetry, no analytics, no account.
 <br/>
 
 No. The `.exe` installer is the same app wrapped for one-click install
-(a Tauri shell plus the bundled backend, built from the `foreko-desktop`
+(a Tauri shell plus the bundled backend, built from the `tempolith-desktop`
 repo). It runs locally, sends no data anywhere, and has no extra or paid
 features. Use whichever path you prefer.
 
 </details>
 
 <details>
-<summary><b>Can I use Foreko commercially?</b></summary>
+<summary><b>Can I use Tempolith commercially?</b></summary>
 <br/>
 
-Yes. Apache 2.0 license. Build whatever you want on top. Foreko itself
+Yes. Apache 2.0 license. Build whatever you want on top. Tempolith itself
 will never have a paid tier.
 
 </details>
@@ -436,7 +436,7 @@ you an honest answer.
 <summary><b>Where do my files live?</b></summary>
 <br/>
 
-Under `~/.foreko/` by default. Override with `FOREKO_STORAGE_DIR`.
+Under `~/.tempolith/` by default. Override with `TEMPOLITH_STORAGE_DIR`.
 
 </details>
 
@@ -455,7 +455,7 @@ the charts, metrics, and a written takeaway.
 <br/>
 
 Drop a class with a `fit_and_forecast(...)` method into
-`app/backend/foreko/services/`, register it in `comparison.py`, and add
+`app/backend/tempolith/services/`, register it in `comparison.py`, and add
 a frontend toggle in `pages/BacktestPage.tsx`. Both backtest and the
 forecast comparison will pick it up.
 

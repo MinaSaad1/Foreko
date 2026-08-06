@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from foreko.services.migrations import (
+from tempolith.services.migrations import (
     MIGRATIONS,
     SCHEMA_VERSION,
     Migration,
@@ -16,7 +16,7 @@ from foreko.services.migrations import (
     current_version,
     run_migrations,
 )
-from foreko.services.store import Store
+from tempolith.services.store import Store
 
 
 LEGACY_V1_SCHEMA = """
@@ -74,7 +74,7 @@ def _table_names(db_path: Path) -> tuple[str, ...]:
 def test_v1_database_without_user_version_is_adopted_at_baseline(
     tmp_path: Path,
 ) -> None:
-    db = tmp_path / "foreko.db"
+    db = tmp_path / "tempolith.db"
     with closing(sqlite3.connect(db)) as legacy:
         legacy.executescript(LEGACY_V1_SCHEMA)
         legacy.execute(
@@ -114,7 +114,7 @@ def test_adoption_does_not_rerun_the_baseline_migration(tmp_path: Path) -> None:
     # populated V1 database is indistinguishable from adopting it. This tripwire
     # baseline fails loudly if it is executed, which is the only way to prove the
     # adoption branch skips it rather than replaying it.
-    db = tmp_path / "foreko.db"
+    db = tmp_path / "tempolith.db"
     with closing(sqlite3.connect(db)) as legacy:
         legacy.executescript(LEGACY_V1_SCHEMA)
         legacy.commit()
@@ -133,7 +133,7 @@ def test_adoption_does_not_rerun_the_baseline_migration(tmp_path: Path) -> None:
 def test_failed_migration_leaves_prior_schema_and_version_untouched(
     tmp_path: Path,
 ) -> None:
-    db = tmp_path / "foreko.db"
+    db = tmp_path / "tempolith.db"
     Store(db)
     before_tables = _table_names(db)
     before_version = current_version(db)
@@ -155,7 +155,7 @@ def test_failed_migration_leaves_prior_schema_and_version_untouched(
 
 @pytest.mark.unit
 def test_fresh_database_gets_full_migration(tmp_path: Path) -> None:
-    db = tmp_path / "foreko.db"
+    db = tmp_path / "tempolith.db"
 
     assert run_migrations(db) == SCHEMA_VERSION
     assert current_version(db) == SCHEMA_VERSION
@@ -174,7 +174,7 @@ def test_fresh_database_gets_full_migration(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_rerunning_migrations_is_idempotent(tmp_path: Path) -> None:
-    db = tmp_path / "foreko.db"
+    db = tmp_path / "tempolith.db"
     first_version = run_migrations(db)
     first_tables = _table_names(db)
 
@@ -184,7 +184,7 @@ def test_rerunning_migrations_is_idempotent(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_database_newer_than_supported_schema_is_rejected(tmp_path: Path) -> None:
-    db = tmp_path / "foreko.db"
+    db = tmp_path / "tempolith.db"
     with closing(sqlite3.connect(db)) as conn:
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION + 1}")
         conn.commit()

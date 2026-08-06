@@ -242,8 +242,8 @@ export function AnomalyPage() {
        actions={
          summary && seriesResult ? (
            <DownloadPdfButton
-             title="Foreko, Anomaly report"
-             filename="foreko-anomalies.pdf"
+             title="Tempolith, Anomaly report"
+             filename="tempolith-anomalies.pdf"
              sections={() => buildAnomalyReport(seriesResult, summary, {
                horizon,
                datasetName: preview?.filename,

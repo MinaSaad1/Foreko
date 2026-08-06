@@ -9,7 +9,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 /**
  * The real-model gate.
  *
- * The default e2e run sets FOREKO_FAKE_MODELS so every fit returns instantly.
+ * The default e2e run sets TEMPOLITH_FAKE_MODELS so every fit returns instantly.
  * That makes the journey deterministic, and it also removes the two conditions
  * under which the job event stream failed in a shipped build: real fits that
  * occupy the process, and enough events to leave the browser behind the
@@ -20,19 +20,19 @@ const here = path.dirname(fileURLToPath(import.meta.url));
  * not be published until this passes.
  *
  * TimesFM is excluded by default because CI has no cached checkpoint and would
- * download one. Set FOREKO_E2E_MODELS to include it on a machine that has it.
+ * download one. Set TEMPOLITH_E2E_MODELS to include it on a machine that has it.
  */
 
 const storageDir =
-  process.env.FOREKO_E2E_STORAGE_DIR ??
-  fs.mkdtempSync(path.join(os.tmpdir(), "foreko-e2e-heavy-"));
+  process.env.TEMPOLITH_E2E_STORAGE_DIR ??
+  fs.mkdtempSync(path.join(os.tmpdir(), "tempolith-e2e-heavy-"));
 
 // Point this at a backend that is already running and the gate drives that
 // instead of starting one from source. That is how the built artifact gets
-// tested: run the installer's own foreko-backend.exe, which serves the bundled
+// tested: run the installer's own tempolith-backend.exe, which serves the bundled
 // frontend itself, and aim the same journey at it. Source passing says nothing
 // about what PyInstaller froze.
-const externalBaseUrl = process.env.FOREKO_E2E_BASE_URL;
+const externalBaseUrl = process.env.TEMPOLITH_E2E_BASE_URL;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -56,7 +56,7 @@ export default defineConfig({
   },
   webServer: externalBaseUrl ? undefined : [
     {
-      command: "uv run uvicorn foreko.main:app --port 8002 --app-dir app/backend",
+      command: "uv run uvicorn tempolith.main:app --port 8002 --app-dir app/backend",
       port: 8002,
       cwd: path.resolve(here, "..", ".."),
       reuseExistingServer: false,
@@ -64,15 +64,15 @@ export default defineConfig({
       stdout: "pipe",
       stderr: "pipe",
       env: {
-        // Deliberately no FOREKO_FAKE_MODELS. That is the whole point.
+        // Deliberately no TEMPOLITH_FAKE_MODELS. That is the whole point.
         //
         // Preload is left on, as it is for a real install. With it off the
         // registry never leaves "loading", the app sits behind its setup
         // splash forever, and the run would be testing a configuration nobody
         // ships. The consequence is that this gate needs the TimesFM
-        // checkpoint present in FOREKO_E2E_STORAGE_DIR/models, or it will
+        // checkpoint present in TEMPOLITH_E2E_STORAGE_DIR/models, or it will
         // fetch one on first run.
-        FOREKO_STORAGE_DIR: storageDir,
+        TEMPOLITH_STORAGE_DIR: storageDir,
       },
     },
     {
@@ -80,7 +80,7 @@ export default defineConfig({
       url: "http://localhost:5175",
       reuseExistingServer: false,
       timeout: 120_000,
-      env: { FOREKO_API_TARGET: "http://localhost:8002" },
+      env: { TEMPOLITH_API_TARGET: "http://localhost:8002" },
     },
   ],
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],

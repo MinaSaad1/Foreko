@@ -5,8 +5,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foreko.services.backtest import FoldFailure, FoldPrediction
-from foreko.services.validation_policy import (
+from tempolith.services.backtest import FoldFailure, FoldPrediction
+from tempolith.services.validation_policy import (
     metrics_for_rows,
     select_policies,
     select_series_policy,

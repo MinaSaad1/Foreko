@@ -1,6 +1,6 @@
 import { create } from"zustand";
 
-const STORAGE_KEY = "foreko.backtest.summaries";
+const STORAGE_KEY = "tempolith.backtest.summaries";
 
 export interface BacktestSummary {
  datasetId: string;

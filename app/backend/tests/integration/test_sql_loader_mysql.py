@@ -1,6 +1,6 @@
 """Live-MySQL integration tests for the SQL loader.
 
-Skipped unless ``FOREKO_TEST_MYSQL_*`` env vars are set. See
+Skipped unless ``TEMPOLITH_TEST_MYSQL_*`` env vars are set. See
 ``tests/integration/conftest.py`` for the env-var contract.
 """
 
@@ -15,14 +15,14 @@ pytest.importorskip("pymysql")
 
 from sqlalchemy import text
 
-from foreko.services import dataset_store
-from foreko.services.loaders.sql import (
+from tempolith.services import dataset_store
+from tempolith.services.loaders.sql import (
     SqlLoader,
     build_engine,
     list_tables,
     materialize,
 )
-from foreko.services.loaders.sql import (
+from tempolith.services.loaders.sql import (
     test_connection as run_connection_test,
 )
 

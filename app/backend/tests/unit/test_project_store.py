@@ -7,19 +7,19 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from foreko.schemas.dataset import ColumnMapping
-from foreko.schemas.project import (
+from tempolith.schemas.dataset import ColumnMapping
+from tempolith.schemas.project import (
     ProjectCreate,
     ProjectPatch,
     ProjectRevisionCreate,
     ProjectRunCreate,
 )
-from foreko.services.project_store import (
+from tempolith.services.project_store import (
     ProjectNotFoundError,
     ProjectStore,
     get_project_store,
 )
-from foreko.settings import STORAGE_DIR_NAMES
+from tempolith.settings import STORAGE_DIR_NAMES
 
 
 def _revision(horizon: int = 12) -> ProjectRevisionCreate:
@@ -37,7 +37,7 @@ def _revision(horizon: int = 12) -> ProjectRevisionCreate:
 
 @pytest.fixture()
 def store(tmp_path: Path) -> ProjectStore:
-    return ProjectStore(tmp_path / "foreko.db")
+    return ProjectStore(tmp_path / "tempolith.db")
 
 
 @pytest.mark.unit
@@ -189,8 +189,8 @@ def test_mutations_on_missing_project_raise(store: ProjectStore) -> None:
 
 @pytest.mark.unit
 def test_projects_dir_is_created_and_wipeable(tmp_path: Path) -> None:
-    from foreko.routers.system import _WIPEABLE_DIRS
-    from foreko.settings import Settings
+    from tempolith.routers.system import _WIPEABLE_DIRS
+    from tempolith.settings import Settings
 
     settings = Settings(storage_dir=tmp_path)
     settings.ensure_dirs()

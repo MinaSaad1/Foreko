@@ -128,7 +128,7 @@ def test_validate_writes_an_immutable_run_artifact(client) -> None:
 def test_a_candidate_failure_is_reported_without_failing_the_run(
     client, monkeypatch
 ) -> None:
-    from foreko.services import backtest as backtest_service
+    from tempolith.services import backtest as backtest_service
 
     real = backtest_service._forecast_one_model
 

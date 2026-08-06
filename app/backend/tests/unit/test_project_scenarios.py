@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from foreko.services.project_forecast import scenario_deltas
+from tempolith.services.project_forecast import scenario_deltas
 
 
 def _csv(rows: int = 48) -> bytes:

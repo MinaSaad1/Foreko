@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from foreko.services.factor_plan import (
+from tempolith.services.factor_plan import (
     FactorPlanError,
     copy_for_scenario,
     generate_calendar_factors,

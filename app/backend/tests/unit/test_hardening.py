@@ -12,11 +12,11 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from foreko.main import create_app
-from foreko.services import dataset_store, janitor
-from foreko.services.paths import validate_segment
-from foreko.services.series import ensure_min_length
-from foreko.settings import Settings
+from tempolith.main import create_app
+from tempolith.services import dataset_store, janitor
+from tempolith.services.paths import validate_segment
+from tempolith.services.series import ensure_min_length
+from tempolith.settings import Settings
 
 from ..conftest import FakeModelRegistry
 
@@ -104,13 +104,13 @@ def test_short_series_forecast_returns_422_not_fake_forecast(client: TestClient)
 @pytest.mark.unit
 def test_upload_over_cap_returns_413(tmp_path: Path) -> None:
     settings = Settings(
-        storage_dir=tmp_path / "foreko",
+        storage_dir=tmp_path / "tempolith",
         preload_model=False,
         max_upload_bytes=1024,
     )
     settings.ensure_dirs()
     app = create_app(settings=settings)
-    from foreko.deps import get_registry
+    from tempolith.deps import get_registry
 
     fake = FakeModelRegistry()
     app.dependency_overrides[get_registry] = lambda: fake

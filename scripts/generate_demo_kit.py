@@ -1,4 +1,4 @@
-﻿"""Generate Foreko screen-recording demo workbooks and production plan.
+"""Generate Tempolith screen-recording demo workbooks and production plan.
 
 Run from the repository root with the bundled or project Python runtime.
 All data is deterministic and synthetic.
@@ -19,7 +19,7 @@ from openpyxl.utils import get_column_letter
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "output" / "foreko-demo-kit"
+OUT = ROOT / "output" / "tempolith-demo-kit"
 DATA_DIR = OUT / "datasets"
 RNG = np.random.default_rng(20260714)
 
@@ -40,11 +40,11 @@ class Demo:
 
 
 DEMOS = [
-    Demo(1, "Excel ingestion and column mapping", "Bring an ordinary business workbook into Foreko in under a minute.", "45-60 sec", "Record now", "01_excel_ingestion_and_mapping.xlsx", "Sheet: Monthly_Data; Date: Date; Value: Revenue; Series: none", "Start on Ingest with no active dataset.", "Upload workbook; choose Monthly_Data; show preview; confirm automatic mapping; open the saved dataset from the library.", "The workbook is previewed, mapped, stored locally, and reusable without another upload.", "Your forecasting workflow starts with the spreadsheet you already have."),
+    Demo(1, "Excel ingestion and column mapping", "Bring an ordinary business workbook into Tempolith in under a minute.", "45-60 sec", "Record now", "01_excel_ingestion_and_mapping.xlsx", "Sheet: Monthly_Data; Date: Date; Value: Revenue; Series: none", "Start on Ingest with no active dataset.", "Upload workbook; choose Monthly_Data; show preview; confirm automatic mapping; open the saved dataset from the library.", "The workbook is previewed, mapped, stored locally, and reusable without another upload.", "Your forecasting workflow starts with the spreadsheet you already have."),
     Demo(2, "Forecast readiness report", "Check whether a series is forecast-ready before trusting a model.", "50-70 sec", "Record now", "02_forecast_readiness.xlsx", "Date: Date; Value: Daily_Demand; Series: none", "Upload, then open Data Quality.", "Run preflight; show quality score; show frequency, trend, seasonality, outliers, stationarity, and recommended transformations.", "The dataset deliberately contains weekly seasonality, trend, and more than 5% extreme points.", "A forecast is only as defensible as the data behind it."),
     Demo(3, "Forecast horizon and uncertainty", "Get a forward forecast with a realistic range, not a single false-precision line.", "55-75 sec", "Record now", "03_forecast_horizon_and_uncertainty.xlsx", "Date: Date; Value: Revenue; Series: none", "Upload and open Forecast; wait for model status Ready.", "Choose horizon 12; run forecast; hover history and forecast; point to P10/P90 band, expected total, accuracy, and confidence.", "A seasonal monthly series produces a clear 12-month forecast and uncertainty band.", "Plan with a range of outcomes, not one number."),
-    Demo(4, "TimesFM versus LightGBM", "Let backtested evidence choose between two different forecasting approaches.", "60-80 sec", "Record now", "04_model_comparison.xlsx", "Date: Date; Value: Orders; Series: none", "Upload and open Forecast.", "Run horizon 28; show recommended winner; inspect the alternative; toggle side-by-side overlay; mention holdout MAPE and confidence.", "Both forecasts, the selected winner, and the alternative are visible on the same history.", "Foreko does not ask you to choose a model by instinct."),
-    Demo(5, "Forecast export", "Turn an analysis into an asset you can share immediately.", "35-50 sec", "Record now", "05_forecast_export.xlsx", "Date: Date; Value: Revenue; Series: none", "Run a 12-period forecast first.", "Export the chart as PNG; download the forecast PDF; briefly open the downloaded file if your recording setup allows it.", "The chart export and structured PDF complete successfully.", "The result leaves Foreko in a format stakeholders can use."),
+    Demo(4, "TimesFM versus LightGBM", "Let backtested evidence choose between two different forecasting approaches.", "60-80 sec", "Record now", "04_model_comparison.xlsx", "Date: Date; Value: Orders; Series: none", "Upload and open Forecast.", "Run horizon 28; show recommended winner; inspect the alternative; toggle side-by-side overlay; mention holdout MAPE and confidence.", "Both forecasts, the selected winner, and the alternative are visible on the same history.", "Tempolith does not ask you to choose a model by instinct."),
+    Demo(5, "Forecast export", "Turn an analysis into an asset you can share immediately.", "35-50 sec", "Record now", "05_forecast_export.xlsx", "Date: Date; Value: Revenue; Series: none", "Run a 12-period forecast first.", "Export the chart as PNG; download the forecast PDF; briefly open the downloaded file if your recording setup allows it.", "The chart export and structured PDF complete successfully.", "The result leaves Tempolith in a format stakeholders can use."),
     Demo(6, "Walk-forward backtesting", "Prove how the forecast would have performed on history it had not seen.", "70-90 sec", "Record now", "06_walk_forward_backtest.xlsx", "Date: Date; Value: Daily_Orders; Series: none", "Upload and open Backtest; wait for model Ready.", "Set horizon 14 and folds 5; run; show winner, aggregate MAPE/RMSE/MASE, per-horizon error, and fold table.", "Stable weekly demand gives readable fold metrics and a clear error-by-horizon chart.", "A plausible forecast is not enough. Backtest it."),
     Demo(7, "Prediction interval calibration", "Check whether the forecast range is as honest as the point forecast.", "55-75 sec", "Record now", "07_prediction_interval_calibration.xlsx", "Date: Date; Value: Shipments; Series: none", "Run Backtest with horizon 14 and folds 5.", "Click Compute calibration; explain nominal versus empirical coverage; point out whether intervals are under or overconfident.", "The reliability plot and calibration observations render after the backtest.", "Uncertainty should be measured, not decorated onto a chart."),
     Demo(8, "Residual diagnostics", "See what the model failed to learn.", "70-90 sec", "Record now", "08_residual_diagnostics.xlsx", "Date: Date; Value: Support_Calls; Series: none", "Upload and open Diagnostics.", "Choose horizon 14 and Seasonal Naive; run; show histogram, Q-Q plot, residual ACF, Ljung-Box result, and STL decomposition.", "The dataset has trend, weekly structure, and periodic shocks, so the diagnostic panels are visually informative.", "Good diagnostics tell you where confidence should stop."),
@@ -52,13 +52,13 @@ DEMOS = [
     Demo(10, "Multi-method anomaly agreement", "Use method agreement to separate robust anomalies from one-method noise.", "60-80 sec", "Fix first", "10_multi_method_anomaly_agreement.xlsx", "Date: Date; Value: Sales; Series: none", "Fix quantile-PI wiring before recording, then open Explain.", "Run Detect anomalies; show method counts, agreement matrix, vote severity, and reasons.", "Extreme campaign days are designed to be found by several statistical methods.", "Agreement across methods is stronger evidence than one arbitrary threshold."),
     Demo(11, "Lag analysis", "Measure how many periods pass before a business driver shows up in the target.", "50-70 sec", "Record now", "11_lag_analysis.xlsx", "Date: Date; Value: Sales; numeric factors: Ad_Spend, Price, Stockout_Flag, Inventory_Index", "Upload and open Explain; map columns; select Ad_Spend and Price.", "Click Lag analysis; focus on the Ad_Spend curve and peak lag; explain that positive lag means the factor leads Sales.", "Sales is generated with a three-day delayed response to Ad_Spend.", "Knowing the lag turns a correlation into an operating lead time."),
     Demo(12, "Granger causality", "Test whether a driver predicts the target beyond the target's own history.", "50-70 sec", "Record now", "12_granger_causality.xlsx", "Date: Date; Value: Sales; numeric factors: Ad_Spend, Price, Stockout_Flag, Inventory_Index", "Upload and open Explain; select Ad_Spend and Price.", "Click Granger causality; show best lag, p-value, and causal flag; state that this is predictive evidence, not philosophical proof of cause.", "The delayed Ad_Spend signal is intentionally strong enough to be detected.", "Use causality tests to narrow the drivers worth acting on."),
-    Demo(13, "Anomaly root-cause hints", "Connect abnormal target dates to the factors that were abnormal at the same time.", "65-85 sec", "Fix first", "13_anomaly_root_cause.xlsx", "Date: Date; Value: Sales; numeric: Ad_Spend, Stockout_Flag, Inventory_Index; categorical: Event_Type", "Fix quantile-PI wiring; open Explain; select factors.", "Run anomaly methods; then Find root cause; show anomaly versus baseline means, factor z-scores, category lift, direction, and strength.", "Anomalies coincide with stockouts, unusually low inventory, and distinct event categories.", "Foreko gives you evidence-backed investigation leads, not an invented narrative."),
+    Demo(13, "Anomaly root-cause hints", "Connect abnormal target dates to the factors that were abnormal at the same time.", "65-85 sec", "Fix first", "13_anomaly_root_cause.xlsx", "Date: Date; Value: Sales; numeric: Ad_Spend, Stockout_Flag, Inventory_Index; categorical: Event_Type", "Fix quantile-PI wiring; open Explain; select factors.", "Run anomaly methods; then Find root cause; show anomaly versus baseline means, factor z-scores, category lift, direction, and strength.", "Anomalies coincide with stockouts, unusually low inventory, and distinct event categories.", "Tempolith gives you evidence-backed investigation leads, not an invented narrative."),
     Demo(14, "Factor impact", "Quantify how price, spend, promotions, and weather change the forecast.", "70-90 sec", "Record now", "14_factor_impact.xlsx", "Date: Date; Value: Sales; numeric: Ad_Spend, Price, Temperature_C; categorical: Promotion", "Upload and open Factors.", "Select factors; choose additive; run horizon 12; show baseline toggle, total delta, top driver, influence bars, correlations, and elasticity table.", "The target contains clear positive spend and promotion effects plus a negative price effect.", "A factor belongs in planning only when its impact is visible and measurable."),
     Demo(15, "What-if scenarios", "Compare a flat future with a spend ramp and a price change before committing resources.", "75-95 sec", "Record now", "15_what_if_scenarios.xlsx", "Date: Date; Value: Sales; numeric factors: Ad_Spend, Price", "Upload and open What-if.", "Select Ad_Spend and Price; run baseline; add a 12-period spend ramp; add a price scenario; compare totals and percentage deltas.", "The scenario chart shows multiple futures against the same historical series.", "A scenario is useful when it makes a decision comparable."),
     Demo(16, "Segment comparison", "Find which regions are largest, fastest-growing, and most volatile.", "55-75 sec", "Record now", "16_segment_comparison.xlsx", "Date: Date; Value: Demand; Series: Segment", "Upload and open Segments; select Segment as series column.", "Set Top N 10; compare; switch sort between Total, Growth, and Volatility; show multi-line timelines.", "Eight segments have intentionally different size, growth, seasonality, and volatility profiles.", "The biggest segment is not always the one that needs the most attention."),
     Demo(17, "Timeline annotations", "Put known business events next to the forecasting evidence.", "40-60 sec", "Record now", "17_timeline_annotations.xlsx", "Date: Date; Value: Revenue; Series: none", "Upload and open Operations.", "Add annotations for 2024-03-01 Product launch and 2024-11-01 Distribution expansion; show saved entries; delete one and add it again if useful.", "Annotations persist against the active dataset.", "Known events should be recorded before unusual movements are interpreted."),
     Demo(18, "Saved analyses and operations PDF", "Keep a local audit trail of the analyses behind a decision.", "55-75 sec", "Record now", "18_saved_analyses_and_ops_pdf.xlsx", "Date: Date; Value: Revenue; Series: none", "Run Preflight and Backtest first, then open Operations.", "Show saved analysis entries; export the Operations PDF; explain that annotations and cached analyses are bundled locally.", "Preflight and backtest runs appear automatically in Saved analyses.", "The decision record stays with the dataset on your machine."),
-    Demo(19, "SQL connection and table ingest", "Connect Foreko directly to a forecasting table without exporting a CSV every time.", "60-90 sec", "Setup required", "19_sql_connection_seed.xlsx", "Database table columns: Date, Demand, Region; Date: Date; Value: Demand; Series: Region", "Import the seed workbook into a local PostgreSQL, MySQL, or SQL Server instance before recording.", "Create connection; test it; choose schema and table; ingest; map Date, Demand, and Region; preview the stored dataset.", "A live local database is required. The workbook is only the seed source for that table.", "Foreko can start from the system where the time series already lives."),
+    Demo(19, "SQL connection and table ingest", "Connect Tempolith directly to a forecasting table without exporting a CSV every time.", "60-90 sec", "Setup required", "19_sql_connection_seed.xlsx", "Database table columns: Date, Demand, Region; Date: Date; Value: Demand; Series: Region", "Import the seed workbook into a local PostgreSQL, MySQL, or SQL Server instance before recording.", "Create connection; test it; choose schema and table; ingest; map Date, Demand, and Region; preview the stored dataset.", "A live local database is required. The workbook is only the seed source for that table.", "Tempolith can start from the system where the time series already lives."),
     Demo(20, "Changepoint detection", "Detect sustained shifts in the level of a series, not just isolated spikes.", "50-70 sec", "Fix first", "20_changepoint_detection.xlsx", "Date: Date; Value: Demand; Series: none", "Add ruptures to the app dependency set and verify installation before recording.", "Open Explain; run Detect changepoints; show shift date, left versus right mean, direction, and percent change.", "The series contains two deliberate level shifts.", "A changepoint tells you when the old baseline stopped being valid."),
     Demo(21, "Missing-value quality guardrail", "Surface incomplete target data before any forecast is trusted.", "40-60 sec", "Fix first", "21_missing_value_quality_guardrail.xlsx", "Date: Date; Value: Demand; Series: none", "Change preflight so missing values are counted before extraction rejects them, or return a dedicated quality result.", "Run Data Quality; show missing count, missing rate, score penalty, and corrective warning.", "The workbook contains 15 missing target values across 180 daily rows.", "Missing periods should be a visible quality decision, not an opaque failure."),
 ]
@@ -302,14 +302,14 @@ def write_plan_files() -> None:
         {"Area": "Changepoints", "Finding": "service imports ruptures, but ruptures is absent from project dependencies", "Recording decision": "Hold demo 20 until fixed"},
         {"Area": "SQL connector", "Finding": "requires a running PostgreSQL, MySQL, or SQL Server instance", "Recording decision": "Record only after local test database setup"},
     ])
-    plan_path = OUT / "Foreko_Demo_Production_Plan.xlsx"
+    plan_path = OUT / "Tempolith_Demo_Production_Plan.xlsx"
     with pd.ExcelWriter(plan_path, engine="openpyxl") as writer:
         plan_df.to_excel(writer, sheet_name="Demo_Plan", index=False)
         blockers.to_excel(writer, sheet_name="Known_Blockers", index=False)
     style_workbook(plan_path)
 
     lines = [
-        "# Foreko Demo Production Plan",
+        "# Tempolith Demo Production Plan",
         "",
         "This plan is based on the implemented React pages, API wiring, and backend services reviewed on 2026-07-14.",
         "",
@@ -347,7 +347,7 @@ def write_plan_files() -> None:
             f"Closing line: {d.closing}",
             "",
         ])
-    (OUT / "FOREKO_DEMO_PLAN.md").write_text("\n".join(lines), encoding="utf-8")
+    (OUT / "TEMPOLITH_DEMO_PLAN.md").write_text("\n".join(lines), encoding="utf-8")
 
 
 def generate() -> None:
@@ -393,7 +393,7 @@ def generate() -> None:
 
     write_plan_files()
 
-    zip_path = ROOT / "output" / "Foreko_Demo_Kit.zip"
+    zip_path = ROOT / "output" / "Tempolith_Demo_Kit.zip"
     if zip_path.exists():
         zip_path.unlink()
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
@@ -402,7 +402,7 @@ def generate() -> None:
                 archive.write(path, path.relative_to(OUT.parent))
 
     print(f"Generated {len(DEMOS)} demo workbooks in {DATA_DIR}")
-    print(f"Plan: {OUT / 'FOREKO_DEMO_PLAN.md'}")
+    print(f"Plan: {OUT / 'TEMPOLITH_DEMO_PLAN.md'}")
     print(f"Archive: {zip_path}")
 
 

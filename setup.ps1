@@ -1,4 +1,4 @@
-# Foreko setup script for Windows.
+# Tempolith setup script for Windows.
 # Installs all Python dependencies and automatically selects the GPU-accelerated
 # PyTorch build when an NVIDIA GPU with a modern driver is detected, falling
 # back to CPU otherwise.
@@ -104,5 +104,5 @@ if ($useCuda) {
 }
 Write-Host ""
 Write-Host "Start the app:"
-Write-Host "  Backend  : uv run uvicorn foreko.main:app --port 8000 --reload --app-dir app/backend"
+Write-Host "  Backend  : uv run uvicorn tempolith.main:app --port 8000 --reload --app-dir app/backend"
 Write-Host "  Frontend : cd app/frontend && npm run dev"

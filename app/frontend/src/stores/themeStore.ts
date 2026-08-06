@@ -2,7 +2,7 @@ import { create } from"zustand";
 
 export type Theme = "dark" | "light";
 
-const STORAGE_KEY = "foreko.theme";
+const STORAGE_KEY = "tempolith.theme";
 
 function readInitialTheme(): Theme {
  if (typeof window === "undefined") return"dark";

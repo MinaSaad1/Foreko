@@ -2,7 +2,7 @@
 
 SQLite exercises the shared SQLAlchemy code paths (build_engine, list_tables,
 preview_query, materialize, test_connection). Postgres / MySQL / MSSQL live in
-tests/integration and run only when the corresponding FOREKO_TEST_* env vars
+tests/integration and run only when the corresponding TEMPOLITH_TEST_* env vars
 point at a live database.
 """
 
@@ -16,16 +16,16 @@ pytest.importorskip("sqlalchemy")
 
 import pandas as pd
 
-from foreko.schemas.connection import Connection
-from foreko.services import dataset_store
-from foreko.services.loaders.sql import (
+from tempolith.schemas.connection import Connection
+from tempolith.services import dataset_store
+from tempolith.services.loaders.sql import (
     SqlLoader,
     build_engine,
     list_tables,
     materialize,
     preview_query,
 )
-from foreko.services.loaders.sql import (
+from tempolith.services.loaders.sql import (
     test_connection as run_connection_test,  # alias keeps pytest from collecting the import
 )
 

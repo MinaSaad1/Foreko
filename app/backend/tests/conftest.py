@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for Foreko tests."""
+"""Shared pytest fixtures for Tempolith tests."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from foreko.main import create_app
-from foreko.schemas.system import DeviceInfo
-from foreko.services.model_registry import ModelRegistry
-from foreko.settings import Settings
+from tempolith.main import create_app
+from tempolith.schemas.system import DeviceInfo
+from tempolith.services.model_registry import ModelRegistry
+from tempolith.settings import Settings
 
 
 class FakeTimesFMModel:
@@ -128,7 +128,7 @@ class FakeModelRegistry(ModelRegistry):
 
 @pytest.fixture
 def tmp_storage(tmp_path: Path) -> Path:
-    return tmp_path / "foreko"
+    return tmp_path / "tempolith"
 
 
 @pytest.fixture
@@ -143,7 +143,7 @@ def client(settings: Settings):
     app = create_app(settings=settings)
     fake = FakeModelRegistry()
 
-    from foreko.deps import get_registry
+    from tempolith.deps import get_registry
 
     app.dependency_overrides[get_registry] = lambda: fake
     with TestClient(app) as c:

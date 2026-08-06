@@ -302,8 +302,8 @@ export function BacktestPage() {
        actions={
          result && (
            <DownloadPdfButton
-             title="Foreko, Backtest report"
-             filename="foreko-backtest.pdf"
+             title="Tempolith, Backtest report"
+             filename="tempolith-backtest.pdf"
              sections={() => buildBacktestReport(result, calibration, {
                horizon,
                folds,

@@ -1,5 +1,5 @@
 // Hand-mirrored from the validate job's serialized ValidationResult in
-// app/backend/foreko/routers/project_jobs.py.
+// app/backend/tempolith/routers/project_jobs.py.
 
 export interface MetricSet {
  mase: number | null;

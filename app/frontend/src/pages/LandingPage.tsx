@@ -228,7 +228,7 @@ export function LandingPage() {
               <span className="text-accent">Stay on your machine.</span>
             </h1>
             <p className="text-base text-text-secondary leading-relaxed max-w-[60ch]">
-              Foreko wraps Google's TimesFM and a LightGBM baseline in a
+              Tempolith wraps Google's TimesFM and a LightGBM baseline in a
               workbench you run locally. Keep a recurring forecast as a
               project: the data recipe, the model evidence, your assumptions,
               and how accurate it turned out, all reproducible later. Free and
@@ -261,8 +261,8 @@ export function LandingPage() {
             <span className="pointer-events-none absolute inset-0 m-auto h-[20rem] w-[20rem] lg:h-[24rem] lg:w-[24rem] rounded-full border border-dashed border-accent/15" />
             <span className="pointer-events-none absolute inset-0 m-auto h-[22rem] w-[22rem] lg:h-[28rem] lg:w-[28rem] rounded-full border border-accent/5" />
             <img
-              src="/foreko-logo.png"
-              alt="Foreko mascot"
+              src="/tempolith-logo.png"
+              alt="Tempolith mascot"
               className="absolute inset-0 m-auto z-10 h-64 w-64 lg:h-80 lg:w-80 object-contain drop-shadow-[0_0_30px_rgb(var(--color-accent)/0.45)]"
             />
           </div>
@@ -274,7 +274,7 @@ export function LandingPage() {
       <section className="pt-4">
         <div className="mb-4 flex items-baseline justify-between border-b border-border-strong/70 pb-3">
           <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-text-primary">
-            What Foreko does
+            What Tempolith does
           </h2>
           <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-faint">
             One workbench · many lenses
@@ -315,7 +315,7 @@ export function LandingPage() {
         </div>
         <ol className="grid md:grid-cols-3 divide-x divide-border-strong/70">
           {[
-            { n: "01", title: "Bring your data", body: "Upload a CSV, an Excel workbook, or connect a database. Foreko reads the schema." },
+            { n: "01", title: "Bring your data", body: "Upload a CSV, an Excel workbook, or connect a database. Tempolith reads the schema." },
             { n: "02", title: "Open a project", body: "Prepare the series, validate the model on your own history, enter your assumptions, then issue the forecast." },
             { n: "03", title: "Score it later", body: "Load actuals when they arrive to measure accuracy and bias. Reproduce any past decision without rebuilding it." },
           ].map((step) => (
@@ -340,7 +340,7 @@ export function LandingPage() {
       </section>
 
       <footer className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-border-strong/70 pt-5 font-mono text-[10px] uppercase tracking-[0.18em] text-text-faint">
-        <span>Foreko · Free and open source · Apache-2.0 licensed</span>
+        <span>Tempolith · Free and open source · Apache-2.0 licensed</span>
         <div className="flex gap-5">
           <Link to="/glossary" className="hover:text-accent transition-colors">Glossary</Link>
           <Link to="/data" className="hover:text-accent transition-colors">Datasets</Link>

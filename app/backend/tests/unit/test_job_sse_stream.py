@@ -13,7 +13,7 @@ import json
 
 import pytest
 
-from foreko.jobs.generic import GenericJobManager, sse_lines
+from tempolith.jobs.generic import GenericJobManager, sse_lines
 
 
 def _events(frames: list[str]) -> list[dict]:

@@ -13,7 +13,7 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from foreko.services import backtest as backtest_service
+from tempolith.services import backtest as backtest_service
 
 
 def _monthly_csv(n: int = 48) -> str:

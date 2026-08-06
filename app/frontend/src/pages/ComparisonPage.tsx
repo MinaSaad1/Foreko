@@ -251,8 +251,8 @@ export function ComparisonPage() {
         actions={
           resolved && (
             <DownloadPdfButton
-              title="Foreko, Forecast report"
-              filename="foreko-forecast.pdf"
+              title="Tempolith, Forecast report"
+              filename="tempolith-forecast.pdf"
               sections={() => buildForecastReport(resolved.data, {
                 horizon,
                 datasetName: preview?.filename,

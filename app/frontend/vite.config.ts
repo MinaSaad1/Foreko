@@ -31,8 +31,8 @@ export default defineConfig({
     proxy: {
       "/api": {
         // The e2e run starts its own isolated backend on another port so it
-        // cannot touch a developer's real ~/.foreko storage.
-        target: process.env.FOREKO_API_TARGET ?? "http://localhost:8000",
+        // cannot touch a developer's real ~/.tempolith storage.
+        target: process.env.TEMPOLITH_API_TARGET ?? "http://localhost:8000",
         changeOrigin: false,
       },
     },

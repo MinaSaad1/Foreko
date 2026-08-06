@@ -37,7 +37,7 @@ export default tseslint.config(
       // compiler, and on working code they flag architecture rather than
       // defects: setting state from a fetched result, module-level caches,
       // Date.now during render. Turning them on would mean rewriting sound code
-      // to satisfy a compiler that is not in the build. Revisit if Foreko
+      // to satisfy a compiler that is not in the build. Revisit if Tempolith
       // adopts React Compiler.
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/refs": "off",

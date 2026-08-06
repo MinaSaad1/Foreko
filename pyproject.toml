@@ -1,7 +1,7 @@
 [project]
-name = "foreko"
+name = "tempolith"
 version = "2.0.3"
-description = "Foreko, a local-first time-series forecasting workbench. TimesFM and LightGBM side by side, free and Apache-2.0-licensed."
+description = "Tempolith, a local-first time-series forecasting workbench. TimesFM and LightGBM side by side, free and Apache-2.0-licensed."
 authors = [
     {name = "Mina Saad", email = "mina.saad.wahba@gmail.com"},
 ]
@@ -106,7 +106,7 @@ filterwarnings = [
 
 [tool.setuptools.packages.find]
 where = ["src", "app/backend"]
-include = ["timesfm*", "foreko*"]
+include = ["timesfm*", "tempolith*"]
 
 [build-system]
 requires = ["setuptools>=61.0"]

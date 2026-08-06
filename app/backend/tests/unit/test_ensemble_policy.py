@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foreko.services.ensemble_policy import (
+from tempolith.services.ensemble_policy import (
     MAX_BIAS_INCREASE_PP,
     CandidateMetrics,
     combine,

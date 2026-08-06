@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import pytest
 
-from foreko.schemas.dataset import ColumnMapping
-from foreko.services import backtest as backtest_service
-from foreko.services.loaders.csv import ingest_upload
+from tempolith.schemas.dataset import ColumnMapping
+from tempolith.services import backtest as backtest_service
+from tempolith.services.loaders.csv import ingest_upload
 
 
 def _multi_series_csv(rows: int = 48, regions=("egypt", "uae")) -> bytes:

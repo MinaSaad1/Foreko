@@ -11,14 +11,14 @@ interface StorageRow {
 }
 
 const STORAGE_INVENTORY: StorageRow[] = [
- { path:"~/.foreko/datasets/", what:"Your uploaded CSVs. Kept for 30 days, then auto-purged." },
- { path:"~/.foreko/models/", what:"The TimesFM model weights (around 1.2 GB), downloaded on first run. If HuggingFace is unreachable, you can pre-populate this folder from another machine." },
- { path:"~/.foreko/data/foreko.db", what:"Cached forecasts, backtests, anomaly results, saved scenarios, and your forecast projects: project metadata, every configuration revision, every run, the forecasts you issued, and the actuals you imported." },
- { path:"~/.foreko/projects/", what:"One folder per forecast project, holding its prepared data, run results, and export packages. Deleting a project removes its folder; the source dataset is kept." },
- { path:"~/.foreko/adapters/", what:"Any fine-tuned adapters you create." },
- { path:"~/.foreko/jobs/", what:"Background job state for long-running operations." },
- { path:"~/.foreko/exports/", what:"PDFs and CSVs you export from reports." },
- { path:"~/.foreko/logs/", what:"App logs you can inspect if something goes wrong." },
+ { path:"~/.tempolith/datasets/", what:"Your uploaded CSVs. Kept for 30 days, then auto-purged." },
+ { path:"~/.tempolith/models/", what:"The TimesFM model weights (around 1.2 GB), downloaded on first run. If HuggingFace is unreachable, you can pre-populate this folder from another machine." },
+ { path:"~/.tempolith/data/tempolith.db", what:"Cached forecasts, backtests, anomaly results, saved scenarios, and your forecast projects: project metadata, every configuration revision, every run, the forecasts you issued, and the actuals you imported." },
+ { path:"~/.tempolith/projects/", what:"One folder per forecast project, holding its prepared data, run results, and export packages. Deleting a project removes its folder; the source dataset is kept." },
+ { path:"~/.tempolith/adapters/", what:"Any fine-tuned adapters you create." },
+ { path:"~/.tempolith/jobs/", what:"Background job state for long-running operations." },
+ { path:"~/.tempolith/exports/", what:"PDFs and CSVs you export from reports." },
+ { path:"~/.tempolith/logs/", what:"App logs you can inspect if something goes wrong." },
 ];
 
 export function PrivacyPage() {
@@ -59,19 +59,19 @@ export function PrivacyPage() {
  <div>
  <h1 className="font-display text-3xl font-semibold text-text-primary">Privacy</h1>
  <p className="mt-2 text-text-secondary">
- Foreko is a local-first app. Your data stays on the machine running it.
+ Tempolith is a local-first app. Your data stays on the machine running it.
  </p>
  </div>
 
  <section className="rounded-panel border border-border/60 bg-bg-surface p-6 space-y-4">
  <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
- What Foreko writes to your machine
+ What Tempolith writes to your machine
  </h2>
  <p className="text-sm text-text-secondary">
- Everything Foreko touches lives under
- <code className="mx-1 font-mono text-text-primary">~/.foreko/</code>
+ Everything Tempolith touches lives under
+ <code className="mx-1 font-mono text-text-primary">~/.tempolith/</code>
  (or
- <code className="mx-1 font-mono text-text-primary">%USERPROFILE%\.foreko\</code>
+ <code className="mx-1 font-mono text-text-primary">%USERPROFILE%\.tempolith\</code>
  on Windows). Delete that folder to remove all app data.
  </p>
  <ul className="space-y-2 text-sm">
@@ -95,7 +95,7 @@ export function PrivacyPage() {
  </li>
  </ul>
  <p className="text-xs text-text-muted">
- Foreko never sends telemetry, crash reports, or usage analytics automatically.
+ Tempolith never sends telemetry, crash reports, or usage analytics automatically.
  </p>
  </section>
 
@@ -123,7 +123,7 @@ export function PrivacyPage() {
  <div>
  <p className="text-sm text-text-primary">Download a log bundle</p>
  <p className="text-xs text-text-muted">
- Zipped copy of <code className="font-mono">~/.foreko/logs/</code>, useful when filing bug reports.
+ Zipped copy of <code className="font-mono">~/.tempolith/logs/</code>, useful when filing bug reports.
  </p>
  </div>
  <button
@@ -169,20 +169,20 @@ export function PrivacyPage() {
  </div>
 
  <p className="text-xs text-text-muted pt-1">
- To also remove the 1.2 GB model weights, close Foreko and delete
- <code className="mx-1 font-mono">~/.foreko/models/</code>
+ To also remove the 1.2 GB model weights, close Tempolith and delete
+ <code className="mx-1 font-mono">~/.tempolith/models/</code>
  manually.
  </p>
  </section>
 
  <section className="rounded-panel border border-border/60 bg-bg-surface p-6 space-y-3">
  <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
- How to remove all Foreko data
+ How to remove all Tempolith data
  </h2>
  <p className="text-sm text-text-secondary">
  Close the app and delete
- <code className="mx-1 font-mono text-text-primary">~/.foreko/</code>.
- That removes uploaded datasets, cached results, logs, and the model weights. Foreko does
+ <code className="mx-1 font-mono text-text-primary">~/.tempolith/</code>.
+ That removes uploaded datasets, cached results, logs, and the model weights. Tempolith does
  not write anywhere else on your machine.
  </p>
  </section>

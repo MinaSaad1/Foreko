@@ -1,6 +1,6 @@
 import { useEffect } from"react";
 
-const BASE = "Foreko";
+const BASE = "Tempolith";
 
 export function useDocumentTitle(pageTitle?: string): void {
  useEffect(() => {

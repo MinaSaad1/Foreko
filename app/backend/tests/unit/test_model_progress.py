@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from foreko.services import model_download, runtime
+from tempolith.services import model_download, runtime
 
 
 @pytest.mark.unit

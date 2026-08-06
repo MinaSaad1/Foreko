@@ -10,11 +10,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foreko.schemas.dataset import ColumnMapping
-from foreko.schemas.project import PreparationStep, ProjectRevisionCreate
-from foreko.services import project_forecast
-from foreko.services.loaders.csv import ingest_upload
-from foreko.services.project_forecast import run_project_forecast
+from tempolith.schemas.dataset import ColumnMapping
+from tempolith.schemas.project import PreparationStep, ProjectRevisionCreate
+from tempolith.services import project_forecast
+from tempolith.services.loaders.csv import ingest_upload
+from tempolith.services.project_forecast import run_project_forecast
 
 
 def _csv(regions=("egypt", "uae"), rows: int = 48) -> bytes:

@@ -31,7 +31,7 @@ jobs:
       - name: Sync dependencies (CPU torch)
         run: uv sync --python ${{ matrix.python-version }} --extra app --extra app-dev --extra connectors
       - name: Lint (ruff)
-        run: uv run ruff check app/backend/foreko
+        run: uv run ruff check app/backend/tempolith
       - name: Unit tests (no model download)
         run: uv run pytest app/backend/tests -q -m "not integration"
 
@@ -91,7 +91,7 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run the browser journey
         working-directory: app/frontend
-        # FOREKO_FAKE_MODELS keeps the run deterministic and downloads no model
+        # TEMPOLITH_FAKE_MODELS keeps the run deterministic and downloads no model
         # weights. Playwright starts an isolated backend on 8001 with its own
         # empty storage, so nothing here touches real data.
         run: npx playwright test --project=chromium

@@ -101,12 +101,12 @@ export function StatusBar({ isSidebarOpen, onToggleSidebar, showSidebarToggle = 
  )}
 
  <Link
- to="/"className="flex items-center gap-2.5 px-4 border-r border-border-strong/70 hover:bg-bg-elevated transition-colors"aria-label="Foreko home"
+ to="/"className="flex items-center gap-2.5 px-4 border-r border-border-strong/70 hover:bg-bg-elevated transition-colors"aria-label="Tempolith home"
  >
  <img
- src="/foreko-logo.png"alt=""aria-hidden="true"className="h-6 w-6 object-contain drop-shadow-[0_0_5px_rgb(var(--color-accent)/0.4)]"
+ src="/tempolith-logo.png"alt=""aria-hidden="true"className="h-6 w-6 object-contain drop-shadow-[0_0_5px_rgb(var(--color-accent)/0.4)]"
  />
- <span className="font-display text-[13px] font-semibold text-text-primary tracking-wide">Foreko</span>
+ <span className="font-display text-[13px] font-semibold text-text-primary tracking-wide">Tempolith</span>
  </Link>
 
  <Segment k="ENV"v="LOCAL" />

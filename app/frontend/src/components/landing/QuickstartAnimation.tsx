@@ -13,7 +13,7 @@
 export function QuickstartAnimation() {
  return (
  <div
- className="relative w-full overflow-hidden rounded-panel border border-accent/30 bg-bg-surface/50 "aria-label="How Foreko works: from CSV to forecast in seconds"role="img"
+ className="relative w-full overflow-hidden rounded-panel border border-accent/30 bg-bg-surface/50 "aria-label="How Tempolith works: from CSV to forecast in seconds"role="img"
  >
  <style>{`
  @keyframes qs-csv-reveal {

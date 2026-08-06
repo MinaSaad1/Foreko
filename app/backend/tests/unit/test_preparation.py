@@ -10,8 +10,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foreko.schemas.project import PreparationStep
-from foreko.services.preparation import (
+from tempolith.schemas.project import PreparationStep
+from tempolith.services.preparation import (
     PreparationError,
     prepare_series,
     validate_recipe_order,

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from foreko.services.project_artifacts import (
+from tempolith.services.project_artifacts import (
     atomic_write_json,
     dataset_fingerprint,
     derived_dir,

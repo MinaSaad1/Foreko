@@ -32,7 +32,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
  businessQuestions: [
  "What numbers do I want to forecast?",
  "Which dataset was the one I used last time?",
- "Can I try Foreko on a sample before bringing my own data?",
+ "Can I try Tempolith on a sample before bringing my own data?",
  ],
  relatedTerms: ["preflight", "zero-shot"],
  },
@@ -193,7 +193,7 @@ export const PAGE_INTROS: Record<PageIntroKey, PageIntroContent> = {
  glossary: {
  title: "Every term, in plain English",
  summary:
- "A searchable reference of every statistical and forecasting concept Foreko surfaces.",
+ "A searchable reference of every statistical and forecasting concept Tempolith surfaces.",
  whenToUse:
  "Whenever a label on a chart or a metric in a table isn't immediately obvious.",
  businessQuestions: [

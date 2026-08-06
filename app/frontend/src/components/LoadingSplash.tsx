@@ -105,10 +105,10 @@ export function LoadingSplash() {
  <div className="flex flex-col items-center gap-4 relative w-full max-w-md px-6">
  <div className="absolute -inset-20 bg-hero-glow blur-[80px] opacity-20 animate-pulse-slow pointer-events-none" />
  <img
- src="/foreko-logo.png"alt=""aria-hidden="true"className="relative z-10 h-24 w-24 object-contain drop-shadow-[0_0_20px_rgb(var(--color-accent)/0.35)] animate-pulse-slow"
+ src="/tempolith-logo.png"alt=""aria-hidden="true"className="relative z-10 h-24 w-24 object-contain drop-shadow-[0_0_20px_rgb(var(--color-accent)/0.35)] animate-pulse-slow"
  />
  <span className="text-2xl font-display font-semibold text-text-primary relative z-10 tracking-[0.18em] uppercase">
- Foreko Setup
+ Tempolith Setup
  </span>
 
  {isError ? (
@@ -139,10 +139,10 @@ export function LoadingSplash() {
  </code>
  ) : (
  <code className="mx-1 font-mono text-text-primary">
- ~/.foreko/models/google--timesfm-2.5-200m-pytorch/
+ ~/.tempolith/models/google--timesfm-2.5-200m-pytorch/
  </code>
  )}
- then restart Foreko.
+ then restart Tempolith.
  </p>
  </div>
  </div>

@@ -29,7 +29,7 @@ interface DownloadPdfButtonProps {
 export function DownloadPdfButton({
  title,
  sections,
- filename ="foreko-report.pdf",
+ filename ="tempolith-report.pdf",
  label ="Export PDF",
  disabled,
  className ="",

@@ -10,10 +10,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foreko.schemas.dataset import ColumnMapping
-from foreko.schemas.project import ProjectRevisionCreate
-from foreko.services.loaders.csv import ingest_upload
-from foreko.services.project_forecast import (
+from tempolith.schemas.dataset import ColumnMapping
+from tempolith.schemas.project import ProjectRevisionCreate
+from tempolith.services.loaders.csv import ingest_upload
+from tempolith.services.project_forecast import (
     champions_of,
     policy_consumes_covariates,
     required_future_factors,

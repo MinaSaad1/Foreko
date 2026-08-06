@@ -1,6 +1,6 @@
 """Live-SQL Server integration tests for the SQL loader.
 
-Skipped unless ``FOREKO_TEST_MSSQL_*`` env vars are set. See
+Skipped unless ``TEMPOLITH_TEST_MSSQL_*`` env vars are set. See
 ``tests/integration/conftest.py`` for the env-var contract.
 
 The driver is platform-dependent: pyodbc on Windows, pymssql elsewhere.
@@ -23,14 +23,14 @@ else:
 
 from sqlalchemy import text
 
-from foreko.services import dataset_store
-from foreko.services.loaders.sql import (
+from tempolith.services import dataset_store
+from tempolith.services.loaders.sql import (
     SqlLoader,
     build_engine,
     list_tables,
     materialize,
 )
-from foreko.services.loaders.sql import (
+from tempolith.services.loaders.sql import (
     test_connection as run_connection_test,
 )
 

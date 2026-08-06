@@ -1,4 +1,4 @@
-# DESIGN.md, Foreko
+# DESIGN.md, Tempolith
 
 Visual system of record. Answers how it looks. Strategy lives in
 [PRODUCT.md](PRODUCT.md).

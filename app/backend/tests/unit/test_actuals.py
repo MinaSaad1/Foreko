@@ -1,7 +1,7 @@
 """Issued forecasts are immutable, and accuracy is scored against them.
 
 The guarantee under test: once issued, what you predicted cannot change. If a
-later revision or rerun could alter it, Foreko would be rescoring a forecast the
+later revision or rerun could alter it, Tempolith would be rescoring a forecast the
 user never issued, and its accuracy claim would be worthless.
 """
 
@@ -11,20 +11,20 @@ from pathlib import Path
 
 import pytest
 
-from foreko.schemas.dataset import ColumnMapping
-from foreko.schemas.project import (
+from tempolith.schemas.dataset import ColumnMapping
+from tempolith.schemas.project import (
     ActualRow,
     IssuedForecast,
     ProjectCreate,
     ProjectRevisionCreate,
     ProjectRunCreate,
 )
-from foreko.services.actuals import (
+from tempolith.services.actuals import (
     ActualsImportError,
     parse_actuals,
     score_issued_forecast,
 )
-from foreko.services.project_store import ProjectStore
+from tempolith.services.project_store import ProjectStore
 
 
 FORECAST = {
@@ -65,7 +65,7 @@ def _revision(horizon: int = 2) -> ProjectRevisionCreate:
 
 @pytest.fixture()
 def store(tmp_path: Path) -> ProjectStore:
-    return ProjectStore(tmp_path / "foreko.db")
+    return ProjectStore(tmp_path / "tempolith.db")
 
 
 @pytest.fixture()

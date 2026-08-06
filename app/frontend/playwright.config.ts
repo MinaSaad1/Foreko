@@ -12,13 +12,13 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 // nothing, and a leftover project from a previous run would make the test lie
 // about what it created.
 const storageDir =
-  process.env.FOREKO_E2E_STORAGE_DIR ??
-  fs.mkdtempSync(path.join(os.tmpdir(), "foreko-e2e-"));
+  process.env.TEMPOLITH_E2E_STORAGE_DIR ??
+  fs.mkdtempSync(path.join(os.tmpdir(), "tempolith-e2e-"));
 
 export default defineConfig({
   testDir: "./e2e",
   // The real-model gate runs from playwright.heavy.config.ts. Running it here
-  // would hand it FOREKO_FAKE_MODELS and quietly turn it back into this suite.
+  // would hand it TEMPOLITH_FAKE_MODELS and quietly turn it back into this suite.
   testIgnore: /real-models\.spec\.ts/,
   timeout: 120_000,
   expect: { timeout: 15_000 },
@@ -40,10 +40,10 @@ export default defineConfig({
   webServer: [
     {
       command:
-        "uv run uvicorn foreko.main:app --port 8001 --app-dir app/backend",
+        "uv run uvicorn tempolith.main:app --port 8001 --app-dir app/backend",
       // Deliberately not 8000, and deliberately never reused.
       //
-      // A developer's backend on 8000 points at their real ~/.foreko. Reusing
+      // A developer's backend on 8000 points at their real ~/.tempolith. Reusing
       // it meant the journey created projects in real storage and scored them
       // with real models, so the run was neither isolated nor deterministic,
       // and it left the developer's data behind. This happened.
@@ -56,9 +56,9 @@ export default defineConfig({
       stdout: "pipe",
       stderr: "pipe",
       env: {
-        FOREKO_FAKE_MODELS: "1",
-        FOREKO_STORAGE_DIR: storageDir,
-        FOREKO_PRELOAD_MODEL: "false",
+        TEMPOLITH_FAKE_MODELS: "1",
+        TEMPOLITH_STORAGE_DIR: storageDir,
+        TEMPOLITH_PRELOAD_MODEL: "false",
       },
     },
     {
@@ -68,7 +68,7 @@ export default defineConfig({
       // backend on 8000, which is the thing this run must not touch.
       reuseExistingServer: false,
       timeout: 120_000,
-      env: { FOREKO_API_TARGET: "http://localhost:8001" },
+      env: { TEMPOLITH_API_TARGET: "http://localhost:8001" },
     },
   ],
   projects: [

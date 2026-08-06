@@ -14,11 +14,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from foreko.services import dataset_store
-from foreko.services.loaders import LOADERS, loader_for_extension
-from foreko.services.loaders.excel import ExcelLoader, list_sheets
-from foreko.services.loaders.json import JSONLoader
-from foreko.services.loaders.parquet import ParquetLoader
+from tempolith.services import dataset_store
+from tempolith.services.loaders import LOADERS, loader_for_extension
+from tempolith.services.loaders.excel import ExcelLoader, list_sheets
+from tempolith.services.loaders.json import JSONLoader
+from tempolith.services.loaders.parquet import ParquetLoader
 
 
 def _good_df() -> pd.DataFrame:

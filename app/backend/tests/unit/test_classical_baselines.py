@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foreko.services.classical_baselines import (
+from tempolith.services.classical_baselines import (
     arima_forecast,
     ets_forecast,
     seasonal_naive,

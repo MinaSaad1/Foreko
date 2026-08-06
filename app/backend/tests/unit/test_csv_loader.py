@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from foreko.schemas.dataset import ColumnMapping, DateParts
-from foreko.services import csv_loader
+from tempolith.schemas.dataset import ColumnMapping, DateParts
+from tempolith.services import csv_loader
 
 
 @pytest.mark.unit

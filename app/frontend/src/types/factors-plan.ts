@@ -1,7 +1,7 @@
 import type { CovariateRole } from "@/types/project";
 
 // Hand-mirrored from GET /api/projects/{id}/factor-plan and the forecast job's
-// serialized result in app/backend/foreko/routers/project_jobs.py.
+// serialized result in app/backend/tempolith/routers/project_jobs.py.
 
 export type FillPolicy = "none" | "forward_fill" | "zero";
 

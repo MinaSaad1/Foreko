@@ -107,11 +107,11 @@ export function OperationsPage() {
         },
       ];
 
-      const blob = await api.exportPdf("Foreko, Operations report", sections);
+      const blob = await api.exportPdf("Tempolith, Operations report", sections);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "foreko-operations.pdf";
+      a.download = "tempolith-operations.pdf";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

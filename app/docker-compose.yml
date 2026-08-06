@@ -1,5 +1,5 @@
 services:
-  foreko:
+  tempolith:
     build:
       context: ..
       dockerfile: app/Dockerfile

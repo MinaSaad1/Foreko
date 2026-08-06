@@ -2,7 +2,7 @@
  * Quality score banding, shared by every surface that renders a preflight score.
  *
  * The backend returns `quality_score` on a 0-100 scale: it starts at 100 and
- * subtracts per issue (app/backend/foreko/services/preflight.py). It is not a
+ * subtracts per issue (app/backend/tempolith/services/preflight.py). It is not a
  * 0-1 fraction, and must never be scaled again on the way out.
  *
  * This lives in one place because the two readers drifted apart once: the rail

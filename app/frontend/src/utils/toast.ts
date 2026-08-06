@@ -29,11 +29,11 @@ const PATTERNS_422: Pattern[] = [
  },
  {
  match: /at least 10 rows/i,
- text: "This CSV is too short. Foreko needs at least 10 rows to forecast.",
+ text: "This CSV is too short. Tempolith needs at least 10 rows to forecast.",
  },
  {
  match: /numeric column/i,
- text: "Foreko couldn't find a numeric column to forecast. Add one or reshape your data.",
+ text: "Tempolith couldn't find a numeric column to forecast. Add one or reshape your data.",
  },
  {
  match: /duplicate timestamps/i,
@@ -45,7 +45,7 @@ const PATTERNS_422: Pattern[] = [
  },
  {
  match: /CSV exceeds/i,
- text: "That file is too large. Foreko accepts CSVs up to 50 MB.",
+ text: "That file is too large. Tempolith accepts CSVs up to 50 MB.",
  },
  {
  match: /Empty file/i,
@@ -62,10 +62,10 @@ function humanize422(detail: string): string | null {
 
 function friendlyFromApiError(err: ApiError): string {
  if (err.status === 0 || err.status === 503 || err.status === 502) {
- return"Can't reach the Foreko backend. Is it running?";
+ return"Can't reach the Tempolith backend. Is it running?";
  }
  if (err.status === 413) {
- return"That file is too large. Foreko accepts CSVs up to 50 MB.";
+ return"That file is too large. Tempolith accepts CSVs up to 50 MB.";
  }
  if (err.status === 415) {
  return"That file isn't a CSV. Please upload a .csv file.";
@@ -77,7 +77,7 @@ function friendlyFromApiError(err: ApiError): string {
  const humane = humanize422(err.message ?? "");
  if (humane) return humane;
  if (err.message && err.message.length < 200) return err.message;
- return"Foreko couldn't read that CSV. Check the shape of the file and try again.";
+ return"Tempolith couldn't read that CSV. Check the shape of the file and try again.";
  }
  if (err.status >= 500) {
  // Prefer the backend's actual reason (our global handler always fills in
@@ -87,7 +87,7 @@ function friendlyFromApiError(err: ApiError): string {
  if (err.message && err.message.length < 300 && err.message !== "Internal Server Error") {
  return err.message;
  }
- return"Something went wrong on the backend. Check the log file or restart Foreko.";
+ return"Something went wrong on the backend. Check the log file or restart Tempolith.";
  }
  if (err.message && err.message.length < 200) {
  return err.message;
