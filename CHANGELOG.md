@@ -4,9 +4,13 @@ All notable changes to Tempolith are documented here. Format follows [Keep a Cha
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-08-06
+
 ### Changed
 
 - **The app is now called Tempolith.** The previous name conflicted with an existing software company's mark, so it has been retired from the repository, the domain, and all release and installer titles. Nothing about the app itself changed: same forecasting engines, same local-only data handling, same Apache-2.0 licence, still free.
+- **The Windows installer does not replace an existing install, it sits beside it.** The rename changed the application's bundle identifier, and Windows keys an upgrade on that identifier, so it treats this build as a separate product. After installing, remove the old entry through Add or Remove Programs. Doing so is safe: your data was already adopted on first start and lives under the new directory, not inside the old install.
+- Installers built under the previous name have been withdrawn from the releases of both repositories. The release entries and their notes remain, only the binaries are gone.
 - **Your existing data is adopted automatically, nothing to do.** On first start the app moves `~/.foreko` to `~/.tempolith`, including the SQLite database and its write-ahead log, so every dataset, project, run, and export carries over. If you set an explicit storage directory, it is left exactly where it is.
 - `FOREKO_*` environment variables still work and now log a deprecation warning naming their `TEMPOLITH_*` replacement. A value set under the new prefix always wins. Support for the old prefix will be removed in the next major version, so update any `.env` or launch script.
 
