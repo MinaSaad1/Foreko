@@ -484,3 +484,18 @@ Built by [Mina Saad](https://github.com/MinaSaad1). No telemetry. No upsell.
 <sub>Star the repo if you find it useful.</sub>
 
 </div>
+
+---
+
+## About
+
+Tempolith is built by [Mina Saad](https://www.mina-saad.com), free and Apache 2.0, because
+forecasting should not require a specialist on staff.
+
+If you need forecasting wired into how your business actually plans, rather than
+run by hand from a laptop, that is the work I do.
+
+I work out what is actually costing a business, then build whatever fixes it: an
+AI agent, an automation, or a full application. Handed over so your team owns it.
+
+[Book a call](https://cal.com/minasaad/60min) · [mina-saad.com](https://www.mina-saad.com)
